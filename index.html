@@ -1,0 +1,2126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TikTok自动化投放</title>
+<style>
+/* ========== 全局 ========== */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#4080ff;--primary-light:#66a1ff;--bg:#f0f2f5;--border:#e8e8e8;--text:#303133;--text-secondary:#909399;--white:#fff;--success:#67c23a;--warning:#e6a23c;--danger:#f56c6c}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+/* ========== 顶部标题栏 ========== */
+.top-bar{background:var(--white);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:12px}
+.top-bar .logo{font-size:18px;font-weight:600;color:var(--text)}
+.top-bar .breadcrumb{font-size:14px;color:var(--text-secondary);margin-left:8px}
+.top-bar .breadcrumb span{color:var(--text)}
+
+/* ========== 外层导航 Tab ========== */
+.outer-nav{background:var(--white);border-bottom:1px solid var(--border);display:flex;padding:0 24px;gap:0}
+.outer-nav .nav-tab{padding:12px 20px;font-size:15px;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;font-weight:500}
+.outer-nav .nav-tab:hover{color:var(--primary)}
+.outer-nav .nav-tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
+/* ========== 内层导航 Tab ========== */
+.inner-nav{background:var(--white);border-bottom:1px solid var(--border);display:flex;padding:0 24px;gap:0}
+.inner-nav .nav-tab{padding:10px 16px;font-size:13px;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.inner-nav .nav-tab:hover{color:var(--primary)}
+.inner-nav .nav-tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:500}
+.inner-nav.hidden{display:none}
+
+/* ========== 内容区 ========== */
+.main-content{padding:16px 24px}
+
+/* 页面容器 */
+.page-container{display:none}
+.page-container.active{display:block}
+
+/* ========== 搜索/工具栏 ========== */
+.toolbar{background:var(--white);border-radius:6px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.toolbar .toolbar-title{font-size:16px;font-weight:500;margin-right:auto}
+.toolbar input[type=text],.toolbar select{height:32px;padding:4px 12px;border:1px solid var(--border);border-radius:4px;font-size:14px;color:var(--text);outline:none;min-width:160px}
+.toolbar input[type=text]:focus,.toolbar select:focus{border-color:var(--primary)}
+
+/* 按钮 */
+.btn{padding:7px 16px;border-radius:4px;font-size:14px;cursor:pointer;border:1px solid transparent;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.btn-primary{background:var(--primary);color:var(--white);border-color:var(--primary)}
+.btn-primary:hover{background:var(--primary-light);border-color:var(--primary-light)}
+.btn-default{background:var(--white);color:var(--text);border-color:var(--border)}
+.btn-default:hover{border-color:var(--primary);color:var(--primary)}
+.btn-text{background:none;border:none;color:var(--primary);padding:4px 8px}
+.btn-text:hover{background:rgba(64,128,255,.06)}
+.btn-sm{padding:4px 10px;font-size:13px}
+
+/* ========== 表格 ========== */
+.table-wrap{background:var(--white);border-radius:6px;overflow:hidden}
+.table-wrap table{width:100%;border-collapse:collapse;font-size:13px;table-layout:auto}
+.table-wrap th{padding:10px 12px;background:#fafafa;border-bottom:1px solid var(--border);color:var(--text-secondary);font-weight:500;text-align:left;white-space:nowrap;font-size:13px}
+.table-wrap td{padding:10px 12px;border-bottom:1px solid #f0f0f0;color:var(--text);white-space:nowrap}
+.table-wrap tbody tr:hover{background:#fafafa}
+.table-wrap .col-id{color:var(--text-secondary);font-size:12px;max-width:100px;overflow:hidden;text-overflow:ellipsis}
+.table-wrap .col-name{color:var(--primary);cursor:pointer}
+.table-wrap .col-name:hover{text-decoration:underline}
+.table-wrap .col-status{display:inline-flex;align-items:center;gap:4px}
+.table-wrap .col-status::before{content:'';width:6px;height:6px;border-radius:50%}
+.table-wrap .col-status.running::before{background:var(--success)}
+.table-wrap .col-status.stopped::before{background:var(--text-secondary)}
+.table-wrap .col-status.error::before{background:var(--danger)}
+.table-wrap .col-status.pending::before{background:var(--warning)}
+
+/* 分页 */
+.pagination{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 16px;font-size:13px;color:var(--text-secondary)}
+.pagination .page-btn{width:28px;height:28px;border:1px solid var(--border);border-radius:4px;background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px}
+.pagination .page-btn:hover{border-color:var(--primary);color:var(--primary)}
+.pagination .page-btn.active{background:var(--primary);color:var(--white);border-color:var(--primary)}
+.pagination .page-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ========== 模态框 ========== */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal-content{background:var(--white);border-radius:8px;width:900px;max-width:95%;max-height:90vh;overflow-y:auto;padding:24px;position:relative}
+.modal-close{position:absolute;top:20px;right:20px;font-size:24px;color:#999;cursor:pointer;line-height:1}
+.modal-close:hover{color:#333}
+.modal-title{font-size:20px;font-weight:500;color:#333;margin-bottom:32px}
+.form-group-title{font-size:18px;font-weight:500;color:#333;margin:32px 0 24px;padding-left:8px;border-left:4px solid var(--primary)}
+
+/* 表单项 */
+.form-item{margin-bottom:20px;display:flex;align-items:flex-start}
+.form-item label{width:140px;text-align:right;padding-right:12px;line-height:32px;font-size:14px;color:#333;flex-shrink:0}
+.form-item .required{color:#ff4d4f;margin-right:4px}
+.form-item .form-control{flex:1;display:flex;flex-direction:column;gap:8px}
+
+/* 输入框 */
+.input-text{height:32px;padding:4px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:14px;color:#606266;outline:none;transition:border-color .2s}
+.input-text:focus{border-color:var(--primary)}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+.btn-option{height:32px;padding:0 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:14px;cursor:pointer;background:var(--white);color:#606266;transition:all .2s;white-space:nowrap}
+.btn-option.active{background:var(--primary);border-color:var(--primary);color:var(--white)}
+.btn-option:hover:not(.active){border-color:var(--primary);color:var(--primary)}
+.btn-option:disabled{opacity:.5;cursor:not-allowed}
+
+/* 表单底部 */
+.form-footer{display:flex;justify-content:flex-end;gap:12px;margin-top:32px}
+.btn-cancel{height:32px;padding:0 16px;border:1px solid #dcdfe6;border-radius:4px;font-size:14px;cursor:pointer;background:var(--white);color:#606266}
+.btn-cancel:hover{border-color:var(--primary);color:var(--primary)}
+.btn-submit{height:32px;padding:0 16px;border:1px solid var(--primary);border-radius:4px;font-size:14px;cursor:pointer;background:var(--primary);color:var(--white)}
+.btn-submit:hover{background:var(--primary-light);border-color:var(--primary-light)}
+
+/* 时间/条件 */
+.time-range-group{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.time-input{height:32px;padding:4px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:14px;color:#606266;outline:none;width:120px}
+.time-input:focus{border-color:var(--primary)}
+.add-time-btn{color:var(--primary);font-size:14px;cursor:pointer;align-self:flex-start}
+.add-time-btn:hover{color:var(--primary-light)}
+.condition-group{display:flex;flex-direction:column;gap:8px;width:100%}
+.condition-row{display:flex;align-items:center;gap:8px}
+.condition-select{height:32px;padding:4px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:14px;color:#606266;outline:none;background:var(--white);min-width:140px}
+.condition-operator{height:32px;padding:4px 8px;border:1px solid #dcdfe6;border-radius:4px;font-size:14px;color:#606266;outline:none;background:var(--white);width:60px;text-align:center}
+.condition-input{height:32px;padding:4px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:14px;color:#606266;outline:none;flex:1;max-width:200px}
+.condition-input:focus{border-color:var(--primary)}
+.condition-delete{width:32px;height:32px;border:none;background:none;color:#ff4d4f;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:4px}
+.condition-input-wrap{display:flex;align-items:center;position:relative}
+.condition-input-wrap .condition-input{padding-right:24px}
+.condition-input-suffix{position:absolute;right:8px;color:var(--text-secondary);font-size:14px;pointer-events:none}
+.between-input-group{display:none;align-items:center;gap:8px}
+.input-group{display:flex;align-items:center;gap:8px}
+.between-input-group.show{display:flex}
+.single-input{display:flex}
+.single-input.hide{display:none}
+
+/* 提示 */
+.tip-text{font-size:12px;color:var(--text-secondary);line-height:32px;margin-left:8px}
+.char-count{font-size:12px;color:var(--text-secondary);margin-top:4px;text-align:right}
+.error-tip{display:none;font-size:12px;color:#ff4d4f;margin-top:4px}
+.error-tip.show{display:block}
+
+/* 短剧搜索 */
+.drama-search-section{border:1px solid #dcdfe6;border-radius:4px;padding:16px}
+.drama-tabs{display:flex;gap:24px;margin-bottom:16px;border-bottom:1px solid #eee;padding-bottom:12px}
+.drama-tab{display:flex;align-items:center;gap:6px;font-size:14px;color:#666;cursor:pointer;padding:4px 0}
+.drama-tab input{accent-color:var(--primary)}
+.drama-tab.active{color:var(--primary);font-weight:500}
+.drama-search-panel{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.drama-search-panel .form-item{margin-bottom:0}
+.drama-search-panel .form-item label{width:auto;text-align:left;padding-right:8px}
+.drama-textarea{padding:4px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:14px;color:#606266;outline:none;width:220px;resize:vertical;font-family:inherit;line-height:1.6}
+.drama-textarea:focus{border-color:var(--primary)}
+.drama-lang-select{height:32px;padding:4px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:14px;color:#606266;outline:none;background:var(--white);min-width:120px}
+.drama-search-btn{height:32px;padding:0 16px;border:1px solid var(--primary);border-radius:4px;font-size:14px;cursor:pointer;background:var(--primary);color:var(--white)}
+.drama-search-btn:hover{background:var(--primary-light);border-color:var(--primary-light)}
+.drama-result-card{margin-top:16px;padding:16px;border:1px solid #e8e8e8;border-radius:4px}
+.drama-result-card:hover{border-color:var(--primary)}
+.drama-result-info{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 24px;margin-bottom:12px}
+.drama-result-item{display:flex;gap:8px;font-size:14px}
+.drama-result-item .label{color:var(--text-secondary)}
+.drama-result-item .value{color:var(--text)}
+.drama-result-actions{display:flex;justify-content:flex-end}
+.drama-add-btn{padding:6px 16px;background:var(--white);border:1px solid var(--primary);color:var(--primary);border-radius:4px;font-size:14px;cursor:pointer}
+.drama-add-btn:hover{background:var(--primary);color:var(--white)}
+.drama-add-btn:disabled{opacity:.5;cursor:not-allowed}
+.drama-placeholder{text-align:center;padding:24px;color:var(--text-secondary);font-size:14px}
+.selected-dramas-area{margin-top:16px;padding-top:16px;border-top:1px dashed #dcdfe6}
+.selected-dramas-title{font-size:14px;color:var(--text);margin-bottom:8px}
+.selected-dramas-list{display:flex;flex-wrap:wrap;gap:8px}
+.selected-drama-tag{background:#f5f7fa;border-radius:4px;padding:4px 12px;font-size:14px;color:var(--text);display:flex;align-items:center;gap:8px}
+.selected-drama-tag .remove{cursor:pointer;color:var(--text-secondary);font-size:16px;line-height:1}
+.selected-drama-tag .remove:hover{color:#ff4d4f}
+
+/* 素材预览 */
+.material-preview-section{margin-top:24px;border:1px solid #dcdfe6;border-radius:4px;display:none}
+.material-preview-section.show{display:block}
+.material-preview-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #ebeef5;font-size:14px;color:var(--text);font-weight:500}
+.material-preview-table-wrap{overflow-x:auto}
+.material-preview-table{width:100%;border-collapse:collapse;font-size:13px;min-width:960px}
+.material-preview-table th{padding:8px 12px;border-bottom:1px solid #ebeef5;color:var(--text-secondary);font-weight:500;text-align:left;background:#f5f7fa;white-space:nowrap}
+.material-preview-table td{padding:8px 12px;border-bottom:1px solid #ebeef5;color:var(--text);white-space:nowrap}
+.material-preview-table tbody tr:hover{background:#f5f7fa}
+.material-preview-empty{text-align:center;padding:32px;color:var(--text-secondary);font-size:14px}
+.material-preview-footer{padding:8px 16px;border-top:1px solid #ebeef5;font-size:12px;color:var(--text-secondary);text-align:center}
+
+/* 侧边栏抽屉 */
+.drawer-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1001;display:flex;justify-content:flex-end}
+.drawer{background:var(--white);width:720px;max-width:95%;height:100%;display:flex;flex-direction:column;box-shadow:-4px 0 12px rgba(0,0,0,.15);animation:slideInRight .25s ease-out}
+@keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border);font-size:18px;font-weight:500;flex-shrink:0}
+.drawer-close{font-size:22px;color:#999;cursor:pointer;line-height:1}
+.drawer-close:hover{color:#333}
+.drawer-body{flex:1;overflow-y:auto;padding:20px 24px}
+.drawer-footer{display:flex;justify-content:flex-end;gap:12px;padding:12px 24px;border-top:1px solid var(--border);flex-shrink:0}
+.drawer-section-title{font-size:15px;font-weight:500;color:var(--text);margin:20px 0 12px;padding-bottom:8px;border-bottom:1px solid #f0f0f0}
+
+/* 账户选择表格 */
+.account-select-table{width:100%;border-collapse:collapse;font-size:13px}
+.account-select-table th{padding:8px 12px;background:#fafafa;border-bottom:1px solid var(--border);color:var(--text-secondary);font-weight:500;text-align:left}
+.account-select-table td{padding:8px 12px;border-bottom:1px solid #f0f0f0;color:var(--text)}
+.account-select-table .add-btn{color:var(--primary);cursor:pointer;background:none;border:none;font-size:13px}
+.account-select-table .add-btn:hover{color:var(--primary-light)}
+.account-select-table .added-tag{color:#67c23a;font-size:13px}
+.account-select-table-wrap{max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:4px}
+
+/* 已选账户 */
+.selected-accounts-area{margin-top:12px;padding:8px 12px;background:#f5f7fa;border-radius:4px;font-size:13px;color:var(--text);min-height:36px;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.selected-account-tag{background:var(--white);border:1px solid var(--border);border-radius:3px;padding:2px 8px;font-size:12px;display:flex;align-items:center;gap:6px}
+.selected-account-tag .remove{cursor:pointer;color:var(--text-secondary);font-size:14px}
+.selected-account-tag .remove:hover{color:var(--danger)}
+
+/* 定向包 - 列表项 */
+.targeting-list-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.targeting-list-item:hover{border-color:var(--primary);background:rgba(64,128,255,.04)}
+.targeting-list-item.selected{border-color:var(--primary);background:rgba(64,128,255,.08)}
+.targeting-list-item .tp-name{font-size:14px;font-weight:500;color:var(--text)}
+.targeting-list-item .tp-desc{font-size:12px;color:var(--text-secondary);margin-top:4px}
+.targeting-list-item .tp-actions{display:flex;gap:8px}
+
+/* 商品库 - 列表卡片 */
+.pl-card{border:1px solid var(--border);border-radius:6px;margin-bottom:8px;cursor:pointer;transition:all .15s;padding:12px 16px}
+.pl-card:hover{border-color:var(--primary);background:rgba(64,128,255,.04)}
+.pl-card.selected{border-color:var(--primary);background:rgba(64,128,255,.08)}
+.pl-card .pl-name{font-size:14px;font-weight:500;color:var(--text)}
+.pl-card .pl-meta{font-size:12px;color:var(--text-secondary);margin-top:4px;display:flex;gap:16px}
+.pl-card .pl-check{float:right;font-size:18px;color:var(--primary);display:none}
+.pl-card.selected .pl-check{display:inline}
+.selected-pl-tag{display:inline-block;background:#ecf5ff;border:1px solid #b3d8ff;border-radius:3px;padding:1px 8px;font-size:12px;color:var(--primary);margin:2px 4px 2px 0}
+
+/* 定向包表单内 check 组 */
+.check-group{display:flex;flex-wrap:wrap;gap:8px}
+.check-group label{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--text);cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:4px;transition:all .15s}
+.check-group label:hover{border-color:var(--primary)}
+.check-group label.checked{background:rgba(64,128,255,.08);border-color:var(--primary);color:var(--primary)}
+.check-group label input{display:none}
+
+/* 多选下拉 */
+.multi-select{position:relative;width:100%}
+.multi-select-trigger{min-height:32px;padding:2px 32px 2px 8px;border:1px solid #dcdfe6;border-radius:4px;font-size:14px;cursor:pointer;display:flex;flex-wrap:wrap;gap:4px;align-items:center;background:var(--white);transition:border-color .2s}
+.multi-select-trigger:hover{border-color:var(--primary)}
+.multi-select-trigger.open{border-color:var(--primary)}
+.multi-select-trigger .placeholder{color:#c0c4cc;line-height:28px}
+.multi-select-trigger .tag{display:inline-flex;align-items:center;gap:2px;background:#f0f2f5;border-radius:3px;padding:0 6px;font-size:12px;line-height:22px;color:var(--text)}
+.multi-select-trigger .tag .remove{cursor:pointer;color:var(--text-secondary);font-size:14px;line-height:1}
+.multi-select-trigger .tag .remove:hover{color:var(--danger)}
+.multi-select-arrow{position:absolute;right:8px;top:50%;transform:translateY(-50%);color:var(--text-secondary);font-size:12px;pointer-events:none;transition:transform .2s}
+.multi-select-arrow.open{transform:translateY(-50%) rotate(180deg)}
+.multi-select-dropdown{position:absolute;top:100%;left:0;right:0;z-index:10;background:var(--white);border:1px solid var(--border);border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.1);max-height:220px;overflow-y:auto;display:none}
+.multi-select-dropdown.show{display:block}
+.multi-select-dropdown label{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;cursor:pointer;transition:background .15s}
+.multi-select-dropdown label:hover{background:#f5f7fa}
+.multi-select-dropdown label input{accent-color:var(--primary)}
+
+/* 地区选择器 */
+.region-selector{display:flex;gap:12px;border:1px solid #dcdfe6;border-radius:4px;overflow:hidden}
+.region-left{flex:1;display:flex;flex-direction:column}
+.region-left .search-box{padding:8px;border-bottom:1px solid #ebeef5}
+.region-left .search-box input{border:none;outline:none;width:100%;font-size:13px;padding:4px 0}
+.region-left .region-list{flex:1;max-height:240px;overflow-y:auto}
+.region-left .region-item{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;font-size:13px;cursor:pointer;transition:background .15s}
+.region-left .region-item:hover{background:#f5f7fa}
+.region-left .region-item .add-region{color:var(--primary);cursor:pointer;background:none;border:none;font-size:16px;line-height:1;visibility:hidden}
+.region-left .region-item:hover .add-region{visibility:visible}
+.region-right{width:200px;border-left:1px solid #dcdfe6;display:flex;flex-direction:column;background:#fafafa}
+.region-right .region-right-title{padding:8px 10px;font-size:12px;color:var(--text-secondary);border-bottom:1px solid #ebeef5}
+.region-right .region-right-list{flex:1;max-height:240px;overflow-y:auto;padding:6px}
+.region-right .selected-region-tag{display:flex;align-items:center;justify-content:space-between;padding:3px 8px;font-size:13px;color:var(--text);margin-bottom:4px}
+.region-right .selected-region-tag .remove-region{color:var(--text-secondary);cursor:pointer;font-size:14px;line-height:1}
+.region-right .selected-region-tag .remove-region:hover{color:var(--danger)}
+
+/* 年龄多选 - 按钮式 */
+.age-multi .btn-option{cursor:pointer;user-select:none}
+</style>
+</head>
+<body>
+
+<!-- ============ 顶部 ============ -->
+<div class="top-bar">
+  <div class="logo">TikTok自动化投放</div>
+  <div class="breadcrumb" id="breadcrumbPage">自动化任务 / <span>任务</span></div>
+</div>
+
+<!-- ============ 外层导航 ============ -->
+<div class="outer-nav" id="outerNav">
+  <div class="nav-tab active" data-outer="auto">自动化任务</div>
+  <div class="nav-tab" data-outer="preconfig">前置配置</div>
+</div>
+
+<!-- ============ 内层导航（自动化任务下） ============ -->
+<div class="inner-nav" id="innerNav">
+  <div class="nav-tab active" data-page="auto-task">任务</div>
+  <div class="nav-tab" data-page="campaign">广告系列</div>
+  <div class="nav-tab" data-page="adgroup">广告组</div>
+  <div class="nav-tab" data-page="ad">广告</div>
+</div>
+
+<!-- ============ 内容区 ============ -->
+<div class="main-content">
+
+  <!-- 自动化任务列表 -->
+  <div class="page-container active" id="page-auto-task">
+    <div class="toolbar" style="flex-direction:column;align-items:stretch;gap:8px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <input type="text" placeholder="任务ID" style="width:120px">
+        <input type="text" placeholder="任务名称" style="width:150px">
+        <select><option value="">任务状态</option><option>启用</option><option>停用</option></select>
+        <select><option value="">请选择竞价策略</option><option>最大转化量</option><option>成本上限</option><option>出价上限</option></select>
+        <select><option value="">请选择创建人</option></select>
+        <input type="text" placeholder="最高数量" style="width:120px">
+        <input type="text" placeholder="单次成效费用目标" style="width:160px">
+        <input type="text" placeholder="竞价上限" style="width:120px">
+        <input type="text" placeholder="广告花费回报目标" style="width:160px">
+        <button class="btn btn-default btn-sm">查询</button>
+        <button class="btn btn-default btn-sm">重置</button>
+        <button class="btn btn-primary btn-sm" onclick="openTaskModal()">+ 新建任务</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding-top:4px;border-top:1px dashed var(--border)">
+        <span class="select-info" style="font-size:13px;color:var(--text-secondary);cursor:pointer;user-select:none" title="点击管理已选任务">已选择 <b>0</b> 个任务</span>
+        <button class="btn btn-default btn-sm" style="color:#67c23a;border-color:#67c23a">批量启动</button>
+        <button class="btn btn-default btn-sm" style="color:#e6a23c;border-color:#e6a23c">批量暂停</button>
+      </div>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>任务名称</th><th>状态</th><th>竞价策略</th><th>日预算</th><th>执行间隔(分钟)</th><th>优化目标</th><th>成效目标</th><th>渠道号</th><th>上次完成时间</th><th>创建人</th><th>更新人</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
+      <tbody id="autoTaskTableBody"></tbody>
+    </table></div>
+    <div class="pagination" id="autoTaskPagination"></div>
+  </div>
+
+  <!-- 前置配置 - 账户包管理 -->
+  <div class="page-container" id="page-account-package">
+    <div class="toolbar">
+      <input type="text" placeholder="请输入账户包名称">
+      <button class="btn btn-default btn-sm">查询</button>
+      <button class="btn btn-default btn-sm">重置</button>
+      <button class="btn btn-primary btn-sm" onclick="openAccountPackageDrawer()">+ 新增账户包</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>账户包名称</th><th>业务类型</th><th>渠道名称</th><th>渠道号</th><th>投放策略</th><th>回传模板</th><th>像素名称</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
+      <tbody id="accountPackageTableBody"></tbody>
+    </table></div>
+    <div class="pagination" id="accountPackagePagination"></div>
+  </div>
+
+  <!-- 广告系列列表 -->
+  <div class="page-container" id="page-campaign">
+    <div class="toolbar">
+      <span class="date-mode-toggle">
+        <button class="btn-option active" style="padding:0 8px;font-size:12px">按日</button>
+        <button class="btn-option" style="padding:0 8px;font-size:12px">按月</button>
+      </span>
+      <input type="text" placeholder="开始日期" style="width:100px">
+      <input type="text" placeholder="结束日期" style="width:100px">
+      <input type="text" placeholder="任务ID" style="width:120px">
+      <input type="text" placeholder="任务名称" style="width:150px">
+      <input type="text" placeholder="上传广告系列ID" style="width:150px">
+      <input type="text" placeholder="账户名称" style="width:150px">
+      <input type="text" placeholder="系列名称" style="width:150px">
+      <select><option value="">广告系列状态</option><option>已开启</option><option>已关闭</option></select>
+      <select><option value="">请选择短剧</option></select>
+      <input type="text" placeholder="输入渠道号" style="width:150px">
+      <select><option value="">请选择竞价策略</option><option>最大转化量</option><option>成本上限</option><option>出价上限</option></select>
+      <select><option value="">选择业务类型</option><option>付费</option><option>免费</option></select>
+      <button class="btn btn-default btn-sm">查询</button>
+      <button class="btn btn-default btn-sm">重置</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>任务ID</th><th>广告系列ID</th><th>广告系列名称</th><th>账户名称</th><th>账户ID</th><th>渠道名称</th><th>渠道号</th><th>上传状态</th><th>系列状态</th><th>竞价策略</th><th>日预算</th><th>优化目标</th><th>失败原因</th><th>短剧名称</th><th>链接名称</th><th>回传模板</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
+      <tbody id="campaignTableBody"></tbody>
+    </table></div>
+    <div class="pagination" id="campaignPagination"></div>
+  </div>
+
+  <!-- 广告组列表 -->
+  <div class="page-container" id="page-adgroup">
+    <div class="toolbar">
+      <span class="date-mode-toggle">
+        <button class="btn-option active" style="padding:0 8px;font-size:12px">按日</button>
+        <button class="btn-option" style="padding:0 8px;font-size:12px">按月</button>
+      </span>
+      <input type="text" placeholder="开始日期" style="width:100px">
+      <input type="text" placeholder="结束日期" style="width:100px">
+      <input type="text" placeholder="任务ID" style="width:120px">
+      <input type="text" placeholder="任务名称" style="width:150px">
+      <input type="text" placeholder="账户名称" style="width:150px">
+      <input type="text" placeholder="上传系列ID" style="width:150px">
+      <input type="text" placeholder="系列名称" style="width:150px">
+      <input type="text" placeholder="上传广告组ID" style="width:150px">
+      <input type="text" placeholder="广告组名称" style="width:150px">
+      <select><option value="">广告组状态</option><option>已开启</option><option>已关闭</option></select>
+      <select><option value="">请选择短剧</option></select>
+      <input type="text" placeholder="输入渠道号" style="width:150px">
+      <select><option value="">请选择竞价策略</option><option>最大转化量</option><option>成本上限</option><option>出价上限</option></select>
+      <select><option value="">选择业务类型</option><option>付费</option><option>免费</option></select>
+      <button class="btn btn-default btn-sm">查询</button>
+      <button class="btn btn-default btn-sm">重置</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>任务ID</th><th>上传系列ID</th><th>广告组名称</th><th>账户信息</th><th>投放短剧</th><th>广告组状态</th><th>定向包</th><th>失败原因</th><th>优化目标</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
+      <tbody id="adgroupTableBody"></tbody>
+    </table></div>
+    <div class="pagination" id="adgroupPagination"></div>
+  </div>
+
+  <!-- 广告列表 -->
+  <div class="page-container" id="page-ad">
+    <div class="toolbar">
+      <span class="date-mode-toggle">
+        <button class="btn-option active" style="padding:0 8px;font-size:12px">按日</button>
+        <button class="btn-option" style="padding:0 8px;font-size:12px">按月</button>
+      </span>
+      <input type="text" placeholder="开始日期" style="width:100px">
+      <input type="text" placeholder="结束日期" style="width:100px">
+      <input type="text" placeholder="任务ID" style="width:120px">
+      <input type="text" placeholder="账户名称" style="width:150px">
+      <select><option value="">选择短剧</option></select>
+      <input type="text" placeholder="上传广告组ID" style="width:150px">
+      <input type="text" placeholder="广告组ID" style="width:150px">
+      <select><option value="">选择竞价策略</option><option>最大转化量</option><option>成本上限</option><option>出价上限</option></select>
+      <select><option value="">选择业务类型</option><option>付费</option><option>免费</option></select>
+      <select><option value="">选择上传状态</option><option>待上传</option><option>上传成功</option><option>上传失败</option></select>
+      <button class="btn btn-default btn-sm">查询</button>
+      <button class="btn btn-default btn-sm">重置</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>任务ID</th><th>广告系列ID</th><th>广告组ID</th><th>上传广告组ID</th><th>广告ID</th><th>账户名称</th><th>账户ID</th><th>上传状态</th><th>广告状态</th><th>多广告主</th><th>失败原因</th><th>素材名称</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
+      <tbody id="adTableBody"></tbody>
+    </table></div>
+    <div class="pagination" id="adPagination"></div>
+  </div>
+
+</div>
+
+<!-- ============ 任务表单模态框 ============ -->
+<div class="modal-overlay" id="taskModalOverlay" style="display:none">
+  <div class="modal-content">
+    <div class="modal-close" onclick="closeTaskModal()">&times;</div>
+    <div class="modal-title" id="taskModalTitle">新建TikTok自动化任务</div>
+    <form id="autoTaskForm">
+
+      <div class="form-group-title">基本信息</div>
+
+      <div class="form-item">
+        <label><span class="required">*</span>任务名称</label>
+        <div class="form-control">
+          <input type="text" class="input-text" id="taskName" maxlength="50" placeholder="请输入任务名称">
+          <div class="char-count" id="taskNameCount">0 / 50</div>
+        </div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>状态</label>
+        <div class="form-control"><div class="btn-group">
+          <button type="button" class="btn-option active" data-status="1">启用</button>
+          <button type="button" class="btn-option" data-status="0">停用</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>生效时间(UTC+8)</label>
+        <div class="form-control" id="timeRangeContainer">
+          <div class="time-range-group">
+            <input type="time" class="time-input" value="00:00:00" step="1">
+            <span>~</span>
+            <input type="time" class="time-input" value="23:59:59" step="1">
+          </div>
+          <div class="add-time-btn" id="addTimeRange">+ 添加时间范围</div>
+        </div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>执行频率</label>
+        <div class="form-control"><div class="input-group">
+          <span>间隔</span>
+          <input type="number" class="input-text" id="executeFrequency" min="1" placeholder="请输入" style="width:100px">
+          <span>分钟执行一次</span>
+        </div></div>
+      </div>
+
+      <!-- 选择短剧 -->
+      <div class="form-item">
+        <label><span class="required">*</span>选择短剧</label>
+        <div class="form-control"><div class="drama-search-section">
+          <div class="drama-tabs">
+            <label class="drama-tab active" id="tabDramaName"><input type="radio" name="dramaSearchMode" value="drama" checked onchange="switchDramaMode('drama')"><span>按短剧搜索</span></label>
+            <label class="drama-tab" id="tabPlaybook"><input type="radio" name="dramaSearchMode" value="playbook" onchange="switchDramaMode('playbook')"><span>按剧本搜索</span></label>
+          </div>
+          <div class="drama-search-panel">
+            <div class="form-item" id="dramaNamePanel"><label>短剧名称</label><textarea class="drama-textarea" rows="2" placeholder="请输入短剧名称，每行一个" id="dramaNameInput"></textarea></div>
+            <div class="form-item" id="playbookPanel" style="display:none"><label>剧本</label><textarea class="drama-textarea" rows="2" placeholder="输入剧本ID或剧本名，每行一个" id="playbookInput"></textarea></div>
+            <div class="form-item" id="dramaLangPanel" style="display:none"><label>语言</label><select class="drama-lang-select" id="dramaLangSelect"><option value="">请选择语言</option><option value="zh">中文</option><option value="en">英文</option><option value="th">泰文</option><option value="ms">马来文</option></select></div>
+            <button type="button" class="drama-search-btn" onclick="searchDramas()">搜索</button>
+          </div>
+          <div id="dramaSearchResult"><div class="drama-placeholder">请输入搜索条件进行搜索</div></div>
+          <div class="selected-dramas-area" id="selectedDramasArea" style="display:none">
+            <div class="selected-dramas-title">已选短剧</div>
+            <div class="selected-dramas-list" id="selectedDramasList"></div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- 结束运行条件 -->
+      <div class="form-item">
+        <label><span class="required">*</span>结束运行条件</label>
+        <div class="form-control"><div class="condition-group" id="endConditionGroup">
+          <div class="condition-row">
+            <select class="condition-select" disabled><option>单账户单短剧在投总系列数</option></select>
+            <select class="condition-operator" disabled><option>>=</option></select>
+            <input type="number" class="condition-input" placeholder="请输入数值" min="0">
+          </div>
+          <div class="condition-row">
+            <select class="condition-select" disabled><option>账户数</option></select>
+            <select class="condition-operator" disabled><option>>=</option></select>
+            <input type="number" class="condition-input" placeholder="请输入数值" min="0">
+          </div>
+        </div></div>
+      </div>
+
+      <div class="form-item">
+        <label style="width:180px"><span class="required">*</span>单轮单短剧计划创建上限</label>
+        <div class="form-control"><input type="number" class="input-text" id="campaignLimit" min="1" max="30" value="1" style="width:130px"></div>
+      </div>
+
+      <div class="form-group-title">素材配置</div>
+
+      <div class="form-item" id="materialTimeItem">
+        <label><span class="required">*</span>素材创建时间</label>
+        <div class="form-control"><div class="btn-group" id="materialCreateTime">
+          <button type="button" class="btn-option active" data-day="unlimit">不限</button>
+          <button type="button" class="btn-option" data-day="1">1天</button>
+          <button type="button" class="btn-option" data-day="3">3天</button>
+          <button type="button" class="btn-option" data-day="7">7天</button>
+          <button type="button" class="btn-option" data-day="15">15天</button>
+          <button type="button" class="btn-option" data-day="30">30天</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>素材数据筛选</label>
+        <div class="form-control"><div class="btn-group" id="materialFilterType">
+          <button type="button" class="btn-option active" data-type="unlimit">不限</button>
+          <button type="button" class="btn-option" data-type="custom">自定义</button>
+        </div></div>
+      </div>
+      <div class="form-item" id="businessTypeItem" style="display:none">
+        <label>业务类型</label>
+        <div class="form-control"><div class="btn-group" id="businessTypeBtns">
+          <button type="button" class="btn-option active" data-type="unlimit">不限</button>
+          <button type="button" class="btn-option" data-type="free">免费</button>
+          <button type="button" class="btn-option" data-type="paid">付费</button>
+        </div></div>
+      </div>
+      <div class="form-item" id="mediaFilterItem" style="display:none">
+        <label>筛选媒体</label>
+        <div class="form-control"><div class="btn-group" id="mediaFilterBtns">
+          <button type="button" class="btn-option active" data-type="unlimit">不限</button>
+          <button type="button" class="btn-option" data-type="facebook">Facebook</button>
+          <button type="button" class="btn-option" data-type="tiktok">TikTok</button>
+        </div></div>
+      </div>
+      <div class="form-item" id="materialCountItem" style="display:none">
+        <label><span class="required">*</span>素材数量</label>
+        <div class="form-control"><div class="btn-group" id="materialCountType">
+          <button type="button" class="btn-option active" data-type="unlimit">不限</button>
+          <button type="button" class="btn-option" data-type="custom">自定义</button>
+        </div>
+        <div class="input-group" id="materialCountInput" style="display:none"><input type="number" class="input-text" id="materialCount" min="1" placeholder="请输入"></div></div>
+      </div>
+      <div class="form-item" id="statRangeItem">
+        <label>素材投放时间</label>
+        <div class="form-control"><div class="btn-group" id="statRangeBtns">
+          <button type="button" class="btn-option active" data-day="unlimit">累计</button>
+          <button type="button" class="btn-option" data-day="1">1天</button>
+          <button type="button" class="btn-option" data-day="3">3天</button>
+          <button type="button" class="btn-option" data-day="7">7天</button>
+          <button type="button" class="btn-option" data-day="15">15天</button>
+          <button type="button" class="btn-option" data-day="30">30天</button>
+        </div></div>
+      </div>
+      <div class="form-item" id="materialConditionItem">
+        <label>筛选条件</label>
+        <div class="form-control"><div class="condition-group" id="materialConditionGroup">
+          <div class="condition-row">
+            <select class="condition-select material-condition-metric">
+              <option value="cost">消耗</option><option value="doroi">DOROI</option><option value="d0_ad_roi">D0广告ROI</option><option value="d0_iaa">D0 IAA</option><option value="compliance">综合达标率</option><option value="old_compliance">老达标率</option>
+            </select>
+            <select class="condition-operator material-condition-operator">
+              <option value=">=">>=</option><option value=">">></option><option value="=">=</option><option value="<"><</option><option value="<="><=</option><option value="between">介于</option>
+            </select>
+            <div class="single-input"><div class="condition-input-wrap"><input type="text" class="condition-input" placeholder="请输入"><span class="condition-input-suffix" style="display:none">%</span></div></div>
+            <div class="between-input-group">
+              <div class="condition-input-wrap"><input type="text" class="condition-input" placeholder="请输入"><span class="condition-input-suffix" style="display:none">%</span></div>
+              <span>至</span>
+              <div class="condition-input-wrap"><input type="text" class="condition-input" placeholder="请输入"><span class="condition-input-suffix" style="display:none">%</span></div>
+            </div>
+            <button type="button" class="condition-delete">&times;</button>
+          </div>
+        </div>
+        <div class="add-time-btn" id="addMaterialCondition">+ 添加条件</div>
+        <div class="error-tip" id="materialConditionError">不能重复选择相同条件类型</div>
+        <div class="error-tip" id="materialConditionRequired">选择自定义时，至少需要输入一个条件</div></div>
+      </div>
+      <div class="form-item" id="sortMetricItem" style="display:none">
+        <label>按指标排序</label>
+        <div class="form-control"><div class="btn-group" id="sortMetricBtns">
+          <button type="button" class="btn-option active" data-metric="compliance">综合达标率</button>
+          <button type="button" class="btn-option" data-metric="cost">消耗</button>
+          <button type="button" class="btn-option" data-metric="doroi">D0ROI</button>
+          <button type="button" class="btn-option" data-metric="d0_ad_roi">D0广告ROI</button>
+          <button type="button" class="btn-option" data-metric="d0_iaa">D0 IAA</button>
+          <button type="button" class="btn-option" data-metric="old_compliance">老达标率</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label>素材重复次数</label>
+        <div class="form-control"><div class="btn-group" id="repeatCountType">
+          <button type="button" class="btn-option active" data-type="unlimit">不限</button>
+          <button type="button" class="btn-option" data-type="custom">自定义</button>
+        </div>
+        <div class="input-group" id="repeatCountInput" style="display:none"><input type="number" class="input-text" id="repeatCount" min="1" placeholder="请输入"><span class="tip-text">不填写默认30</span></div></div>
+      </div>
+      <div class="form-item">
+        <label style="white-space:nowrap">多轮执行不投重复素材</label>
+        <div class="form-control"><div class="btn-group" id="dedupAcrossRounds">
+          <button type="button" class="btn-option" data-value="0">关闭</button>
+          <button type="button" class="btn-option active" data-value="1">开启</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label>广告数</label>
+        <div class="form-control"><div class="input-group"><input type="number" class="input-text" id="adCount" min="1" placeholder="请输入"><span class="tip-text">不填写默认30</span></div></div>
+      </div>
+
+      <div class="material-preview-section" id="materialPreviewSection">
+        <div class="material-preview-header"><span>素材预览</span><span style="cursor:pointer" onclick="closeMaterialPreview()">&times;</span></div>
+        <div id="materialPreviewContent"><div class="material-preview-empty">点击「预览素材」查看匹配结果</div></div>
+      </div>
+
+      <div class="form-group-title">投放配置</div>
+
+      <div class="form-item">
+        <label><span class="required">*</span>投放账户</label>
+        <div class="form-control"><select class="condition-select" id="accountPackage" style="min-width:280px"><option value="">请选择账户包</option></select></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>广告目标</label>
+        <div class="form-control"><div class="btn-group" id="campaignObjective">
+          <button type="button" class="btn-option active" data-value="app_promotion">应用推广</button>
+          <button type="button" class="btn-option" data-value="product_sales">销量</button>
+        </div></div>
+      </div>
+
+      <div class="form-item">
+        <label>广告系列名称后缀</label>
+        <div class="form-control"><input type="text" class="input-text" id="campaignNameSuffix" placeholder="请输入广告系列名称后缀" maxlength="50" style="width:100%">
+        <div class="char-count" id="campaignNameSuffixCount">0 / 50</div></div>
+      </div>
+
+      <div id="appPromotionConfig">
+
+      <div class="form-item">
+        <label>Smart+ 推广系列</label>
+        <div class="form-control"><span style="line-height:32px;color:#606266">已开启</span></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>推广系列类型</label>
+        <div class="form-control"><div class="btn-group" id="campaignType">
+          <button type="button" class="btn-option active" data-value="app_install">应用安装</button>
+          <button type="button" class="btn-option" data-value="app_retargeting">应用再营销</button>
+          <button type="button" class="btn-option" data-value="tiktok_minis">TikTok Minis</button>
+        </div></div>
+      </div>
+      <div class="form-item" id="selectAppItem" style="display:none">
+        <label><span class="required">*</span>选择应用</label>
+        <div class="form-control"><select class="condition-select" id="selectApp" style="min-width:200px">
+          <option value="netshort" selected>Netshort</option>
+          <option value="nettoon">Nettoon</option>
+        </select></div>
+      </div>
+      <div class="form-item" id="selectMiniProgramItem" style="display:none">
+        <label><span class="required">*</span>选择小程序</label>
+        <div class="form-control"><select class="condition-select" id="selectMiniProgram" style="min-width:320px">
+          <option value="7623607732641417217" selected>TT_ZeroDrama(7623607732641417217)</option>
+          <option value="7644122628625598471">TT_FishDrama(7644122628625598471)</option>
+        </select></div>
+      </div>
+      <div class="form-item" id="productSourceItem" style="display:none">
+        <label>商品数据源</label>
+        <div class="form-control"><div class="btn-group" id="productSource">
+          <button type="button" class="btn-option active" data-value="0">关闭</button>
+          <button type="button" class="btn-option" data-value="1">开启</button>
+        </div></div>
+      </div>
+      <div class="form-item" id="productLibraryItem" style="display:none">
+        <label>关联商品投放</label>
+        <div class="form-control">
+          <a href="#" class="add-time-btn" style="line-height:32px;text-decoration:none" onclick="openProductLibraryDrawer();return false">关联商品投放</a>
+          <div id="selectedProductLibs" style="margin-top:8px;font-size:13px;color:#909399"></div>
+        </div>
+      </div>
+      <div class="form-item" id="dailyBudgetItem">
+        <label id="budgetAmountLabel"><span class="required">*</span>单日预算额度</label>
+        <div class="form-control"><div class="input-group">
+          <span>$</span>
+          <input type="text" class="input-text" id="dailyBudget" placeholder="请输入预算额度" style="width:180px">
+          <span>USD</span>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>广告系列状态</label>
+        <div class="form-control"><div class="btn-group" id="campaignStatus">
+          <button type="button" class="btn-option" data-value="1">启用</button>
+          <button type="button" class="btn-option active" data-value="0">暂停</button>
+        </div></div>
+      </div>
+
+      <div class="form-group-title">广告组设置</div>
+
+      <div class="form-item">
+        <label><span class="required">*</span>优化目标</label>
+        <div class="form-control"><div class="btn-group" id="optimizationGoal">
+          <button type="button" class="btn-option" data-value="app_event">应用内事件</button>
+          <button type="button" class="btn-option" data-value="click">点击数</button>
+          <button type="button" class="btn-option active" data-value="install">安装</button>
+          <button type="button" class="btn-option" data-value="value">价值</button>
+        </div></div>
+      </div>
+      <div class="form-item" id="appEventItem" style="display:none">
+        <label><span class="required">*</span>选择应用内事件</label>
+        <div class="form-control"><select class="condition-select" id="appEvent" style="min-width:200px">
+          <option value="purchase">购买</option>
+          <option value="add_to_cart">加入购物车</option>
+          <option value="view_content">查看内容</option>
+          <option value="registration">注册</option>
+          <option value="reach_level">达到级别</option>
+        </select></div>
+      </div>
+      <div class="form-item" id="valueAppEventItem" style="display:none">
+        <label><span class="required">*</span>选择应用内事件</label>
+        <div class="form-control"><select class="condition-select" id="valueAppEvent" style="min-width:200px">
+          <option value="ad_revenue">广告收入价值</option>
+          <option value="iap_value">应用内购价值</option>
+        </select></div>
+      </div>
+      <div class="form-item" id="targetRoasItem" style="display:none">
+        <label><span class="required">*</span>目标 ROAS</label>
+        <div class="form-control"><input type="text" class="input-text" id="targetRoas" placeholder="请输入目标 ROAS" style="width:160px"></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>竞价策略</label>
+        <div class="form-control"><div class="btn-group" id="campaignBidStrategy">
+          <button type="button" class="btn-option" data-value="max_conversion">最大转化量</button>
+          <button type="button" class="btn-option active" data-value="cost_cap">成本上限</button>
+          <button type="button" class="btn-option" data-value="max_delivery" style="display:none">最大投放量</button>
+        </div></div>
+      </div>
+      <div class="form-item" id="bidAmountItem">
+        <label><span class="required">*</span>出价</label>
+        <div class="form-control"><div class="input-group"><span>$</span><input type="text" class="input-text" id="bidAmount" placeholder="请输入出价" style="width:160px"><span>USD</span></div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>版位</label>
+        <div class="form-control"><div class="btn-group" id="placement">
+          <button type="button" class="btn-option active" data-value="auto">自动版位</button>
+          <button type="button" class="btn-option" data-value="manual">指定版位</button>
+        </div></div>
+      </div>
+      <div class="form-item" id="placementManualItem" style="display:none">
+        <label><span class="required">*</span>指定版位</label>
+        <div class="form-control"><div class="checkbox-group">
+          <label class="checkbox-label"><input type="checkbox" value="tiktok" class="placement-checkbox"> TikTok</label>
+          <label class="checkbox-label"><input type="checkbox" value="pangle" class="placement-checkbox"> Pangle</label>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>定向包</label>
+        <div class="form-control">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span id="targetingPackageLabel" style="color:var(--text-secondary);font-size:14px;line-height:32px">未选择</span>
+            <a href="#" class="add-time-btn" style="line-height:32px;text-decoration:none" onclick="openTargetingModal();return false">选择定向包</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group-title">广告设置</div>
+
+      <div class="form-item">
+        <label>行动号召</label>
+        <div class="form-control"><span style="line-height:32px;color:#606266">立即观看</span></div>
+      </div>
+      <div class="form-item">
+        <label>用户评论</label>
+        <div class="form-control"><div class="btn-group" id="userComments">
+          <button type="button" class="btn-option active" data-value="0">关闭</button>
+          <button type="button" class="btn-option" data-value="1">开启</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label>视频下载</label>
+        <div class="form-control"><div class="btn-group" id="videoDownload">
+          <button type="button" class="btn-option active" data-value="0">关闭</button>
+          <button type="button" class="btn-option" data-value="1">开启</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label>视频共享</label>
+        <div class="form-control"><div class="btn-group" id="videoShare">
+          <button type="button" class="btn-option active" data-value="0">关闭</button>
+          <button type="button" class="btn-option" data-value="1">开启</button>
+        </div></div>
+      </div>
+
+      </div>
+      <!-- /appPromotionConfig -->
+
+      <div id="salesConfig" style="display:none">
+
+      <div class="form-item" id="salesProductSourceItem">
+        <label>商品数据源</label>
+        <div class="form-control"><div class="btn-group" id="salesProductSource">
+          <button type="button" class="btn-option active" data-value="0">关闭</button>
+          <button type="button" class="btn-option" data-value="1">开启</button>
+        </div></div>
+      </div>
+      <div class="form-item" id="salesProductLibraryItem" style="display:none">
+        <label>关联商品投放</label>
+        <div class="form-control">
+          <a href="#" class="add-time-btn" style="line-height:32px;text-decoration:none" onclick="openProductLibraryDrawer();return false">关联商品投放</a>
+          <div id="salesSelectedProductLibs" style="margin-top:8px;font-size:13px;color:#909399"></div>
+        </div>
+      </div>
+      <div class="form-item">
+        <label id="salesBudgetAmountLabel"><span class="required">*</span>单日预算额度</label>
+        <div class="form-control"><div class="input-group">
+          <span>$</span>
+          <input type="text" class="input-text" id="salesDailyBudget" placeholder="请输入预算额度" style="width:180px">
+          <span>USD</span>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>广告系列状态</label>
+        <div class="form-control"><div class="btn-group" id="salesCampaignStatus">
+          <button type="button" class="btn-option" data-value="1">启用</button>
+          <button type="button" class="btn-option active" data-value="0">暂停</button>
+        </div></div>
+      </div>
+
+      <div class="form-group-title">广告组设置</div>
+
+      <div class="form-item">
+        <label>广告组名称</label>
+        <div class="form-control"><input type="text" class="input-text" id="salesAdgroupName" placeholder="请输入广告组名称" maxlength="50" style="width:100%">
+        <div class="char-count" id="salesAdgroupNameCount">0 / 50</div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>广告组状态</label>
+        <div class="form-control"><div class="btn-group" id="salesAdgroupStatus">
+          <button type="button" class="btn-option" data-value="1">启用</button>
+          <button type="button" class="btn-option active" data-value="0">暂停</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>优化目标</label>
+        <div class="form-control"><div class="btn-group" id="salesOptimizationEvent">
+          <button type="button" class="btn-option active" data-value="conversion">转化</button>
+          <button type="button" class="btn-option" data-value="click">点击数</button>
+          <button type="button" class="btn-option" data-value="landing_page_view">落地页浏览量</button>
+          <button type="button" class="btn-option" data-value="value">价值</button>
+        </div></div>
+      </div>
+      <div class="form-item" id="salesOptimizationEventItem">
+        <label><span class="required">*</span>优化事件</label>
+        <div class="form-control"><select class="condition-select" id="salesAdOptimizationEvent" style="min-width:200px">
+          <option value="download">下载</option>
+          <option value="purchase" selected>付费</option>
+          <option value="add_to_wishlist">加入心愿单</option>
+          <option value="add_to_cart">加入购物车</option>
+          <option value="initiate_checkout">开始结账</option>
+          <option value="view_content">查看内容</option>
+          <option value="subscribe">订阅</option>
+        </select></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>竞价策略</label>
+        <div class="form-control"><div class="btn-group" id="salesBidStrategy">
+          <button type="button" class="btn-option active" data-value="cost_cap">成本上限</button>
+          <button type="button" class="btn-option" data-value="max_delivery">最大投放量</button>
+        </div></div>
+      </div>
+      <div class="form-item" id="salesTargetRoasItem" style="display:none">
+        <label><span class="required">*</span>目标ROAS</label>
+        <div class="form-control"><input type="text" class="input-text" id="salesTargetRoas" placeholder="请输入目标 ROAS" style="width:160px"></div>
+      </div>
+      <div class="form-item" id="salesBidAmountItem">
+        <label><span class="required">*</span>出价</label>
+        <div class="form-control"><div class="input-group"><span>$</span><input type="text" class="input-text" id="salesBidAmount" placeholder="请输入出价" style="width:160px"><span>USD</span></div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>事件统计方式</label>
+        <div class="form-control"><div class="btn-group" id="salesEventCount">
+          <button type="button" class="btn-option active" data-value="once">仅一次</button>
+          <button type="button" class="btn-option" data-value="every">每一次</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>版位</label>
+        <div class="form-control"><div class="btn-group" id="salesPlacement">
+          <button type="button" class="btn-option active" data-value="auto">自动版位</button>
+          <button type="button" class="btn-option" data-value="manual">指定版位</button>
+        </div></div>
+      </div>
+      <div class="form-item" id="salesPlacementManualItem" style="display:none">
+        <label><span class="required">*</span>指定版位</label>
+        <div class="form-control"><div class="checkbox-group">
+          <label class="checkbox-label"><input type="checkbox" value="tiktok" class="placement-checkbox"> TikTok</label>
+          <label class="checkbox-label"><input type="checkbox" value="pangle" class="placement-checkbox"> Pangle</label>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>定向包</label>
+        <div class="form-control">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span id="targetingPackageLabel" style="color:var(--text-secondary);font-size:14px;line-height:32px">未选择</span>
+            <a href="#" class="add-time-btn" style="line-height:32px;text-decoration:none" onclick="openTargetingModal();return false">选择定向包</a>
+          </div>
+        </div>
+      </div>
+      <div class="form-group-title">广告设置</div>
+
+      <div class="form-item">
+        <label>行动号召</label>
+        <div class="form-control"><span style="line-height:32px;color:#606266">立即观看</span></div>
+      </div>
+      <div class="form-item">
+        <label>用户评论</label>
+        <div class="form-control"><div class="btn-group" id="salesUserComments">
+          <button type="button" class="btn-option active" data-value="0">关闭</button>
+          <button type="button" class="btn-option" data-value="1">开启</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label>视频下载</label>
+        <div class="form-control"><div class="btn-group" id="salesVideoDownload">
+          <button type="button" class="btn-option active" data-value="0">关闭</button>
+          <button type="button" class="btn-option" data-value="1">开启</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label>视频共享</label>
+        <div class="form-control"><div class="btn-group" id="salesVideoShare">
+          <button type="button" class="btn-option active" data-value="0">关闭</button>
+          <button type="button" class="btn-option" data-value="1">开启</button>
+        </div></div>
+      </div>
+
+      </div>
+      <!-- /salesConfig -->
+
+      <div class="form-footer">
+        <button type="button" class="btn-cancel" onclick="closeTaskModal()">取消</button>
+        <button type="button" class="btn-cancel" id="btnPreview" onclick="toggleMaterialPreview()" style="border-color:var(--primary);color:var(--primary)">预览素材</button>
+        <button type="submit" class="btn-submit">确定</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ 新增账户包侧边栏 ============ -->
+<div class="drawer-overlay" id="accountPackageDrawer" style="display:none">
+  <div class="drawer">
+    <div class="drawer-header">
+      新增账户包
+      <span class="drawer-close" onclick="closeAccountPackageDrawer()">&times;</span>
+    </div>
+    <div class="drawer-body">
+      <div class="form-item">
+        <label><span class="required">*</span>账号包名称</label>
+        <div class="form-control">
+          <input type="text" class="input-text" id="apName" maxlength="50" placeholder="请输入账号包名称">
+          <div class="char-count" id="apNameCount">0 / 50</div>
+        </div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>业务类型</label>
+        <div class="form-control"><div class="btn-group" id="apBizType">
+          <button type="button" class="btn-option active" data-type="免费">免费</button>
+          <button type="button" class="btn-option" data-type="付费">付费</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>推广渠道</label>
+        <div class="form-control"><input type="text" class="input-text" id="apChannel" placeholder="请输入推广渠道"></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>渠道号</label>
+        <div class="form-control"><input type="text" class="input-text" id="apChannelNo" placeholder="请输入渠道号"></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>投放策略</label>
+        <div class="form-control"><div class="btn-group" id="apStrategy">
+          <button type="button" class="btn-option active" data-strategy="直投">直投</button>
+          <button type="button" class="btn-option" data-strategy="W2A">W2A</button>
+        </div></div>
+      </div>
+      <div class="form-item ap-w2a-field" style="display:none">
+        <label><span class="required">*</span>行动号召<br><span style="font-size:12px;color:var(--text-secondary)">(落地页文案)</span></label>
+        <div class="form-control">
+          <input type="text" class="input-text" id="apCta" maxlength="26" placeholder="请输入行动号召">
+          <div class="char-count" id="apCtaCount">0 / 26</div>
+        </div>
+      </div>
+      <div class="form-item ap-w2a-field" style="display:none">
+        <label><span class="required">*</span>像素ID</label>
+        <div class="form-control"><input type="text" class="input-text" id="apPixelId" placeholder="输入"></div>
+      </div>
+      <div class="drawer-section-title">账户范围 <span style="font-weight:400;color:var(--text-secondary);font-size:13px">(3465)</span></div>
+      <div style="margin-bottom:12px"><input type="text" class="input-text" id="apAccountSearch" placeholder="搜索账户名" style="width:100%" oninput="filterAccountList()"></div>
+      <div class="account-select-table-wrap">
+        <table class="account-select-table">
+          <thead><tr><th>账户ID</th><th>账户名称</th><th>操作</th></tr></thead>
+          <tbody id="apAccountTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="apAccountPagination" style="padding:8px 0"></div>
+      <div class="selected-accounts-area" id="apSelectedAccounts">
+        已选账户 (<b>0</b>)
+      </div>
+    </div>
+    <div class="drawer-footer">
+      <button type="button" class="btn-cancel" onclick="closeAccountPackageDrawer()">取消</button>
+      <button type="button" class="btn-submit" onclick="submitAccountPackage()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 定向包侧边栏 ============ -->
+<div class="drawer-overlay" id="targetingDrawer" style="display:none">
+  <div class="drawer">
+    <div class="drawer-header">
+      <span id="tpDrawerTitle">选择定向包</span>
+      <span class="drawer-close" onclick="closeTargetingDrawer()">&times;</span>
+    </div>
+    <!-- 列表视图 -->
+    <div class="drawer-body" id="tpListView">
+      <div style="margin-bottom:12px"><button class="btn btn-primary btn-sm" onclick="showTpForm()">+ 新建定向包</button></div>
+      <div id="tpListContainer"></div>
+    </div>
+    <!-- 表单视图 -->
+    <div class="drawer-body" id="tpFormView" style="display:none">
+      <div class="form-item">
+        <label><span class="required">*</span>定向包名称</label>
+        <div class="form-control">
+          <input type="text" class="input-text" id="tpName" maxlength="50" placeholder="请输入定向包名称">
+          <div class="char-count" id="tpNameCount">0 / 50</div>
+        </div>
+      </div>
+      <div class="form-item">
+        <label>性别</label>
+        <div class="form-control"><div class="btn-group" id="tpGender">
+          <button type="button" class="btn-option active" data-value="不限">不限</button>
+          <button type="button" class="btn-option" data-value="男">男</button>
+          <button type="button" class="btn-option" data-value="女">女</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label>年龄</label>
+        <div class="form-control"><div class="btn-group age-multi" id="tpAge">
+          <button type="button" class="btn-option" data-value="18-24">18-24</button>
+          <button type="button" class="btn-option" data-value="25-34">25-34</button>
+          <button type="button" class="btn-option" data-value="35-44">35-44</button>
+          <button type="button" class="btn-option" data-value="45-54">45-54</button>
+          <button type="button" class="btn-option" data-value="55+">55+</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label>语言</label>
+        <div class="form-control"><div class="multi-select" id="tpLanguage">
+          <div class="multi-select-trigger" onclick="toggleLangDropdown()">
+            <span class="placeholder">请选择语言</span>
+          </div>
+          <span class="multi-select-arrow" onclick="toggleLangDropdown()">▾</span>
+          <div class="multi-select-dropdown" id="tpLangDropdown">
+            <label><input type="checkbox" value="zh" onchange="onLangChange()">中文</label>
+            <label><input type="checkbox" value="en" onchange="onLangChange()">英语</label>
+            <label><input type="checkbox" value="ja" onchange="onLangChange()">日语</label>
+            <label><input type="checkbox" value="ko" onchange="onLangChange()">韩语</label>
+            <label><input type="checkbox" value="th" onchange="onLangChange()">泰语</label>
+            <label><input type="checkbox" value="es" onchange="onLangChange()">西班牙语</label>
+            <label><input type="checkbox" value="pt" onchange="onLangChange()">葡萄牙语</label>
+            <label><input type="checkbox" value="ar" onchange="onLangChange()">阿拉伯语</label>
+            <label><input type="checkbox" value="id" onchange="onLangChange()">印尼语</label>
+            <label><input type="checkbox" value="vi" onchange="onLangChange()">越南语</label>
+          </div>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label>操作系统</label>
+        <div class="form-control"><div class="btn-group" id="tpOs">
+          <button type="button" class="btn-option active" data-value="不限">不限</button>
+          <button type="button" class="btn-option" data-value="iOS">iOS</button>
+          <button type="button" class="btn-option" data-value="Android">Android</button>
+        </div></div>
+      </div>
+      <div class="form-item tp-os-version" style="display:none">
+        <label>最低系统版本</label>
+        <div class="form-control"><input type="text" class="input-text" id="tpMinOsVersion" placeholder="如 14.0"></div>
+      </div>
+      <div class="form-item">
+        <label>网络环境</label>
+        <div class="form-control"><div class="btn-group" id="tpNetwork">
+          <button type="button" class="btn-option active" data-value="不限">不限</button>
+          <button type="button" class="btn-option" data-value="WiFi">WiFi</button>
+          <button type="button" class="btn-option" data-value="4G">4G</button>
+          <button type="button" class="btn-option" data-value="5G">5G</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>地区定向信息</label>
+        <div class="form-control"><div class="region-selector">
+          <div class="region-left">
+            <div class="search-box"><input type="text" placeholder="搜索地区" id="tpRegionSearch" oninput="filterRegions()"></div>
+            <div class="region-list" id="tpRegionList"></div>
+          </div>
+          <div class="region-right">
+            <div class="region-right-title">已选地区 (<span id="tpRegionCount">0</span>)</div>
+            <div class="region-right-list" id="tpSelectedRegions"></div>
+          </div>
+        </div></div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:16px">
+        <button type="button" class="btn-cancel" onclick="cancelTpForm()">返回列表</button>
+        <button type="button" class="btn-submit" onclick="saveTargetingPackage()">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 商品库选择侧边栏 ============ -->
+<div class="drawer-overlay" id="productLibraryDrawer" style="display:none">
+  <div class="drawer" style="width:1100px">
+    <div class="drawer-header">
+      关联商品投放
+      <span class="drawer-close" onclick="closeProductLibraryDrawer()">&times;</span>
+    </div>
+    <div class="drawer-body" style="display:flex;flex-direction:column;padding:0;height:580px">
+      <div style="padding:8px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">
+        <span style="font-size:13px;color:var(--text-secondary)">选择模式：</span>
+        <div class="btn-group" id="plSelectMode">
+          <button type="button" class="btn-option active" data-value="unified" style="font-size:12px;padding:4px 12px">统一选择</button>
+          <button type="button" class="btn-option" data-value="per_account" style="font-size:12px;padding:4px 12px">分账户选择</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:0;flex:1;overflow:hidden">
+      <!-- 第一栏：账号列表 -->
+      <div id="plAccountColumn" style="width:280px;flex-shrink:0;border-right:1px solid var(--border);padding:12px;display:none;flex-direction:column">
+        <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:8px">账号</div>
+        <div style="font-size:12px;color:#909399;margin-bottom:8px">共<b id="plAccountCount">0</b>个账号</div>
+        <div id="plAccountList" style="flex:1;overflow-y:auto"></div>
+      </div>
+      <!-- 第二栏：商品库列表 -->
+      <div style="width:320px;flex-shrink:0;border-right:1px solid var(--border);padding:12px;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <input type="text" class="input-text" id="plSearch" placeholder="搜索商品库ID或名称" style="flex:1;font-size:13px" oninput="filterProductLibraries()" disabled>
+          <button type="button" class="btn btn-primary btn-sm" id="refreshLibBtn" onclick="refreshProductLibraries()" disabled>刷新</button>
+        </div>
+        <div style="font-size:12px;color:#909399;margin-bottom:8px">
+          共<b id="plTotalCount">0</b>个商品库，当前选择：<b id="plSelectedLabel">无</b>
+        </div>
+        <div style="border-bottom:1px solid #e8e8e8;margin-bottom:8px"></div>
+        <div id="plListContainer" style="flex:1;overflow-y:auto"></div>
+      </div>
+      <!-- 第三栏：商品列表 -->
+      <div style="flex:1;padding:12px;display:flex;flex-direction:column;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <input type="text" class="input-text" id="productSearch" placeholder="搜索商品名称" style="flex:1;font-size:13px" oninput="filterProducts()" disabled>
+          <button type="button" class="btn btn-primary btn-sm" id="refreshProductBtn" onclick="refreshProducts()" disabled>刷新商品列表</button>
+        </div>
+        <div id="productTableTitle" style="font-size:13px;color:#909399;margin-bottom:8px">共 0 件商品</div>
+        <div style="flex:1;overflow-y:auto;border:1px solid var(--border);border-radius:4px">
+          <table class="account-select-table" style="table-layout:fixed">
+            <thead><tr>
+              <th style="width:36px"><input type="checkbox" id="productSelectAll" onchange="toggleSelectAllProducts(this)" disabled></th>
+              <th>短剧名称</th>
+              <th style="width:80px">短剧标签</th>
+              <th style="width:60px">剧集数</th>
+            </tr></thead>
+            <tbody id="productTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      </div><!-- /flex row -->
+    </div>
+    <div class="drawer-footer">
+      <button type="button" class="btn-cancel" onclick="closeProductLibraryDrawer()">取消</button>
+      <button type="button" class="btn-submit" onclick="confirmProductLibraries()">确定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== Tab 切换 ====================
+const breadcrumbPage = document.getElementById('breadcrumbPage');
+const innerNav = document.getElementById('innerNav');
+let currentOuter = 'auto'; // 'auto' | 'preconfig'
+
+// 外层 Tab 点击
+document.querySelectorAll('#outerNav .nav-tab').forEach(tab=>{
+  tab.addEventListener('click', function(){
+    document.querySelectorAll('#outerNav .nav-tab').forEach(t=>t.classList.remove('active'));
+    this.classList.add('active');
+    currentOuter = this.dataset.outer;
+
+    document.querySelectorAll('.page-container').forEach(p=>p.classList.remove('active'));
+
+    if(currentOuter === 'auto'){
+      innerNav.classList.remove('hidden');
+      const activeInner = innerNav.querySelector('.nav-tab.active');
+      const pageId = activeInner ? activeInner.dataset.page : 'auto-task';
+      document.getElementById('page-' + pageId).classList.add('active');
+      breadcrumbPage.innerHTML = '自动化任务 / <span>' + (activeInner ? activeInner.textContent : '任务') + '</span>';
+    } else {
+      innerNav.classList.add('hidden');
+      document.getElementById('page-account-package').classList.add('active');
+      breadcrumbPage.innerHTML = '<span>前置配置</span>';
+    }
+  });
+});
+
+// 内层 Tab 点击
+document.querySelectorAll('#innerNav .nav-tab').forEach(tab=>{
+  tab.addEventListener('click', function(){
+    document.querySelectorAll('#innerNav .nav-tab').forEach(t=>t.classList.remove('active'));
+    this.classList.add('active');
+    document.querySelectorAll('.page-container').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-' + this.dataset.page).classList.add('active');
+    breadcrumbPage.innerHTML = '自动化任务 / <span>' + this.textContent + '</span>';
+  });
+});
+
+// ==================== 任务表单 ====================
+function openTaskModal(editData){
+  document.getElementById('taskModalOverlay').style.display = 'flex';
+  document.getElementById('taskModalTitle').textContent = editData ? '编辑TikTok自动化任务' : '新建TikTok自动化任务';
+  if(editData){document.getElementById('taskName').value=editData.name||'';document.getElementById('taskNameCount').textContent=(editData.name||'').length+' / 50'}
+  checkMaterialFilterVisible();checkMaterialConditionRequired();
+}
+function closeTaskModal(){document.getElementById('taskModalOverlay').style.display='none';resetTaskForm()}
+function resetTaskForm(){
+  document.getElementById('autoTaskForm').reset();
+  document.getElementById('taskNameCount').textContent='0 / 50';
+  document.querySelectorAll('#selectedDramasList .selected-drama-tag').forEach(t=>t.remove());
+  document.getElementById('selectedDramasArea').style.display='none';
+  document.getElementById('dramaSearchResult').innerHTML='<div class="drama-placeholder">请输入搜索条件进行搜索</div>';
+  document.getElementById('targetingPackageLabel').textContent='未选择';
+  document.getElementById('targetingPackageLabel').style.color='var(--text-secondary)';
+  closeMaterialPreview();
+}
+
+// ==================== 账户包 ====================
+const mockAccountPackages = [
+  {id:355,name:'账户包A-北美投放',bizType:'免费',channel:'通用默认渠道',channelNo:'CH001',strategy:'W2A',template:'回传模板_001',pixel:'像素_A001',created:'2026-05-12',updated:'2026-06-20'},
+  {id:356,name:'账户包B-东南亚投放',bizType:'付费',channel:'通用默认渠道',channelNo:'CH002',strategy:'直投',template:'回传模板_002',pixel:'像素_B002',created:'2026-05-15',updated:'2026-06-18'},
+  {id:357,name:'账户包C-欧洲投放',bizType:'免费',channel:'TikTok渠道',channelNo:'CH003',strategy:'W2A',template:'回传模板_003',pixel:'像素_C003',created:'2026-05-20',updated:'2026-06-22'},
+  {id:358,name:'账户包D-日韩投放',bizType:'付费',channel:'TikTok渠道',channelNo:'CH004',strategy:'直投',template:'回传模板_004',pixel:'像素_D004',created:'2026-06-01',updated:'2026-06-21'},
+  {id:359,name:'账户包E-全球投放',bizType:'免费',channel:'通用默认渠道',channelNo:'CH005',strategy:'W2A',template:'回传模板_005',pixel:'像素_E005',created:'2026-06-05',updated:'2026-06-23'},
+  {id:360,name:'复制 - ja_JP_JP',bizType:'免费',channel:'通用默认渠道',channelNo:'CH006',strategy:'W2A',template:'回传模板_JP',pixel:'像素_JP006',created:'2026-06-10',updated:'2026-06-23'},
+  {id:361,name:'账户包F-测试专用',bizType:'收费',channel:'测试渠道',channelNo:'CH007',strategy:'直投',template:'回传模板_TEST',pixel:'像素_TEST',created:'2026-06-12',updated:'2026-06-24'},
+  {id:362,name:'账户包G-南美投放',bizType:'付费',channel:'TikTok渠道',channelNo:'CH008',strategy:'直投',template:'回传模板_007',pixel:'像素_G007',created:'2026-06-15',updated:'2026-06-24'},
+];
+const mockTargetingPackages = [
+  {id:'tp1',name:'兴趣标签定向',gender:'不限',ageGroups:['18-24','25-34'],languages:['zh','en'],os:'不限',minOsVersion:'',network:'不限',locations:'美国, 加拿大, 英国'},
+  {id:'tp2',name:'男性行为定向',gender:'男',ageGroups:['25-34','35-44','45-54'],languages:['en'],os:'Android',minOsVersion:'10',network:'WiFi',locations:'美国'},
+  {id:'tp3',name:'女性消费定向',gender:'女',ageGroups:['18-24','25-34'],languages:['zh','ja','ko'],os:'iOS',minOsVersion:'14.0',network:'不限',locations:'日本, 韩国'},
+  {id:'tp4',name:'广泛匹配',gender:'不限',ageGroups:['18-24','25-34','35-44','45-54','55+'],languages:[],os:'不限',minOsVersion:'',network:'不限',locations:''},
+];
+let selectedTargetingPackage = null, editingTpId = null, tpSelectedRegions = [];
+const langLabelMap = {zh:'中文',en:'英语',ja:'日语',ko:'韩语',th:'泰语',es:'西班牙语',pt:'葡萄牙语',ar:'阿拉伯语',id:'印尼语',vi:'越南语'};
+const allRegions = ['美国','加拿大','英国','德国','法国','日本','韩国','泰国','越南','印尼','巴西','墨西哥','澳大利亚','印度','沙特','阿联酋','新加坡','马来西亚','菲律宾','土耳其','意大利','西班牙','荷兰','瑞典','波兰','埃及','南非','阿根廷','智利','秘鲁'];
+(function(){
+  const sel=document.getElementById('accountPackage');
+  mockAccountPackages.forEach(p=>{const o=document.createElement('option');o.value=p.name;o.textContent=p.name;sel.appendChild(o)});
+  // 年龄多选按钮
+  document.querySelectorAll('#tpAge .btn-option').forEach(b=>b.addEventListener('click',function(){this.classList.toggle('active')}));
+  // 点击外部关闭语言下拉
+  document.addEventListener('click',function(e){if(!document.getElementById('tpLanguage').contains(e.target))closeLangDropdown()});
+})();
+// ========== 定向包侧边栏 ==========
+function openTargetingModal(){openTargetingDrawer()}
+function openTargetingDrawer(){
+  document.getElementById('targetingDrawer').style.display='flex';
+  showTpList();
+}
+function closeTargetingDrawer(){document.getElementById('targetingDrawer').style.display='none'}
+function showTpList(){
+  document.getElementById('tpListView').style.display='block';
+  document.getElementById('tpFormView').style.display='none';
+  document.getElementById('tpDrawerTitle').textContent='选择定向包';
+  renderTpList();
+}
+function renderTpList(){
+  document.getElementById('tpListContainer').innerHTML=mockTargetingPackages.map(tp=>{
+    const desc=[tp.gender!=='不限'?tp.gender:'',tp.ageGroups.length?tp.ageGroups.join(',')+'岁':'',tp.os!=='不限'?tp.os:'',tp.locations||'不限地区'].filter(Boolean).join(' | ');
+    return `<div class="targeting-list-item${selectedTargetingPackage&&selectedTargetingPackage.id===tp.id?' selected':''}" onclick="selectTargetingPackage('${tp.id}')">
+      <div><div class="tp-name">${tp.name}</div><div class="tp-desc">${desc||'全量定向'}</div></div>
+      <div class="tp-actions"><button class="btn btn-text btn-sm" onclick="event.stopPropagation();editTp('${tp.id}')">编辑</button><button class="btn btn-text btn-sm" style="color:var(--danger)" onclick="event.stopPropagation();deleteTp('${tp.id}')">删除</button></div>
+    </div>`;
+  }).join('')||'<div style="text-align:center;padding:32px;color:var(--text-secondary)">暂无定向包</div>';
+}
+function selectTargetingPackage(id){
+  selectedTargetingPackage=mockTargetingPackages.find(t=>t.id===id)||null;
+  document.getElementById('targetingPackageLabel').textContent=selectedTargetingPackage?selectedTargetingPackage.name:'未选择';
+  document.getElementById('targetingPackageLabel').style.color=selectedTargetingPackage?'#606266':'var(--text-secondary)';
+  closeTargetingDrawer();
+}
+function showTpForm(editData){
+  document.getElementById('tpListView').style.display='none';
+  document.getElementById('tpFormView').style.display='block';
+  document.getElementById('tpDrawerTitle').textContent=editData?'编辑定向包':'新建定向包';
+  document.getElementById('tpName').value=editData?editData.name:'';
+  document.getElementById('tpNameCount').textContent=(editData?editData.name:'').length+' / 50';
+  tpSelectedRegions=editData&&editData.locations?editData.locations.split(',').map(s=>s.trim()).filter(Boolean):[];
+  resetTpForm();
+  if(editData){
+    setBtnGroup('#tpGender',editData.gender);
+    document.querySelectorAll('#tpAge .btn-option').forEach(b=>b.classList.toggle('active',editData.ageGroups.includes(b.dataset.value)));
+    setLangCheckboxes(editData.languages);
+    updateLangTrigger();
+    setBtnGroup('#tpOs',editData.os);
+    document.getElementById('tpMinOsVersion').value=editData.minOsVersion||'';
+    toggleOsVersion();
+    setBtnGroup('#tpNetwork',editData.network);
+  }
+  renderRegionLists();
+  editingTpId=editData?editData.id:null;
+}
+function cancelTpForm(){showTpList()}
+function resetTpForm(){
+  document.querySelectorAll('#tpGender .btn-option').forEach((b,i)=>b.classList.toggle('active',i===0));
+  document.querySelectorAll('#tpAge .btn-option').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#tpLangDropdown input').forEach(c=>c.checked=false);
+  updateLangTrigger();
+  document.querySelectorAll('#tpOs .btn-option').forEach((b,i)=>b.classList.toggle('active',i===0));
+  document.getElementById('tpMinOsVersion').value='';
+  document.querySelectorAll('#tpNetwork .btn-option').forEach((b,i)=>b.classList.toggle('active',i===0));
+  document.querySelectorAll('.tp-os-version').forEach(e=>e.style.display='none');
+  tpSelectedRegions=[];
+  document.getElementById('tpRegionSearch').value='';
+  renderRegionLists();
+}
+function setBtnGroup(sel,val){
+  document.querySelectorAll(sel+' .btn-option').forEach(b=>b.classList.toggle('active',b.dataset.value===val));
+}
+// ===== 语言多选下拉 =====
+function toggleLangDropdown(){
+  const dd=document.getElementById('tpLangDropdown'),arrow=document.querySelector('#tpLanguage .multi-select-arrow'),trig=document.querySelector('#tpLanguage .multi-select-trigger');
+  const open=!dd.classList.contains('show');
+  dd.classList.toggle('show',open);arrow.classList.toggle('open',open);trig.classList.toggle('open',open);
+}
+function closeLangDropdown(){
+  document.getElementById('tpLangDropdown').classList.remove('show');
+  document.querySelector('#tpLanguage .multi-select-arrow').classList.remove('open');
+  document.querySelector('#tpLanguage .multi-select-trigger').classList.remove('open');
+}
+function onLangChange(){updateLangTrigger()}
+function getSelectedLangs(){return Array.from(document.querySelectorAll('#tpLangDropdown input:checked')).map(c=>c.value)}
+function updateLangTrigger(){
+  const sel=getSelectedLangs(),trig=document.querySelector('#tpLanguage .multi-select-trigger');
+  if(sel.length===0){trig.innerHTML='<span class="placeholder">请选择语言</span>';return}
+  trig.innerHTML=sel.map(v=>`<span class="tag"><span>${langLabelMap[v]||v}</span><span class="remove" onclick="event.stopPropagation();removeLang('${v}')">&times;</span></span>`).join('');
+}
+function removeLang(v){document.querySelector(`#tpLangDropdown input[value="${v}"]`).checked=false;updateLangTrigger()}
+function setLangCheckboxes(vals){document.querySelectorAll('#tpLangDropdown input').forEach(c=>{c.checked=vals.includes(c.value)})}
+// ===== 地区选择器 =====
+function filterRegions(){
+  const q=(document.getElementById('tpRegionSearch').value||'').toLowerCase();
+  document.querySelectorAll('#tpRegionList .region-item').forEach(el=>{el.style.display=el.dataset.name.toLowerCase().includes(q)?'flex':'none'});
+}
+function addRegion(name){
+  if(!tpSelectedRegions.includes(name))tpSelectedRegions.push(name);
+  renderRegionLists();
+}
+function removeRegion(name){
+  tpSelectedRegions=tpSelectedRegions.filter(r=>r!==name);
+  renderRegionLists();
+}
+function renderRegionLists(){
+  const search=document.getElementById('tpRegionSearch')?document.getElementById('tpRegionSearch').value.toLowerCase():'';
+  const avail=allRegions.filter(r=>!tpSelectedRegions.includes(r)&&r.toLowerCase().includes(search));
+  document.getElementById('tpRegionList').innerHTML=avail.map(r=>`<div class="region-item" data-name="${r}"><span>${r}</span><button class="add-region" onclick="addRegion('${r}')">+</button></div>`).join('');
+  document.getElementById('tpSelectedRegions').innerHTML=tpSelectedRegions.map(r=>`<div class="selected-region-tag"><span>${r}</span><span class="remove-region" onclick="removeRegion('${r}')">&times;</span></div>`).join('');
+  document.getElementById('tpRegionCount').textContent=tpSelectedRegions.length;
+}
+// ===== 保存 =====
+function saveTargetingPackage(){
+  const name=document.getElementById('tpName').value.trim();
+  if(!name){alert('请输入定向包名称');return}
+  if(tpSelectedRegions.length===0){alert('请选择地区定向信息');return}
+  const data={
+    id:editingTpId||('tp'+Date.now()),
+    name,
+    gender:document.querySelector('#tpGender .btn-option.active').dataset.value,
+    ageGroups:Array.from(document.querySelectorAll('#tpAge .btn-option.active')).map(b=>b.dataset.value),
+    languages:getSelectedLangs(),
+    os:document.querySelector('#tpOs .btn-option.active').dataset.value,
+    minOsVersion:document.getElementById('tpMinOsVersion').value.trim(),
+    network:document.querySelector('#tpNetwork .btn-option.active').dataset.value,
+    locations:tpSelectedRegions.join(', '),
+  };
+  if(editingTpId){const idx=mockTargetingPackages.findIndex(t=>t.id===editingTpId);if(idx>=0)mockTargetingPackages[idx]=data}
+  else mockTargetingPackages.push(data);
+  editingTpId=null;showTpList();
+}
+function editTp(id){const tp=mockTargetingPackages.find(t=>t.id===id);if(tp)showTpForm(tp)}
+function deleteTp(id){if(!confirm('确定删除此定向包？'))return;mockTargetingPackages.splice(mockTargetingPackages.findIndex(t=>t.id===id),1);if(selectedTargetingPackage&&selectedTargetingPackage.id===id){selectedTargetingPackage=null;document.getElementById('targetingPackageLabel').textContent='未选择';document.getElementById('targetingPackageLabel').style.color='var(--text-secondary)'}renderTpList()}
+function toggleOsVersion(){const os=document.querySelector('#tpOs .btn-option.active').dataset.value;document.querySelectorAll('.tp-os-version').forEach(e=>e.style.display=os==='不限'?'none':'flex')}
+document.getElementById('tpName').addEventListener('input',function(){document.getElementById('tpNameCount').textContent=this.value.length+' / 50'});
+document.querySelectorAll('#tpGender .btn-option').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('#tpGender .btn-option').forEach(x=>x.classList.remove('active'));this.classList.add('active')}));
+document.querySelectorAll('#tpOs .btn-option').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('#tpOs .btn-option').forEach(x=>x.classList.remove('active'));this.classList.add('active');toggleOsVersion()}));
+document.querySelectorAll('#tpNetwork .btn-option').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('#tpNetwork .btn-option').forEach(x=>x.classList.remove('active'));this.classList.add('active')}));
+
+// ==================== 新增账户包侧边栏 ====================
+const mockAllAccounts=[
+  {id:'999948985558804',name:'TT-netshort-YSHU-铁蛋-东八-03'},
+  {id:'999927288829472',name:'Netshort-WY-0116-02-M31-ZJ'},
+  {id:'999832261935300',name:'act_999832261935300'},
+  {id:'998612658582875',name:'Lin Hong'},
+  {id:'998338662054244',name:'Netshort-IOS-05-M32-YH-CL-3W'},
+  {id:'998285326106037',name:'TT-MAD-NS-YH-GMT-5-M14-0428-12-N解N'},
+  {id:'997512479903737',name:'TT-MAD-NS-XK-5.6东八区-03'},
+  {id:'997371009081920',name:'TT-MAD-NS-TDD-UTC+0-万米零时欧美J爆10'},
+  {id:'997246898942846',name:'netshort-yh-东七-0223-01-DH'},
+  {id:'997100762992434',name:'TT-MAD-NS-XH-UTC+8-橘柚-0514-1'},
+  {id:'996184899424613',name:'TT-MAD-NS-YH-GMT+8-M14-0410-17-N解N-天振'},
+  {id:'995957119857890',name:'TT-MAD-NS-XH-UTC-5-0623-小黑-11'},
+  {id:'995511652893546',name:'TT-MAD-NS-TDD-UTC+8-六月-折子-1'},
+  {id:'995374655843914',name:'M51TT-YSY-NEW2-11'},
+  {id:'994312602786428',name:'TT-HMB-XH-UTC+8-小黑-5'},
+];
+let apSelectedAccounts=[],apCurrentPage=1,apFilteredData=[],apPageSize=8;
+const apAccountBody=document.getElementById('apAccountTableBody'),apAccountPagination=document.getElementById('apAccountPagination');
+
+function openAccountPackageDrawer(){
+  document.getElementById('accountPackageDrawer').style.display='flex';
+  apSelectedAccounts=[];apCurrentPage=1;apFilteredData=mockAllAccounts;
+  document.getElementById('apAccountSearch').value='';
+  updateAccountPage();
+  updateApSelectedArea();
+}
+function closeAccountPackageDrawer(){
+  document.getElementById('accountPackageDrawer').style.display='none';
+  document.getElementById('apName').value='';
+  document.getElementById('apNameCount').textContent='0 / 50';
+}
+function filterAccountList(){
+  const q=document.getElementById('apAccountSearch').value.toLowerCase();
+  apFilteredData=mockAllAccounts.filter(a=>a.name.toLowerCase().includes(q)||a.id.includes(q));
+  apCurrentPage=1;updateAccountPage();
+}
+function updateAccountPage(){
+  const data=apFilteredData,start=(apCurrentPage-1)*apPageSize,pageData=data.slice(start,start+apPageSize);
+  apAccountBody.innerHTML=pageData.map(a=>{
+    const added=apSelectedAccounts.some(s=>s.id===a.id);
+    return `<tr><td>${a.id}</td><td>${a.name}</td><td>${added?'<span class="added-tag">已添加</span>':`<button class="add-btn" onclick="addApAccount('${a.id}')">+ 添加</button>`}</td></tr>`;
+  }).join('');
+  const tp=Math.ceil(data.length/apPageSize);
+  let h=`<span>共 ${data.length} 条</span>`;
+  h+=`<button class="page-btn" ${apCurrentPage<=1?'disabled':''} onclick="apCurrentPage--;updateAccountPage()">&lt;</button>`;
+  const pEnd=Math.min(tp,5),pStart=Math.max(1,apCurrentPage-2);
+  for(let i=pStart;i<=Math.min(pStart+4,tp);i++)h+=`<button class="page-btn${i===apCurrentPage?' active':''}" onclick="apCurrentPage=${i};updateAccountPage()">${i}</button>`;
+  h+=`<button class="page-btn" ${apCurrentPage>=tp?'disabled':''} onclick="apCurrentPage++;updateAccountPage()">&gt;</button>`;
+  apAccountPagination.innerHTML=h;
+}
+function addApAccount(id){
+  const a=mockAllAccounts.find(x=>x.id===id);
+  if(a&&!apSelectedAccounts.some(x=>x.id===id))apSelectedAccounts.push(a);
+  updateApSelectedArea();updateAccountPage();
+}
+function removeApAccount(id){
+  apSelectedAccounts=apSelectedAccounts.filter(a=>a.id!==id);
+  updateApSelectedArea();updateAccountPage();
+}
+function updateApSelectedArea(){
+  const area=document.getElementById('apSelectedAccounts');
+  area.innerHTML=`已选账户 (<b>${apSelectedAccounts.length}</b>)`+apSelectedAccounts.map(a=>`<span class="selected-account-tag"><span>${a.name}</span><span class="remove" onclick="removeApAccount('${a.id}')">&times;</span></span>`).join('');
+}
+function submitAccountPackage(){
+  const name=document.getElementById('apName').value.trim();
+  if(!name){alert('请输入账号包名称');return}
+  if(!apSelectedAccounts.length){alert('请选择账户');return}
+  alert('账户包创建成功！');
+  closeAccountPackageDrawer();
+}
+document.getElementById('apName').addEventListener('input',function(){document.getElementById('apNameCount').textContent=this.value.length+' / 50'});
+document.querySelectorAll('#apBizType .btn-option').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('#apBizType .btn-option').forEach(x=>x.classList.remove('active'));this.classList.add('active')}));
+document.querySelectorAll('#apStrategy .btn-option').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('#apStrategy .btn-option').forEach(x=>x.classList.remove('active'));this.classList.add('active');const isW2A=this.dataset.strategy==='W2A';document.querySelectorAll('.ap-w2a-field').forEach(el=>el.style.display=isW2A?'flex':'none')}));
+document.getElementById('apCta').addEventListener('input',function(){document.getElementById('apCtaCount').textContent=this.value.length+' / 26'});
+
+// ==================== 短剧搜索 ====================
+function switchDramaMode(mode){
+  const isDrama=mode==='drama';
+  document.getElementById('tabDramaName').classList.toggle('active',isDrama);
+  document.getElementById('tabPlaybook').classList.toggle('active',!isDrama);
+  document.getElementById('dramaNamePanel').style.display=isDrama?'flex':'none';
+  document.getElementById('playbookPanel').style.display=isDrama?'none':'flex';
+  document.getElementById('dramaLangPanel').style.display=isDrama?'none':'flex';
+  document.getElementById('dramaSearchResult').innerHTML='<div class="drama-placeholder">'+(isDrama?'请输入短剧名称，每行一个':'输入剧本ID或剧本名，每行一个，可选语言筛选')+'</div>';
+}
+function searchDramas(){
+  const mode=document.querySelector('input[name="dramaSearchMode"]:checked').value;
+  const dramaNameRaw=document.getElementById('dramaNameInput').value.trim();
+  const playbookRaw=document.getElementById('playbookInput').value.trim();
+  const lang=document.getElementById('dramaLangSelect').value;
+  const result=document.getElementById('dramaSearchResult');
+  const mockNames=['繁花','狂飙','漫长的季节','三体','庆余年','琅琊榜','知否','甄嬛传'];
+  const langMap={zh:'中文',en:'英文',th:'泰文',ms:'马来文'},nameMap={zh:'繁花',en:'Blooming',th:'บุษบา',ms:'Mekar'};
+  if(mode==='drama'){
+    if(!dramaNameRaw){alert('请输入短剧名称');return}
+    const names=dramaNameRaw.split('\n').map(s=>s.trim()).filter(s=>s);
+    result.innerHTML=names.map((name,i)=>`<div class="drama-result-card"><div class="drama-result-info"><div class="drama-result-item"><span class="label">剧本名称：</span><span class="value">${mockNames[i%mockNames.length]}</span></div><div class="drama-result-item"><span class="label">剧本ID：</span><span class="value">L${String(i+1).padStart(4,'0')}</span></div><div class="drama-result-item"><span class="label">短剧名称：</span><span class="value">${name}</span></div><div class="drama-result-item"><span class="label">语言：</span><span class="value">中文</span></div></div><div class="drama-result-actions"><button class="drama-add-btn" onclick="addDrama(this)">+ 添加到投放</button></div></div>`).join('');
+  }else{
+    if(!playbookRaw){alert('请输入剧本ID或剧本名');return}
+    const playbooks=playbookRaw.split('\n').map(s=>s.trim()).filter(s=>s);
+    let cards='';
+    playbooks.forEach(pb=>{
+      if(lang){cards+=`<div class="drama-result-card"><div class="drama-result-info"><div class="drama-result-item"><span class="label">剧本名称：</span><span class="value">繁花</span></div><div class="drama-result-item"><span class="label">剧本ID：</span><span class="value">${pb}</span></div><div class="drama-result-item"><span class="label">短剧名称：</span><span class="value">${nameMap[lang]}</span></div><div class="drama-result-item"><span class="label">语言：</span><span class="value">${langMap[lang]}</span></div></div><div class="drama-result-actions"><button class="drama-add-btn" onclick="addDrama(this)">+ 添加到投放</button></div></div>`}
+      else{Object.keys(langMap).forEach(l=>{cards+=`<div class="drama-result-card"><div class="drama-result-info"><div class="drama-result-item"><span class="label">剧本名称：</span><span class="value">繁花</span></div><div class="drama-result-item"><span class="label">剧本ID：</span><span class="value">${pb}</span></div><div class="drama-result-item"><span class="label">短剧名称：</span><span class="value">${nameMap[l]}</span></div><div class="drama-result-item"><span class="label">语言：</span><span class="value">${langMap[l]}</span></div></div><div class="drama-result-actions"><button class="drama-add-btn" onclick="addDrama(this)">+ 添加到投放</button></div></div>`})}
+    });
+    result.innerHTML=cards;
+  }
+}
+function addDrama(btn){
+  const card=btn.closest('.drama-result-card');
+  const items=card.querySelectorAll('.drama-result-item .value');
+  const tagText=`${items[1].textContent}-${items[0].textContent}-${items[2].textContent}-${items[3].textContent}`;
+  if(Array.from(document.querySelectorAll('.selected-drama-tag span:first-child')).map(el=>el.textContent).includes(tagText)){alert('该短剧已添加');return}
+  const list=document.getElementById('selectedDramasList'),area=document.getElementById('selectedDramasArea');
+  const tag=document.createElement('div');tag.className='selected-drama-tag';
+  tag.innerHTML=`<span>${tagText}</span><span class="remove" onclick="removeDrama(this)">&times;</span>`;
+  list.appendChild(tag);area.style.display='block';btn.textContent='已添加';btn.disabled=true;resetMaterialPreview();
+}
+function removeDrama(btn){btn.closest('.selected-drama-tag').remove();const list=document.getElementById('selectedDramasList');if(list.querySelectorAll('.selected-drama-tag').length===0)document.getElementById('selectedDramasArea').style.display='none';resetMaterialPreview()}
+
+// ==================== 表单交互 ====================
+document.getElementById('taskName').addEventListener('input',function(){document.getElementById('taskNameCount').textContent=this.value.length+' / 50'});
+document.querySelectorAll('.btn-option[data-status]').forEach(btn=>{btn.addEventListener('click',function(){document.querySelectorAll('.btn-option[data-status]').forEach(b=>b.classList.remove('active'));this.classList.add('active')})});
+document.getElementById('addTimeRange').addEventListener('click',function(){
+  const row=document.createElement('div');row.className='time-range-group';
+  row.innerHTML='<input type="time" class="time-input" value="00:00:00" step="1"><span>~</span><input type="time" class="time-input" value="23:59:59" step="1"><span style="cursor:pointer;color:#909399" onclick="this.parentElement.remove()">&times;</span>';
+  document.getElementById('timeRangeContainer').insertBefore(row,this);
+});
+
+// ==================== 素材配置 ====================
+function checkMaterialFilterVisible(){
+  const isCustom=document.querySelector('#materialFilterType .btn-option.active').dataset.type==='custom';
+  ['statRangeItem','materialConditionItem','sortMetricItem','materialCountItem','businessTypeItem','mediaFilterItem'].forEach(id=>document.getElementById(id).style.display=isCustom?'flex':'none');
+}
+function checkMaterialConditionRequired(){
+  const filterType=document.querySelector('#materialFilterType .btn-option.active').dataset.type;
+  const needCheck=filterType==='custom',hasRows=document.querySelectorAll('#materialConditionGroup .condition-row').length>0;
+  document.getElementById('materialConditionRequired').classList.toggle('show',needCheck&&!hasRows);
+  const btn=document.getElementById('btnPreview');
+  if(btn){btn.disabled=!(!needCheck||hasRows);btn.style.opacity=(!needCheck||hasRows)?'1':'0.5';btn.style.cursor=(!needCheck||hasRows)?'pointer':'not-allowed'}
+}
+document.querySelectorAll('#materialFilterType .btn-option').forEach(btn=>{btn.addEventListener('click',function(){document.querySelectorAll('#materialFilterType .btn-option').forEach(b=>b.classList.remove('active'));this.classList.add('active');checkMaterialFilterVisible();checkMaterialConditionRequired();resetMaterialPreview()})});
+function bindBtnGroup(sel){
+  document.querySelectorAll(sel+' .btn-option').forEach(btn=>{btn.addEventListener('click',function(){document.querySelectorAll(sel+' .btn-option').forEach(b=>b.classList.remove('active'));this.classList.add('active');
+    if(sel==='#materialCountType')document.getElementById('materialCountInput').style.display=this.dataset.type==='custom'?'flex':'none';
+    if(sel==='#repeatCountType')document.getElementById('repeatCountInput').style.display=this.dataset.type==='custom'?'flex':'none';
+    if(sel==='#productSource')toggleProductLibraryConnect();
+    if(sel==='#salesProductSource')toggleProductLibraryConnect();
+    resetMaterialPreview()})});
+}
+['#materialCreateTime','#businessTypeBtns','#mediaFilterBtns','#statRangeBtns','#sortMetricBtns','#materialCountType','#repeatCountType','#dedupAcrossRounds'].forEach(bindBtnGroup);
+
+// ==================== 投放配置/广告组设置/广告设置 交互 ====================
+['#campaignObjective','#campaignType','#productSource','#campaignStatus','#optimizationGoal','#placement','#campaignBidStrategy','#userComments','#videoDownload','#videoShare'].forEach(bindBtnGroup);
+
+
+
+// ===== 推广系列类型联动（应用推广） =====
+function toggleCampaignTypeFields(){
+  const type=document.querySelector('#campaignType .btn-option.active').dataset.value;
+  document.getElementById('productSourceItem').style.display=type==='tiktok_minis'?'flex':'none';
+  document.getElementById('selectAppItem').style.display=(type==='app_install'||type==='app_retargeting')?'flex':'none';
+  document.getElementById('selectMiniProgramItem').style.display=type==='tiktok_minis'?'flex':'none';
+  toggleProductLibraryConnect();
+  const onlyAppEvent=type==='app_retargeting';
+  const onlyValue=type==='tiktok_minis';
+  document.querySelectorAll('#optimizationGoal .btn-option').forEach(b=>{
+    if(onlyAppEvent)b.style.display=b.dataset.value==='app_event'?'inline-flex':'none';
+    else if(onlyValue)b.style.display=b.dataset.value==='value'?'inline-flex':'none';
+    else b.style.display='inline-flex';
+  });
+  if(onlyAppEvent||onlyValue){
+    const targetValue=onlyAppEvent?'app_event':'value';
+    const active=document.querySelector('#optimizationGoal .btn-option.active');
+    if(!active||active.style.display==='none'){
+      document.querySelectorAll('#optimizationGoal .btn-option').forEach(b=>b.classList.remove('active'));
+      document.querySelector('#optimizationGoal .btn-option[data-value="'+targetValue+'"]').classList.add('active');
+    }
+  }
+  // TikTok Minis：版位强制指定版位-TikTok，其他不可选
+  const isMinis=type==='tiktok_minis';
+  document.querySelector('#placement .btn-option[data-value="auto"]').style.display=isMinis?'none':'inline-flex';
+  if(isMinis){
+    document.querySelectorAll('#placement .btn-option').forEach(b=>b.classList.remove('active'));
+    document.querySelector('#placement .btn-option[data-value="manual"]').classList.add('active');
+  }
+  document.getElementById('placementManualItem').style.display=isMinis||document.querySelector('#placement .btn-option.active').dataset.value==='manual'?'flex':'none';
+  document.querySelectorAll('#placementManualItem .checkbox-label').forEach(l=>{
+    const cb=l.querySelector('.placement-checkbox');
+    if(cb.value==='pangle'){l.style.display=isMinis?'none':'';if(isMinis)cb.checked=false}
+    if(cb.value==='tiktok'&&isMinis)cb.checked=true;
+  });
+}
+document.querySelectorAll('#campaignType .btn-option').forEach(b=>b.addEventListener('click',function(){
+  document.querySelectorAll('#campaignType .btn-option').forEach(x=>x.classList.remove('active'));
+  this.classList.add('active');toggleCampaignTypeFields();toggleAppEventField();resetMaterialPreview();
+}));
+
+// ===== 优化目标联动 — 应用内事件（应用推广） =====
+function toggleAppEventField(){
+  const goal=document.querySelector('#optimizationGoal .btn-option.active').dataset.value;
+  const campaignType=document.querySelector('#campaignType .btn-option.active').dataset.value;
+  document.getElementById('appEventItem').style.display=goal==='app_event'?'flex':'none';
+  document.getElementById('valueAppEventItem').style.display=goal==='value'?'flex':'none';
+  document.getElementById('targetRoasItem').style.display=(campaignType==='app_install'&&goal==='value')?'flex':'none';
+  toggleBidStrategyOptions();
+}
+document.querySelectorAll('#optimizationGoal .btn-option').forEach(b=>b.addEventListener('click',function(){
+  toggleAppEventField();
+}));
+
+// ===== 竞价策略联动（应用推广） =====
+function toggleBidStrategyOptions(){
+  const goal=document.querySelector('#optimizationGoal .btn-option.active').dataset.value;
+  const campaignType=document.querySelector('#campaignType .btn-option.active').dataset.value;
+  const isReduced=goal==='app_event'||goal==='click'||goal==='install';
+  const isMaxOnly=(campaignType==='app_install'&&goal==='value')||(campaignType==='tiktok_minis'&&goal==='value');
+  const showMaxDelivery=isReduced||isMaxOnly;
+  const showMaxConversion=!isReduced&&!isMaxOnly;
+  const showCostCap=!isMaxOnly;
+  const btns=document.querySelectorAll('#campaignBidStrategy .btn-option');
+  btns.forEach(b=>{
+    const v=b.dataset.value;
+    if(v==='max_delivery')b.style.display=showMaxDelivery?'inline-flex':'none';
+    if(v==='cost_cap')b.style.display=showCostCap?'inline-flex':'none';
+    if(v==='max_conversion')b.style.display=showMaxConversion?'inline-flex':'none';
+  });
+  const active=document.querySelector('#campaignBidStrategy .btn-option.active');
+  if(!active||active.style.display==='none'){
+    const allBtns=document.querySelectorAll('#campaignBidStrategy .btn-option');
+    let found=false;
+    allBtns.forEach(b=>{b.classList.remove('active');if(!found&&b.style.display!=='none'){b.classList.add('active');found=true;}});
+  }
+  toggleBidAmount();
+}
+function toggleBidAmount(){
+  const active=document.querySelector('#campaignBidStrategy .btn-option.active');
+  const strategy=active?active.dataset.value:'';
+  document.getElementById('bidAmountItem').style.display=strategy==='max_delivery'?'none':'flex';
+}
+document.querySelectorAll('#campaignBidStrategy .btn-option').forEach(b=>b.addEventListener('click',toggleBidAmount));
+
+// ===== 广告目标联动 =====
+function toggleCampaignObjective(){
+  const obj=document.querySelector('#campaignObjective .btn-option.active').dataset.value;
+  document.getElementById('appPromotionConfig').style.display=obj==='app_promotion'?'block':'none';
+  document.getElementById('salesConfig').style.display=obj==='product_sales'?'block':'none';
+  if(obj==='product_sales'){toggleSalesOptimizationEvent();toggleSalesBidStrategyOptions();toggleProductLibraryConnect();}
+  if(obj==='app_promotion'){toggleCampaignTypeFields();toggleBidStrategyOptions();}
+}
+document.querySelectorAll('#campaignObjective .btn-option').forEach(b=>b.addEventListener('click',function(){
+  document.querySelectorAll('#campaignObjective .btn-option').forEach(x=>x.classList.remove('active'));
+  this.classList.add('active');toggleCampaignObjective();resetMaterialPreview();
+}));
+
+// ===== 版位联动 — 指定版位 =====
+function togglePlacementManual(){
+  const type=document.querySelector('#campaignType .btn-option.active').dataset.value;
+  if(type==='tiktok_minis'){
+    // TikTok Minis 强制指定版位
+    document.querySelectorAll('#placement .btn-option').forEach(b=>b.classList.remove('active'));
+    document.querySelector('#placement .btn-option[data-value="manual"]').classList.add('active');
+    document.getElementById('placementManualItem').style.display='flex';
+    return;
+  }
+  const val=document.querySelector('#placement .btn-option.active').dataset.value;
+  document.getElementById('placementManualItem').style.display=val==='manual'?'flex':'none';
+}
+document.querySelectorAll('#placement .btn-option').forEach(b=>b.addEventListener('click',togglePlacementManual));
+function toggleSalesPlacementManual(){
+  const val=document.querySelector('#salesPlacement .btn-option.active').dataset.value;
+  document.getElementById('salesPlacementManualItem').style.display=val==='manual'?'flex':'none';
+}
+document.querySelectorAll('#salesPlacement .btn-option').forEach(b=>b.addEventListener('click',toggleSalesPlacementManual));
+
+// ===== 销量优化目标 → 优化事件联动 =====
+function toggleSalesOptimizationEvent(e){
+  const goal=e.target.dataset.value;
+  const item=document.getElementById('salesOptimizationEventItem');
+  if(goal==='landing_page_view'||goal==='value'){
+    item.style.display='none';
+  }else{
+    item.style.display='flex';
+    if(goal==='value')document.getElementById('salesAdOptimizationEvent').value='purchase';
+  }
+  toggleSalesBidStrategyOptions(goal);
+}
+document.querySelectorAll('#salesOptimizationEvent .btn-option').forEach(b=>b.addEventListener('click',toggleSalesOptimizationEvent));
+
+// ===== 销量竞价策略联动 =====
+// 销量模式 竞价策略规则：
+//   转化/点击数/落地页浏览量：成本上限 + 最大投放量 均可选，成本上限时显示出价
+//   价值：仅 最大投放量，不出价
+function toggleSalesBidStrategyOptions(goal){
+  const isValueGoal=goal==='value';
+  document.querySelectorAll('#salesBidStrategy .btn-option').forEach(b=>{
+    if(b.dataset.value==='cost_cap')b.style.display=isValueGoal?'none':'inline-flex';
+    if(b.dataset.value==='max_delivery')b.style.display='inline-flex';
+  });
+  if(isValueGoal){
+    document.querySelectorAll('#salesBidStrategy .btn-option').forEach(b=>b.classList.remove('active'));
+    document.querySelector('#salesBidStrategy .btn-option[data-value="max_delivery"]').classList.add('active');
+  }
+  document.getElementById('salesTargetRoasItem').style.display=isValueGoal?'flex':'none';
+  toggleSalesBidAmount();
+}
+function toggleSalesBidAmount(){
+  const active=document.querySelector('#salesBidStrategy .btn-option.active');
+  const strategy=active?active.dataset.value:'';
+  document.getElementById('salesBidAmountItem').style.display=strategy==='cost_cap'?'flex':'none';
+}
+// ===== 销量模式 交互 =====
+['#salesCampaignStatus','#salesAdgroupStatus','#salesProductSource','#salesOptimizationEvent','#salesPlacement','#salesBidStrategy','#salesEventCount','#salesUserComments','#salesVideoDownload','#salesVideoShare'].forEach(bindBtnGroup);
+document.querySelectorAll('#salesBidStrategy .btn-option').forEach(b=>b.addEventListener('click',toggleSalesBidAmount));
+document.getElementById('campaignNameSuffix').addEventListener('input',function(){document.getElementById('campaignNameSuffixCount').textContent=this.value.length+' / 50'});
+document.getElementById('salesAdgroupName').addEventListener('input',function(){document.getElementById('salesAdgroupNameCount').textContent=this.value.length+' / 50'});
+
+function togglePercentSuffix(row){const metric=row.querySelector('.material-condition-metric').value;row.querySelectorAll('.condition-input-suffix').forEach(s=>s.style.display=['doroi','compliance','old_compliance','d0_ad_roi'].includes(metric)?'inline':'none')}
+function bindOperatorChange(row){row.querySelector('.material-condition-operator').addEventListener('change',function(){const isBetween=this.value==='between';row.querySelector('.single-input').classList.toggle('hide',isBetween);row.querySelector('.between-input-group').classList.toggle('show',isBetween);checkMaterialConditionDuplicate();resetMaterialPreview()})}
+function checkMaterialConditionDuplicate(){const metrics=Array.from(document.querySelectorAll('.material-condition-metric')).map(m=>m.value);const hasDup=new Set(metrics).size!==metrics.length;document.getElementById('materialConditionError').classList.toggle('show',hasDup);return !hasDup}
+document.getElementById('addMaterialCondition').addEventListener('click',function(){
+  const row=document.createElement('div');row.className='condition-row';
+  row.innerHTML='<select class="condition-select material-condition-metric"><option value="cost">消耗</option><option value="doroi">DOROI</option><option value="d0_ad_roi">D0广告ROI</option><option value="d0_iaa">D0 IAA</option><option value="compliance">综合达标率</option><option value="old_compliance">老达标率</option></select><select class="condition-operator material-condition-operator"><option value=">=">>=</option><option value=">">></option><option value="=">=</option><option value="<"><</option><option value="<="><=</option><option value="between">介于</option></select><div class="single-input"><div class="condition-input-wrap"><input type="text" class="condition-input" placeholder="请输入"><span class="condition-input-suffix" style="display:none">%</span></div></div><div class="between-input-group"><div class="condition-input-wrap"><input type="text" class="condition-input" placeholder="请输入"><span class="condition-input-suffix" style="display:none">%</span></div><span>至</span><div class="condition-input-wrap"><input type="text" class="condition-input" placeholder="请输入"><span class="condition-input-suffix" style="display:none">%</span></div></div><button type="button" class="condition-delete">&times;</button>';
+  document.getElementById('materialConditionGroup').appendChild(row);
+  row.querySelector('.condition-delete').addEventListener('click',()=>{row.remove();resetMaterialPreview();checkMaterialConditionRequired()});
+  bindOperatorChange(row);row.querySelector('.material-condition-metric').addEventListener('change',function(){checkMaterialConditionDuplicate();resetMaterialPreview();togglePercentSuffix(row)});
+  togglePercentSuffix(row);checkMaterialConditionDuplicate();checkMaterialConditionRequired();resetMaterialPreview();
+});
+document.querySelectorAll('#materialConditionGroup .condition-row').forEach(row=>{bindOperatorChange(row);row.querySelector('.material-condition-metric').addEventListener('change',function(){checkMaterialConditionDuplicate();resetMaterialPreview();togglePercentSuffix(row)});togglePercentSuffix(row)});
+document.querySelectorAll('#materialConditionGroup .condition-delete').forEach(btn=>{btn.addEventListener('click',()=>{btn.parentElement.remove();resetMaterialPreview();checkMaterialConditionRequired()})});
+checkMaterialFilterVisible();checkMaterialConditionRequired();
+
+// ==================== 素材预览 ====================
+const mockMaterialData=[{name:'素材_001.mp4',bookId:'L0001',bookName:'繁花',drama:'繁花',lang:'中文',cost:1234,doroi:2.3,d0AdRoi:1.8,d0Iaa:456,compliance:85,oldCompliance:78,created:'2026-05-12',businessType:'免费',media:'TikTok'},{name:'素材_002.mp4',bookId:'L0001',bookName:'繁花',drama:'Blooming',lang:'英文',cost:856,doroi:1.8,d0AdRoi:1.2,d0Iaa:320,compliance:72,oldCompliance:65,created:'2026-05-11',businessType:'付费',media:'TikTok'},{name:'素材_003.mp4',bookId:'L0001',bookName:'繁花',drama:'บุษบา',lang:'泰文',cost:2100,doroi:3.1,d0AdRoi:2.5,d0Iaa:780,compliance:91,oldCompliance:88,created:'2026-05-10',businessType:'免费',media:'TikTok'},{name:'素材_004.mp4',bookId:'L0001',bookName:'繁花',drama:'Mekar',lang:'马来文',cost:450,doroi:0.9,d0AdRoi:0.6,d0Iaa:180,compliance:58,oldCompliance:42,created:'2026-05-13',businessType:'付费',media:'TikTok'},{name:'素材_005.mp4',bookId:'L0002',bookName:'狂飙',drama:'狂飙',lang:'中文',cost:3200,doroi:4.5,d0AdRoi:3.8,d0Iaa:1200,compliance:95,oldCompliance:91,created:'2026-05-09',businessType:'付费',media:'TikTok'},{name:'素材_006.mp4',bookId:'L0002',bookName:'狂飙',drama:'The Knockout',lang:'英文',cost:1890,doroi:2.7,d0AdRoi:2.1,d0Iaa:650,compliance:80,oldCompliance:73,created:'2026-05-08',businessType:'免费',media:'TikTok'},{name:'素材_007.mp4',bookId:'L0003',bookName:'漫长的季节',drama:'漫长的季节',lang:'中文',cost:670,doroi:1.5,d0AdRoi:1.0,d0Iaa:240,compliance:66,oldCompliance:55,created:'2026-05-11',businessType:'免费',media:'TikTok'},{name:'素材_008.mp4',bookId:'L0003',bookName:'漫长的季节',drama:'The Long Season',lang:'英文',cost:980,doroi:2.0,d0AdRoi:1.6,d0Iaa:410,compliance:74,oldCompliance:68,created:'2026-05-07',businessType:'付费',media:'TikTok'},{name:'素材_009.mp4',bookId:'L0004',bookName:'三体',drama:'三体',lang:'中文',cost:5600,doroi:5.2,d0AdRoi:4.5,d0Iaa:2100,compliance:98,oldCompliance:96,created:'2026-05-13',businessType:'付费',media:'TikTok'},{name:'素材_010.mp4',bookId:'L0004',bookName:'三体',drama:'Three-Body',lang:'英文',cost:4200,doroi:4.8,d0AdRoi:4.0,d0Iaa:1650,compliance:93,oldCompliance:90,created:'2026-05-06',businessType:'免费',media:'TikTok'},{name:'素材_011.mp4',bookId:'L0005',bookName:'庆余年',drama:'庆余年',lang:'中文',cost:1500,doroi:2.9,d0AdRoi:2.2,d0Iaa:580,compliance:82,oldCompliance:76,created:'2026-05-12',businessType:'免费',media:'TikTok'},{name:'素材_012.mp4',bookId:'L0005',bookName:'庆余年',drama:'Joy of Life',lang:'英文',cost:1100,doroi:2.1,d0AdRoi:1.7,d0Iaa:390,compliance:76,oldCompliance:69,created:'2026-05-10',businessType:'付费',media:'TikTok'}];
+let previewVisible=false,previewTimer=null;
+
+function toggleMaterialPreview(){clearTimeout(previewTimer);const section=document.getElementById('materialPreviewSection'),content=document.getElementById('materialPreviewContent'),btn=document.getElementById('btnPreview');if(previewVisible){closeMaterialPreview();return}previewVisible=true;section.classList.add('show');btn.textContent='收起预览';content.innerHTML='<div class="material-preview-empty">正在查询匹配素材...</div>';previewTimer=setTimeout(()=>{const shuffled=[...mockMaterialData].sort(()=>Math.random()-.5),count=Math.floor(Math.random()*10)+6,data=shuffled.slice(0,count).sort((a,b)=>b.cost-a.cost);if(data.length===0){content.innerHTML='<div class="material-preview-empty">未找到匹配的素材</div>';return}const displayData=data.length>10?data.slice(0,10):data;const rows=displayData.map(d=>`<tr><td style="color:var(--primary);text-decoration:underline;cursor:pointer">${d.name}</td><td>${d.bookId}</td><td>${d.bookName}</td><td>${d.drama}</td><td>${d.lang}</td><td>${d.businessType}</td><td>${d.media}</td><td>$${d.cost.toLocaleString()}</td><td>${d.doroi}</td><td>${d.d0AdRoi}%</td><td>$${d.d0Iaa.toLocaleString()}</td><td>${d.compliance}%</td><td>${d.oldCompliance}%</td><td>${d.created}</td></tr>`).join(''),note=data.length>10?`<div class="material-preview-footer">共 ${data.length} 条，仅展示前 10 条</div>`:`<div class="material-preview-footer">共 ${data.length} 条</div>`;content.innerHTML=`<div class="material-preview-table-wrap"><table class="material-preview-table"><thead><tr><th>素材名称</th><th>剧本ID</th><th>剧本名称</th><th>短剧</th><th>语言</th><th>业务类型</th><th>媒体</th><th>消耗</th><th>DOROI</th><th>D0广告ROI</th><th>D0 IAA</th><th>综合达标率</th><th>老达标率</th><th>创建时间</th></tr></thead><tbody>${rows}</tbody></table></div>${note}`},600)}
+function closeMaterialPreview(){clearTimeout(previewTimer);previewVisible=false;document.getElementById('materialPreviewSection').classList.remove('show');document.getElementById('btnPreview').textContent='预览素材'}
+function resetMaterialPreview(){if(previewVisible)closeMaterialPreview();document.getElementById('materialPreviewContent').innerHTML='<div class="material-preview-empty">点击「预览素材」查看匹配结果</div>'}
+
+// ==================== 表单提交 ====================
+document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.preventDefault();
+  if(!checkMaterialConditionRequired()){alert('选择自定义时，至少需要输入一个条件');return}
+  const taskName=document.getElementById('taskName').value,executeFrequency=document.getElementById('executeFrequency').value;
+  const dramas=Array.from(document.querySelectorAll('.selected-drama-tag span:first-child')).map(t=>t.textContent);
+  const ev1=document.querySelectorAll('#endConditionGroup .condition-input')[0].value,ev2=document.querySelectorAll('#endConditionGroup .condition-input')[1].value;
+  const cl=document.getElementById('campaignLimit').value;
+  const isSales=document.querySelector('#campaignObjective .btn-option.active').dataset.value==='product_sales';
+  if(!taskName){alert('请输入任务名称');return}if(!executeFrequency){alert('请输入执行频率');return}
+  if(dramas.length===0){alert('请选择短剧');return}if(!ev1||!ev2){alert('请填写结束运行条件的数值');return}
+  if(!cl||+cl<1||+cl>30){alert('请填写计划创建上限（1-30）');return}
+  const accountPkg=document.getElementById('accountPackage').value;
+  if(!accountPkg){alert('请选择投放账户');return}
+  let campaign,adGroup,ad;
+  if(isSales){
+    campaign={
+      objective:'product_sales',
+      smartCampaign:'1',
+      adOnly:'1',
+      cbo:'1',
+      budgetStrategy:'campaign',
+      budgetType:'daily',
+      dailyBudget:document.getElementById('salesDailyBudget').value,
+      status:document.querySelector('#salesCampaignStatus .btn-option.active').dataset.value,
+    };
+    adGroup={
+      name:document.getElementById('salesAdgroupName').value,
+      status:document.querySelector('#salesAdgroupStatus .btn-option.active').dataset.value,
+      optimizationGoal:document.querySelector('#salesOptimizationEvent .btn-option.active').dataset.value,
+      optimizationEvent:(()=>{const g=document.querySelector('#salesOptimizationEvent .btn-option.active').dataset.value;if(g==='value')return 'purchase';if(g==='landing_page_view')return '';return document.getElementById('salesAdOptimizationEvent').value;})(),
+      bidAmount:document.getElementById('salesBidAmount').value,
+      targetRoas:document.getElementById('salesTargetRoas').value,
+      eventCount:document.querySelector('#salesEventCount .btn-option.active').dataset.value,
+      bidStrategy:document.querySelector('#salesBidStrategy .btn-option.active').dataset.value,
+      placement:document.querySelector('#salesPlacement .btn-option.active').dataset.value==='manual'?Array.from(document.querySelectorAll('#salesPlacementManualItem .placement-checkbox:checked')).map(c=>c.value):'auto',
+    };
+    ad={
+      callToAction:'立即观看',
+      userComments:document.querySelector('#salesUserComments .btn-option.active').dataset.value,
+      videoDownload:document.querySelector('#salesVideoDownload .btn-option.active').dataset.value,
+      videoShare:document.querySelector('#salesVideoShare .btn-option.active').dataset.value,
+    };
+  }else{
+    campaign={
+      objective:'app_promotion',
+      smartCampaign:'1',
+      type:document.querySelector('#campaignType .btn-option.active').dataset.value,
+      productSource:document.querySelector('#productSource .btn-option.active').dataset.value,
+      selectApp:document.getElementById('selectApp').value,
+      selectMiniProgram:document.getElementById('selectMiniProgram').value,
+      productLibraries:selectedProducts.map(p=>({libId:p.libId,id:p.id,name:p.name})),
+      cbo:'1',
+      adOnly:'1',
+      budgetStrategy:'campaign',
+      budgetType:'daily',
+      dailyBudget:document.getElementById('dailyBudget').value,
+      bidStrategy:document.querySelector('#campaignBidStrategy .btn-option.active').dataset.value,
+      status:document.querySelector('#campaignStatus .btn-option.active').dataset.value,
+    };
+    adGroup={
+      optimizationGoal:document.querySelector('#optimizationGoal .btn-option.active').dataset.value,
+      appEvent:(()=>{const g=document.querySelector('#optimizationGoal .btn-option.active').dataset.value;if(g==='app_event')return document.getElementById('appEvent').value;if(g==='value')return document.getElementById('valueAppEvent').value;return '';})(),
+      targetRoas:document.getElementById('targetRoas').value,
+      bidAmount:document.getElementById('bidAmount').value,
+      placement:document.querySelector('#placement .btn-option.active').dataset.value==='manual'?Array.from(document.querySelectorAll('#placementManualItem .placement-checkbox:checked')).map(c=>c.value):'auto',
+    };
+    ad={
+      callToAction:'立即观看',
+      userComments:document.querySelector('#userComments .btn-option.active').dataset.value,
+      videoDownload:document.querySelector('#videoDownload .btn-option.active').dataset.value,
+      videoShare:document.querySelector('#videoShare .btn-option.active').dataset.value,
+    };
+  }
+  const formData={taskName,status:document.querySelector('.btn-option[data-status].active').dataset.status,
+    timeRanges:Array.from(document.querySelectorAll('#timeRangeContainer .time-range-group')).map(r=>({start:r.querySelectorAll('.time-input')[0].value,end:r.querySelectorAll('.time-input')[1].value})),
+    executeFrequency,dramas,endConditions:[{metric:'series_count',operator:'>=',value:ev1},{metric:'account_count',operator:'>=',value:ev2}],campaignLimit:+cl,
+    campaignNameSuffix:document.getElementById('campaignNameSuffix').value,
+    account:{package:accountPkg,targetingPackage:selectedTargetingPackage},
+    campaign,adGroup,ad,
+    material:{createTime:document.querySelector('#materialCreateTime .btn-option.active').dataset.day,
+      filterType:document.querySelector('#materialFilterType .btn-option.active').dataset.type,
+      businessType:document.querySelector('#businessTypeBtns .btn-option.active').dataset.type,
+      media:document.querySelector('#mediaFilterBtns .btn-option.active').dataset.type,
+      statRange:document.querySelector('#statRangeBtns .btn-option.active').dataset.day,
+      sortMetric:document.querySelector('#sortMetricBtns .btn-option.active').dataset.metric,
+      materialCount:document.querySelector('#materialCountType .btn-option.active').dataset.type==='custom'?document.getElementById('materialCount').value:'unlimit',
+      conditions:Array.from(document.querySelectorAll('#materialConditionGroup .condition-row')).map(r=>{const m=r.querySelector('.material-condition-metric').value,o=r.querySelector('.material-condition-operator').value,ins=r.querySelectorAll('.condition-input');return o==='between'?{metric:m,operator:o,min:ins[0].value,max:ins[1].value}:{metric:m,operator:o,value:ins[0].value}}),
+      repeatCount:document.querySelector('#repeatCountType .btn-option.active').dataset.type==='custom'?(document.getElementById('repeatCount').value||30):'unlimit',
+      dedupAcrossRounds:document.querySelector('#dedupAcrossRounds .btn-option.active').dataset.value==='1',
+      adCount:document.getElementById('adCount').value||30}};
+  console.log('提交数据：',formData);alert('任务创建成功！');closeTaskModal()});
+
+// ==================== 商品库关联 ====================
+const mockProductAccounts=[
+  {id:'7652323541467234312',name:'TT-MAD-NS-FH-东八-M13-0617-2.0',bcid:'7530195152397369361',libraries:[
+    {id:'7578806096383510273',name:'商品库',region:'美国,伊拉克,+82',products:[
+      {id:'P001',name:'繁花',tag:'都市情感',episodes:30},{id:'P002',name:'狂飙',tag:'悬疑涉案',episodes:39},
+      {id:'P003',name:'庆余年',tag:'古装传奇',episodes:46},{id:'P004',name:'漫长的季节',tag:'悬疑生活',episodes:12},
+    ]},
+    {id:'7578419155666339600',name:'M1-Netshort-短剧库总库一部',region:'美国,泰国,+80',products:[
+      {id:'P005',name:'三体',tag:'科幻',episodes:30},{id:'P006',name:'琅琊榜',tag:'古装权谋',episodes:54},
+    ]},
+  ]},
+  {id:'7623607732641417217',name:'TT-ZeroDrama-Main',bcid:'7530195152397369362',libraries:[
+    {id:'7578806096383510274',name:'零剧商品库A',region:'美国,加拿大',products:[
+      {id:'P007',name:'知否',tag:'古装宅斗',episodes:78},{id:'P008',name:'甄嬛传',tag:'古装宫斗',episodes:76},
+    ]},
+  ]},
+];
+// 统一选择时，合并所有账号下的商品库（去重）
+const allProductLibraries=(()=>{
+  const seen=new Set();const libs=[];
+  mockProductAccounts.forEach(a=>{a.libraries.forEach(l=>{if(!seen.has(l.id)){seen.add(l.id);libs.push({...l,accountId:a.id,accountName:a.name})}})});
+  return libs;
+})();
+let selectedProducts=[];          // {accountId, libId, productId, name, tag, episodes}
+let currentAccountId=null;
+let currentLibId=null;
+let currentLibProducts=[];
+
+function getPlSelectMode(){
+  const btn=document.querySelector('#plSelectMode .btn-option.active');
+  return btn?btn.dataset.value:'unified';
+}
+
+function toggleProductLibraryConnect(){
+  const obj=document.querySelector('#campaignObjective .btn-option.active').dataset.value;
+  if(obj==='product_sales'){
+    const enabled=document.getElementById('salesProductSourceItem').style.display!=='none'&&document.querySelector('#salesProductSource .btn-option.active').dataset.value==='1';
+    document.getElementById('salesProductLibraryItem').style.display=enabled?'flex':'none';
+    if(!enabled){selectedProducts=[];renderSelectedProductLibs()}
+  }else{
+    const enabled=document.getElementById('productSourceItem').style.display!=='none'&&document.querySelector('#productSource .btn-option.active').dataset.value==='1';
+    document.getElementById('productLibraryItem').style.display=enabled?'flex':'none';
+    if(!enabled){selectedProducts=[];renderSelectedProductLibs()}
+  }
+}
+
+function renderSelectedProductLibs(){
+  const containers=[document.getElementById('selectedProductLibs'),document.getElementById('salesSelectedProductLibs')];
+  containers.forEach(c=>{if(!c)return;if(selectedProducts.length===0){c.innerHTML='';return}c.innerHTML=selectedProducts.map(p=>`<span class="selected-pl-tag">${p.name} (${p.id}) <span style="cursor:pointer;color:#909399" onclick="removeSelectedProduct('${p.libId}','${p.id}')">&times;</span></span>`).join('')});
+}
+
+function removeSelectedProduct(libId,pid){
+  selectedProducts=selectedProducts.filter(p=>!(p.libId===libId&&p.id===pid));
+  renderSelectedProductLibs();
+  if(currentLibId===libId){renderProductTable(currentLibProducts)}
+  renderProductLibraries(document.getElementById('plSearch').value);
+  renderAccountList();
+}
+
+function openProductLibraryDrawer(){
+  document.getElementById('productLibraryDrawer').style.display='flex';
+  document.getElementById('plSearch').value='';document.getElementById('productSearch').value='';
+  currentAccountId=null;currentLibId=null;currentLibProducts=[];
+  document.querySelectorAll('#plSelectMode .btn-option').forEach(b=>b.classList.remove('active'));
+  document.querySelector('#plSelectMode .btn-option[data-value="unified"]').classList.add('active');
+  document.getElementById('plAccountColumn').style.display='flex';
+  renderAccountList();
+  clearProductTable();
+  document.getElementById('plSearch').disabled=false;
+  document.getElementById('refreshLibBtn').disabled=false;
+  renderProductLibraries();
+}
+
+function closeProductLibraryDrawer(){
+  document.getElementById('productLibraryDrawer').style.display='none';
+}
+
+function confirmProductLibraries(){
+  const mode=getPlSelectMode();
+  if(selectedProducts.length===0){
+    alert('请先选择商品');
+    return;
+  }
+  if(mode==='per_account'){
+    const unassigned=mockProductAccounts.filter(a=>!selectedProducts.some(p=>p.accountId===a.id));
+    if(unassigned.length>0){
+      alert('以下账户尚未分配商品：'+unassigned.map(a=>a.name).join('、'));
+      return;
+    }
+  }
+  renderSelectedProductLibs();
+  closeProductLibraryDrawer();
+}
+
+// ---- 模式切换 ----
+function togglePlSelectMode(){
+  document.getElementById('plAccountColumn').style.display='flex';
+  currentAccountId=null;currentLibId=null;currentLibProducts=[];
+  clearProductTable();
+  renderAccountList();
+  const mode=getPlSelectMode();
+  if(mode==='unified'){
+    document.getElementById('plSearch').disabled=false;
+    document.getElementById('refreshLibBtn').disabled=false;
+    renderProductLibraries();
+  }else{
+    clearLibList();
+  }
+}
+document.querySelectorAll('#plSelectMode .btn-option').forEach(b=>b.addEventListener('click',function(){
+  document.querySelectorAll('#plSelectMode .btn-option').forEach(x=>x.classList.remove('active'));
+  this.classList.add('active');togglePlSelectMode();
+}));
+
+// ---- 第一栏：账号列表 ----
+function clearAccountList(){
+  document.getElementById('plAccountList').innerHTML='';
+  document.getElementById('plAccountCount').textContent='0';
+}
+function renderAccountList(){
+  const container=document.getElementById('plAccountList');
+  const mode=getPlSelectMode();
+  document.getElementById('plAccountCount').textContent=mockProductAccounts.length;
+  container.innerHTML=mockProductAccounts.map(a=>{
+    const isActive=currentAccountId===a.id;
+    const hasSelection=mode==='unified'?selectedProducts.length>0:selectedProducts.some(p=>p.accountId===a.id);
+    return `<div class="pl-card${isActive?' selected':''}" onclick="selectAccount('${a.id}')">
+      <div class="pl-name">${a.name}${hasSelection?' <span style="color:var(--success);font-size:14px">✓</span>':''}</div>
+      <div class="pl-meta"><span>ID: ${a.id}</span><span>BCID: ${a.bcid}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function selectAccount(id){
+  currentAccountId=id;currentLibId=null;currentLibProducts=[];
+  renderAccountList();
+  renderProductLibraries();
+  clearProductTable();
+  document.getElementById('plSearch').disabled=false;
+  document.getElementById('refreshLibBtn').disabled=false;
+  document.getElementById('plSearch').value='';
+}
+
+// ---- 第二栏：商品库列表 ----
+function filterProductLibraries(){renderProductLibraries(document.getElementById('plSearch').value)}
+function refreshProductLibraries(){document.getElementById('plSearch').value='';renderProductLibraries()}
+function clearLibList(){
+  document.getElementById('plListContainer').innerHTML='';
+  document.getElementById('plTotalCount').textContent='0';
+  document.getElementById('plSelectedLabel').textContent='无';
+  document.getElementById('plSearch').disabled=true;
+  document.getElementById('refreshLibBtn').disabled=true;
+  document.getElementById('plSearch').value='';
+}
+
+function renderProductLibraries(filter){
+  const container=document.getElementById('plListContainer');
+  const mode=getPlSelectMode();
+  let items;
+  if(mode==='per_account'){
+    const account=mockProductAccounts.find(a=>a.id===currentAccountId);
+    if(!account){clearLibList();return}
+    items=account.libraries;
+  }else{
+    items=currentAccountId?allProductLibraries.filter(l=>l.accountId===currentAccountId):allProductLibraries;
+  }
+  if(filter){const kw=filter.toLowerCase();items=items.filter(l=>l.name.toLowerCase().includes(kw)||l.id.includes(kw))}
+  document.getElementById('plTotalCount').textContent=items.length;
+  const selLibIds=[...new Set(selectedProducts.filter(p=>mode==='per_account'?p.accountId===currentAccountId:true).map(p=>p.libId))];
+  const selNames=selLibIds.length?selLibIds.map(id=>{const l=items.find(l=>l.id===id);return l?l.name:''}).filter(Boolean).join(', '):'无';
+  document.getElementById('plSelectedLabel').textContent=selNames;
+  container.innerHTML=items.map(l=>{
+    const isActive=currentLibId===l.id;
+    const hasSelection=selectedProducts.some(p=>p.libId===l.id);
+    return `<div class="pl-card${isActive?' selected':''}" onclick="selectProductLibrary('${l.id}')">
+      <div class="pl-name">${l.name}${hasSelection?' <span style="color:var(--success);font-size:14px">✓</span>':''}</div>
+      <div class="pl-meta"><span>定向地区：${l.region}</span><span>ID: ${l.id}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function selectProductLibrary(id){
+  currentLibId=id;
+  const mode=getPlSelectMode();
+  let lib;
+  if(mode==='per_account'){
+    const account=mockProductAccounts.find(a=>a.id===currentAccountId);
+    lib=account?account.libraries.find(l=>l.id===id):null;
+  }else{
+    lib=allProductLibraries.find(l=>l.id===id);
+    currentAccountId=lib?lib.accountId:null;
+  }
+  currentLibProducts=lib?lib.products:[];
+  renderProductLibraries(document.getElementById('plSearch').value);
+  renderProductTable(currentLibProducts);
+  document.getElementById('productSearch').disabled=false;
+  document.getElementById('refreshProductBtn').disabled=false;
+  document.getElementById('productSelectAll').disabled=false;
+  document.getElementById('productSearch').value='';
+}
+
+// ---- 第三栏：商品列表 ----
+function filterProducts(){renderProductTable(currentLibProducts,document.getElementById('productSearch').value)}
+function refreshProducts(){document.getElementById('productSearch').value='';renderProductTable(currentLibProducts)}
+
+function renderProductTable(products,filter){
+  let items=products||[];
+  if(filter){const kw=filter.toLowerCase();items=items.filter(p=>p.name.toLowerCase().includes(kw))}
+  document.getElementById('productTableTitle').textContent='共 '+items.length+' 件商品';
+  const selPids=selectedProducts.filter(p=>p.libId===currentLibId).map(p=>p.id);
+  document.getElementById('productSelectAll').checked=selPids.length>0;
+  document.getElementById('productTableBody').innerHTML=items.map(p=>{
+    const checked=selPids.includes(p.id)?' checked':'';
+    return `<tr>
+      <td style="text-align:center"><input type="checkbox" value="${p.id}"${checked} onchange="toggleProduct('${p.id}','${p.name}','${p.tag}',${p.episodes})"></td>
+      <td>${p.name}</td><td>${p.tag}</td><td>${p.episodes}</td>
+    </tr>`;
+  }).join('');
+}
+
+function clearProductTable(){
+  document.getElementById('productTableTitle').textContent='共 0 件商品';
+  document.getElementById('productTableBody').innerHTML='';
+  document.getElementById('productSearch').disabled=true;
+  document.getElementById('refreshProductBtn').disabled=true;
+  document.getElementById('productSelectAll').disabled=true;
+  document.getElementById('productSearch').value='';
+}
+
+function toggleProduct(pid,name,tag,episodes){
+  const exist=selectedProducts.findIndex(p=>p.libId===currentLibId&&p.id===pid);
+  if(exist>=0){selectedProducts=[]}
+  else{selectedProducts=[{accountId:currentAccountId,libId:currentLibId,id:pid,name,tag,episodes}]}
+  renderProductTable(currentLibProducts,document.getElementById('productSearch').value);
+  renderProductLibraries(document.getElementById('plSearch').value);
+  renderAccountList();
+}
+
+function toggleSelectAllProducts(cb){
+  if(cb.checked){
+    if(currentLibProducts.length>0){
+      const p=currentLibProducts[0];
+      selectedProducts=[{accountId:currentAccountId,libId:currentLibId,id:p.id,name:p.name,tag:p.tag,episodes:p.episodes}];
+    }
+  }else{
+    selectedProducts=[];
+  }
+  renderProductTable(currentLibProducts,document.getElementById('productSearch').value);
+  renderProductLibraries(document.getElementById('plSearch').value);
+  renderAccountList();
+}
+
+// ==================== 表格渲染 ====================
+function renderTable(bodyId,data,cols,pageSize,ops){const page=this._page||1,start=(page-1)*pageSize,pageData=data.slice(start,start+pageSize);document.getElementById(bodyId).innerHTML=pageData.map(row=>{let h='<tr><td><input type="checkbox"></td>';cols.forEach(col=>{if(typeof col==='string')h+=`<td>${row[col]||''}</td>`;else h+=col.render?`<td>${col.render(row)}</td>`:`<td>${row[col.key]||''}</td>`});if(ops){h+='<td>';if(typeof ops==='function')h+=ops(row);else ops.forEach(o=>h+=`<button class="btn btn-text btn-sm" ${o.onclick?`onclick="${o.onclick(row)}"`:''}>${o.label}</button>`);h+='</td>'}else{h+='<td><button class="btn btn-text btn-sm">编辑</button><button class="btn btn-text btn-sm" style="color:#f56c6c">删除</button></td>'}return h+'</tr>'}).join('')}
+function renderPagination(pid,total,pageSize,onChange){const tp=Math.ceil(total/pageSize),page=this._page||1,c=document.getElementById(pid);let h=`<span>共 ${total} 条</span>`;h+=`<button class="page-btn" ${page<=1?'disabled':''} data-page="${page-1}">&lt;</button>`;for(let i=1;i<=Math.min(tp,5);i++)h+=`<button class="page-btn${i===page?' active':''}" data-page="${i}">${i}</button>`;if(tp>5)h+=`<span>...</span><button class="page-btn" data-page="${tp}">${tp}</button>`;h+=`<button class="page-btn" ${page>=tp?'disabled':''} data-page="${page+1}">&gt;</button>`;c.innerHTML=h;c.querySelectorAll('.page-btn:not([disabled])').forEach(b=>b.addEventListener('click',function(){const p=parseInt(this.dataset.page);if(p>=1&&p<=tp){c._page=p;onChange(p)}}));c._page=page}
+
+// ==================== Mock 数据 ====================
+const mockUsers=['橘柚','青兰','穗禾','蓝木','云笛','森柠','乐初','小邝','小蚂蚁','坠零'],mockTimes=['东八','西五','西五西五'],mockLangs=['英语','韩语','繁体','西班牙','土耳其','日语','葡语'],mockDramas=['繁花','狂飙','漫长的季节','三体','庆余年','琅琊榜','知否','甄嬛传'],mockOptimizations=['最大转化量','成本上限','出价上限'];
+
+// 自动化任务
+const autoTasks=Array.from({length:20},(_,i)=>{const user=mockUsers[i%10],time=mockTimes[i%3],lang=mockLangs[i%7],strategies=['最大转化量','成本上限','出价上限'],goals=['价值','安装','购买','注册'];return{id:1571+i,name:`${user}-${time}-${lang}`,status:Math.random()>.9?'停用':'启用',bidStrategy:strategies[Math.floor(Math.random()*3)],dailyBudget:`$${Math.floor(Math.random()*500+50)}`,interval:Math.floor(Math.random()*30+5),optimization:goals[Math.floor(Math.random()*4)],target:'应用推广',channelNo:`CH${String(100+i).padStart(3,'0')}`,lastComplete:`2026-06-${String(24-Math.floor(Math.random()*7)).padStart(2,'0')} ${String(Math.floor(Math.random()*24)).padStart(2,'0')}:${String(Math.floor(Math.random()*60)).padStart(2,'0')}:00`,creator:user,updater:mockUsers[Math.floor(Math.random()*10)],created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
+function renderAutoTasks(p=1){renderTable('autoTaskTableBody',autoTasks,['id',{key:'name',render:r=>`<span class="col-name" style="cursor:pointer" onclick="openTaskModal({name:'${r.name}'})">${r.name}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='启用'?'running':'stopped'}">${r.status}</span>`},'bidStrategy','dailyBudget','interval','optimization','target','channelNo','lastComplete','creator','updater','created','updated'],10,[{label:'编辑',onclick:r=>`openTaskModal({name:'${r.name}'})`},{label:'复制'},{label:'日志'}]);renderPagination('autoTaskPagination',autoTasks.length,10,p=>renderAutoTasks(p))}
+
+// 账户包
+function renderAccountPackages(p=1){renderTable('accountPackageTableBody',mockAccountPackages,['id','name','bizType','channel','channelNo','strategy','template','pixel','created','updated'],10,[{label:'编辑'},{label:'复制'},{label:'删除'}]);renderPagination('accountPackagePagination',mockAccountPackages.length,10,p=>renderAccountPackages(p))}
+
+// 广告系列
+const campaigns=Array.from({length:20},(_,i)=>{const drama=mockDramas[i%8],pkg=mockAccountPackages[i%8],strategies=['最大转化量','成本上限','出价上限'];return{id:1000+i,taskId:`T2026${String(i%10+1).padStart(5,'0')}`,campaignId:`C2026${String(i+1).padStart(5,'0')}`,name:`${drama}-系列_${String(i+1).padStart(3,'0')}`,accountName:pkg.name,accountId:`A${String(i+100).padStart(5,'0')}`,channelName:pkg.channel,channelNo:pkg.channelNo,uploadStatus:Math.random()>.3?'上传成功':'上传失败',status:Math.random()>.3?'已开启':'已关闭',bidStrategy:strategies[Math.floor(Math.random()*3)],dailyBudget:`$${Math.floor(Math.random()*500+50)}`,optimization:mockOptimizations[Math.floor(Math.random()*3)],failReason:Math.random()>.7?'网络超时':'',drama,linkName:`${drama}_Link`,template:pkg.template,created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
+function renderCampaigns(p=1){renderTable('campaignTableBody',campaigns,['id','taskId',{key:'campaignId',render:r=>`<span class="col-id">${r.campaignId}</span>`},'name','accountName','accountId','channelName','channelNo',{key:'uploadStatus',render:r=>`<span class="col-status ${r.uploadStatus==='上传成功'?'running':'error'}">${r.uploadStatus}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'bidStrategy','dailyBudget','optimization','failReason','drama','linkName','template','created','updated'],10,[{label:'重试'}]);renderPagination('campaignPagination',campaigns.length,10,p=>renderCampaigns(p))}
+
+// 广告组
+const adGroups=Array.from({length:20},(_,i)=>{const drama=mockDramas[i%8],lang=mockLangs[i%7],pkg=mockAccountPackages[i%8];return{id:2000+i,taskId:`T2026${String(i%10+1).padStart(5,'0')}`,uploadSeriesId:`C2026${String(i%20+1).padStart(5,'0')}`,name:`${drama}-${lang}-G${String(i+1).padStart(3,'0')}`,accountInfo:pkg.name,drama:`${drama}-${lang}`,status:Math.random()>.3?'已开启':'已关闭',targeting:mockTargetingPackages[i%5],failReason:Math.random()>.7?'图片尺寸不符':'',optimization:mockOptimizations[Math.floor(Math.random()*3)],created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
+function renderAdGroups(p=1){renderTable('adgroupTableBody',adGroups,['id','taskId','uploadSeriesId','name','accountInfo','drama',{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'targeting','failReason','optimization','created','updated'],10,[{label:'重试'}]);renderPagination('adgroupPagination',adGroups.length,10,p=>renderAdGroups(p))}
+
+// 广告
+const adsList=Array.from({length:20},(_,i)=>{const pkg=mockAccountPackages[i%8];return{id:3000+i,taskId:`T2026${String(i%10+1).padStart(5,'0')}`,campaignId:`C2026${String(i%20+1).padStart(5,'0')}`,adgroupId:`AG${String(i%20+1).padStart(6,'0')}`,uploadAdgroupId:`AG${String(i%20+1).padStart(6,'0')}`,adId:`AD${String(i+1).padStart(7,'0')}`,accountName:pkg.name,accountId:`A${String(i+100).padStart(5,'0')}`,uploadStatus:Math.random()>.2?'上传成功':(Math.random()>.5?'待上传':'上传失败'),status:Math.random()>.3?'已开启':'已关闭',multiAdvertiser:Math.random()>.7?'是':'否',failReason:Math.random()>.8?'视频时长超限':'',material:mockMaterialData[i%12].name,created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*7)).padStart(2,'0')}`}});
+function renderAds(p=1){renderTable('adTableBody',adsList,['id','taskId','campaignId','adgroupId','uploadAdgroupId','adId','accountName','accountId',{key:'uploadStatus',render:r=>`<span class="col-status ${r.uploadStatus==='上传成功'?'running':(r.uploadStatus==='上传失败'?'error':'pending')}">${r.uploadStatus}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'multiAdvertiser','failReason','material','created','updated'],10,[{label:'重试'}]);renderPagination('adPagination',adsList.length,10,p=>renderAds(p))}
+
+// ==================== 初始化 ====================
+renderAutoTasks();renderAccountPackages();renderCampaigns();renderAdGroups();renderAds();
+</script>
+</body>
+</html>
