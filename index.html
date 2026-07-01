@@ -761,16 +761,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
           <label class="checkbox-label"><input type="checkbox" value="pangle" class="placement-checkbox"> Pangle</label>
         </div></div>
       </div>
-      <div class="form-item">
+      <div class="form-item" id="appTargetingItem">
         <label><span class="required">*</span>定向包</label>
         <div class="form-control">
           <div style="display:flex;align-items:center;gap:12px">
-            <span id="targetingPackageLabel" style="color:var(--text-secondary);font-size:14px;line-height:32px">未选择</span>
+            <span id="appTargetingPackageLabel" style="color:var(--text-secondary);font-size:14px;line-height:32px">未选择</span>
             <a href="#" class="add-time-btn" style="line-height:32px;text-decoration:none" onclick="openTargetingModal();return false">选择定向包</a>
           </div>
         </div>
       </div>
-
       <div class="form-group-title">广告设置</div>
 
       <div class="form-item">
@@ -905,11 +904,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
           <label class="checkbox-label"><input type="checkbox" value="pangle" class="placement-checkbox"> Pangle</label>
         </div></div>
       </div>
-      <div class="form-item">
+      <div class="form-item" id="salesTargetingItem">
         <label><span class="required">*</span>定向包</label>
         <div class="form-control">
           <div style="display:flex;align-items:center;gap:12px">
-            <span id="targetingPackageLabel" style="color:var(--text-secondary);font-size:14px;line-height:32px">未选择</span>
+            <span id="salesTargetingPackageLabel" style="color:var(--text-secondary);font-size:14px;line-height:32px">未选择</span>
             <a href="#" class="add-time-btn" style="line-height:32px;text-decoration:none" onclick="openTargetingModal();return false">选择定向包</a>
           </div>
         </div>
@@ -992,13 +991,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         </div></div>
       </div>
       <div class="form-item ap-w2a-field" style="display:none">
-        <label><span class="required">*</span>行动号召<br><span style="font-size:12px;color:var(--text-secondary)">(落地页文案)</span></label>
-        <div class="form-control">
-          <input type="text" class="input-text" id="apCta" maxlength="26" placeholder="请输入行动号召">
-          <div class="char-count" id="apCtaCount">0 / 26</div>
-        </div>
-      </div>
-      <div class="form-item ap-w2a-field" style="display:none">
         <label><span class="required">*</span>像素ID</label>
         <div class="form-control"><input type="text" class="input-text" id="apPixelId" placeholder="输入"></div>
       </div>
@@ -1023,7 +1015,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 </div>
 
 <!-- ============ 定向包侧边栏 ============ -->
-<div class="drawer-overlay" id="targetingDrawer" style="display:none">
+<div class="drawer-overlay" id="targetingDrawer" style="display:none;z-index:1002">
   <div class="drawer">
     <div class="drawer-header">
       <span id="tpDrawerTitle">选择定向包</span>
@@ -1132,31 +1124,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       <span class="drawer-close" onclick="closeProductLibraryDrawer()">&times;</span>
     </div>
     <div class="drawer-body" style="display:flex;flex-direction:column;padding:0;height:580px">
-      <div style="padding:8px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">
-        <span style="font-size:13px;color:var(--text-secondary)">选择模式：</span>
-        <div class="btn-group" id="plSelectMode">
-          <button type="button" class="btn-option active" data-value="unified" style="font-size:12px;padding:4px 12px">统一选择</button>
-          <button type="button" class="btn-option" data-value="per_account" style="font-size:12px;padding:4px 12px">分账户选择</button>
-        </div>
-      </div>
       <div style="display:flex;gap:0;flex:1;overflow:hidden">
-      <!-- 第一栏：账号列表 -->
-      <div id="plAccountColumn" style="width:280px;flex-shrink:0;border-right:1px solid var(--border);padding:12px;display:none;flex-direction:column">
-        <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:8px">账号</div>
-        <div style="font-size:12px;color:#909399;margin-bottom:8px">共<b id="plAccountCount">0</b>个账号</div>
-        <div id="plAccountList" style="flex:1;overflow-y:auto"></div>
+      <!-- 第一栏：已选短剧 -->
+      <div style="width:260px;flex-shrink:0;border-right:1px solid var(--border);padding:12px;display:flex;flex-direction:column;background:#fafafa">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:14px;font-weight:500;color:var(--text)">已选短剧</span>
+          <button type="button" class="btn btn-primary btn-sm" onclick="autoMatchDramas()" style="font-size:12px;padding:3px 10px">一键关联</button>
+        </div>
+        <div style="font-size:12px;color:#909399;margin-bottom:8px">共<b id="plDramaCount">0</b>个短剧</div>
+        <div id="plDramaList" style="flex:1;overflow-y:auto"></div>
       </div>
-      <!-- 第二栏：商品库列表 -->
-      <div style="width:320px;flex-shrink:0;border-right:1px solid var(--border);padding:12px;display:flex;flex-direction:column">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-          <input type="text" class="input-text" id="plSearch" placeholder="搜索商品库ID或名称" style="flex:1;font-size:13px" oninput="filterProductLibraries()" disabled>
-          <button type="button" class="btn btn-primary btn-sm" id="refreshLibBtn" onclick="refreshProductLibraries()" disabled>刷新</button>
+      <!-- 第二栏：投放账户 + 商品库 -->
+      <div style="width:380px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column">
+        <div style="padding:12px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;flex:1;overflow:hidden">
+          <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:8px">投放账户</div>
+          <div style="font-size:12px;color:#909399;margin-bottom:8px">共<b id="plAccountCount">0</b>个账户</div>
+          <div id="plAccountListD" style="overflow-y:auto;margin-bottom:12px;max-height:200px"></div>
+          <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:8px;padding-top:8px;border-top:1px solid var(--border)">商品库</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <input type="text" class="input-text" id="plSearch" placeholder="搜索商品库ID或名称" style="flex:1;font-size:13px" oninput="filterProductLibraries()">
+            <button type="button" class="btn btn-primary btn-sm" id="refreshLibBtn" onclick="refreshProductLibraries()">刷新</button>
+          </div>
+          <div style="font-size:12px;color:#909399;margin-bottom:4px">共<b id="plTotalCount">0</b>个商品库</div>
+          <div id="plListContainer" style="flex:1;overflow-y:auto"></div>
         </div>
-        <div style="font-size:12px;color:#909399;margin-bottom:8px">
-          共<b id="plTotalCount">0</b>个商品库，当前选择：<b id="plSelectedLabel">无</b>
-        </div>
-        <div style="border-bottom:1px solid #e8e8e8;margin-bottom:8px"></div>
-        <div id="plListContainer" style="flex:1;overflow-y:auto"></div>
       </div>
       <!-- 第三栏：商品列表 -->
       <div style="flex:1;padding:12px;display:flex;flex-direction:column;min-width:0">
@@ -1168,7 +1159,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <div style="flex:1;overflow-y:auto;border:1px solid var(--border);border-radius:4px">
           <table class="account-select-table" style="table-layout:fixed">
             <thead><tr>
-              <th style="width:36px"><input type="checkbox" id="productSelectAll" onchange="toggleSelectAllProducts(this)" disabled></th>
+              <th style="width:36px"></th>
               <th>短剧名称</th>
               <th style="width:80px">短剧标签</th>
               <th style="width:60px">剧集数</th>
@@ -1240,8 +1231,10 @@ function resetTaskForm(){
   document.querySelectorAll('#selectedDramasList .selected-drama-tag').forEach(t=>t.remove());
   document.getElementById('selectedDramasArea').style.display='none';
   document.getElementById('dramaSearchResult').innerHTML='<div class="drama-placeholder">请输入搜索条件进行搜索</div>';
-  document.getElementById('targetingPackageLabel').textContent='未选择';
-  document.getElementById('targetingPackageLabel').style.color='var(--text-secondary)';
+  document.getElementById('appTargetingPackageLabel').textContent='未选择';
+  document.getElementById('appTargetingPackageLabel').style.color='var(--text-secondary)';
+  document.getElementById('salesTargetingPackageLabel').textContent='未选择';
+  document.getElementById('salesTargetingPackageLabel').style.color='var(--text-secondary)';
   closeMaterialPreview();
 }
 
@@ -1295,10 +1288,25 @@ function renderTpList(){
     </div>`;
   }).join('')||'<div style="text-align:center;padding:32px;color:var(--text-secondary)">暂无定向包</div>';
 }
+let targetingSelectTarget='task'; // 'task' | 'drama'
 function selectTargetingPackage(id){
-  selectedTargetingPackage=mockTargetingPackages.find(t=>t.id===id)||null;
-  document.getElementById('targetingPackageLabel').textContent=selectedTargetingPackage?selectedTargetingPackage.name:'未选择';
-  document.getElementById('targetingPackageLabel').style.color=selectedTargetingPackage?'#606266':'var(--text-secondary)';
+  const tp=mockTargetingPackages.find(t=>t.id===id)||null;
+  if(targetingSelectTarget==='drama'&&currentDramaName&&currentAccountId&&dramaMatches[currentDramaName]&&dramaMatches[currentDramaName][currentAccountId]){
+    dramaMatches[currentDramaName][currentAccountId].targeting={id:tp?tp.id:'',name:tp?tp.name:'手动-未选',type:'manual'};
+    if(tp){dramaMatches[currentDramaName][currentAccountId].targeting.desc=tp.gender!=='不限'?tp.gender:''}
+    targetingSelectTarget='task';
+    renderAccountListD();renderDramaList();renderSelectedProductLibs();
+    closeTargetingDrawer();
+    return;
+  }
+  targetingSelectTarget='task';
+  selectedTargetingPackage=tp;
+  const lbl=selectedTargetingPackage?selectedTargetingPackage.name:'未选择';
+  const clr=selectedTargetingPackage?'#606266':'var(--text-secondary)';
+  document.getElementById('appTargetingPackageLabel').textContent=lbl;
+  document.getElementById('appTargetingPackageLabel').style.color=clr;
+  document.getElementById('salesTargetingPackageLabel').textContent=lbl;
+  document.getElementById('salesTargetingPackageLabel').style.color=clr;
   closeTargetingDrawer();
 }
 function showTpForm(editData){
@@ -1400,7 +1408,7 @@ function saveTargetingPackage(){
   editingTpId=null;showTpList();
 }
 function editTp(id){const tp=mockTargetingPackages.find(t=>t.id===id);if(tp)showTpForm(tp)}
-function deleteTp(id){if(!confirm('确定删除此定向包？'))return;mockTargetingPackages.splice(mockTargetingPackages.findIndex(t=>t.id===id),1);if(selectedTargetingPackage&&selectedTargetingPackage.id===id){selectedTargetingPackage=null;document.getElementById('targetingPackageLabel').textContent='未选择';document.getElementById('targetingPackageLabel').style.color='var(--text-secondary)'}renderTpList()}
+function deleteTp(id){if(!confirm('确定删除此定向包？'))return;mockTargetingPackages.splice(mockTargetingPackages.findIndex(t=>t.id===id),1);if(selectedTargetingPackage&&selectedTargetingPackage.id===id){selectedTargetingPackage=null;document.getElementById('appTargetingPackageLabel').textContent='未选择';document.getElementById('appTargetingPackageLabel').style.color='var(--text-secondary)';document.getElementById('salesTargetingPackageLabel').textContent='未选择';document.getElementById('salesTargetingPackageLabel').style.color='var(--text-secondary)'}renderTpList()}
 function toggleOsVersion(){const os=document.querySelector('#tpOs .btn-option.active').dataset.value;document.querySelectorAll('.tp-os-version').forEach(e=>e.style.display=os==='不限'?'none':'flex')}
 document.getElementById('tpName').addEventListener('input',function(){document.getElementById('tpNameCount').textContent=this.value.length+' / 50'});
 document.querySelectorAll('#tpGender .btn-option').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('#tpGender .btn-option').forEach(x=>x.classList.remove('active'));this.classList.add('active')}));
@@ -1482,7 +1490,6 @@ function submitAccountPackage(){
 document.getElementById('apName').addEventListener('input',function(){document.getElementById('apNameCount').textContent=this.value.length+' / 50'});
 document.querySelectorAll('#apBizType .btn-option').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('#apBizType .btn-option').forEach(x=>x.classList.remove('active'));this.classList.add('active')}));
 document.querySelectorAll('#apStrategy .btn-option').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('#apStrategy .btn-option').forEach(x=>x.classList.remove('active'));this.classList.add('active');const isW2A=this.dataset.strategy==='W2A';document.querySelectorAll('.ap-w2a-field').forEach(el=>el.style.display=isW2A?'flex':'none')}));
-document.getElementById('apCta').addEventListener('input',function(){document.getElementById('apCtaCount').textContent=this.value.length+' / 26'});
 
 // ==================== 短剧搜索 ====================
 function switchDramaMode(mode){
@@ -1522,12 +1529,22 @@ function addDrama(btn){
   const items=card.querySelectorAll('.drama-result-item .value');
   const tagText=`${items[1].textContent}-${items[0].textContent}-${items[2].textContent}-${items[3].textContent}`;
   if(Array.from(document.querySelectorAll('.selected-drama-tag span:first-child')).map(el=>el.textContent).includes(tagText)){alert('该短剧已添加');return}
+  if(Object.keys(dramaMatches).length>0){
+    if(!confirm('添加短剧时将清空商品库列表'))return;
+    dramaMatches={};renderSelectedProductLibs();
+  }
   const list=document.getElementById('selectedDramasList'),area=document.getElementById('selectedDramasArea');
   const tag=document.createElement('div');tag.className='selected-drama-tag';
   tag.innerHTML=`<span>${tagText}</span><span class="remove" onclick="removeDrama(this)">&times;</span>`;
   list.appendChild(tag);area.style.display='block';btn.textContent='已添加';btn.disabled=true;resetMaterialPreview();
 }
-function removeDrama(btn){btn.closest('.selected-drama-tag').remove();const list=document.getElementById('selectedDramasList');if(list.querySelectorAll('.selected-drama-tag').length===0)document.getElementById('selectedDramasArea').style.display='none';resetMaterialPreview()}
+function removeDrama(btn){
+  btn.closest('.selected-drama-tag').remove();
+  const list=document.getElementById('selectedDramasList');
+  if(list.querySelectorAll('.selected-drama-tag').length===0)document.getElementById('selectedDramasArea').style.display='none';
+  if(Object.keys(dramaMatches).length>0){dramaMatches={};renderSelectedProductLibs()}
+  resetMaterialPreview()
+}
 
 // ==================== 表单交互 ====================
 document.getElementById('taskName').addEventListener('input',function(){document.getElementById('taskNameCount').textContent=this.value.length+' / 50'});
@@ -1799,7 +1816,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
       productSource:document.querySelector('#productSource .btn-option.active').dataset.value,
       selectApp:document.getElementById('selectApp').value,
       selectMiniProgram:document.getElementById('selectMiniProgram').value,
-      productLibraries:selectedProducts.map(p=>({libId:p.libId,id:p.id,name:p.name})),
+      productLibraries:(()=>{const r=[];Object.entries(dramaMatches).forEach(([dn,accs])=>{Object.entries(accs).forEach(([aid,m])=>{r.push({dramaName:dn,accountId:aid,libId:m.libId,libName:m.libName,productId:m.product.productId,seriesName:m.product.seriesName,targeting:m.targeting||null})})});return r})(),
       cbo:'1',
       adOnly:'1',
       budgetStrategy:'campaign',
@@ -1844,34 +1861,41 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
 // ==================== 商品库关联 ====================
 const mockProductAccounts=[
   {id:'7652323541467234312',name:'TT-MAD-NS-FH-东八-M13-0617-2.0',bcid:'7530195152397369361',libraries:[
-    {id:'7578806096383510273',name:'商品库',region:'美国,伊拉克,+82',products:[
-      {id:'P001',name:'繁花',tag:'都市情感',episodes:30},{id:'P002',name:'狂飙',tag:'悬疑涉案',episodes:39},
-      {id:'P003',name:'庆余年',tag:'古装传奇',episodes:46},{id:'P004',name:'漫长的季节',tag:'悬疑生活',episodes:12},
+    {id:'7578806096383510273',name:'短剧库-欧美',region:'美国,加拿大',products:[
+      {productId:'7579094770561402640',seriesName:'Imprisoned Phoenix',seriesId:'1936978277919223809',seriesTags:'GANG_MAFIA,BITTER_LOVE',totalEpisodes:63,initialPaidEpisodes:8,spokenLanguage:'en',subtitleLanguage:'en',imageUrl:'https://p16-catalog-sg.ibyteimg.com/i18n-dpa-image/92ce19775206401842a87671f3c22d79~tplv-dw3ygh5mvh-convert.png',auditStatus:'approved',activeStatus:'ACTIVATED'},
+      {productId:'7579094884511876880',seriesName:'His Choice Killed Our Daughter',seriesId:'1990271703494557697',seriesTags:'OTHERS,COME_UPPANCE_RETRIBUTION',totalEpisodes:55,initialPaidEpisodes:11,spokenLanguage:'fr',subtitleLanguage:'en',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
+      {productId:'7579094998554806033',seriesName:'The God of Speed: The Legend Returns',seriesId:'1986742723116990466',seriesTags:'ATHLETE,COME_UPPANCE_RETRIBUTION',totalEpisodes:46,initialPaidEpisodes:9,spokenLanguage:'en',subtitleLanguage:'en',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
+      {productId:'7579095797452801809',seriesName:'(Dubbed) Born to Dominate',seriesId:'1950802061416050689',seriesTags:'KUNG_FU_MASTER,ACTION',totalEpisodes:74,initialPaidEpisodes:11,spokenLanguage:'zh',subtitleLanguage:'en',imageUrl:'',auditStatus:'processing',activeStatus:'ACTIVATED'},
+      {productId:'7579095879933003536',seriesName:'(Doblado) ¿La sustituya de quién?',seriesId:'1976870103476342785',seriesTags:'HEROINE,COME_UPPANCE_RETRIBUTION',totalEpisodes:67,initialPaidEpisodes:12,spokenLanguage:'es',subtitleLanguage:'en',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
+      {productId:'MOCK003',seriesName:'狂飙 (The Knockout)',seriesId:'MOCK_S003',seriesTags:'CRIME_SUSPENSE',totalEpisodes:39,initialPaidEpisodes:10,spokenLanguage:'zh',subtitleLanguage:'zh',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
+      {productId:'MOCK004',seriesName:'三体 (Three-Body)',seriesId:'MOCK_S004',seriesTags:'SCI_FI',totalEpisodes:30,initialPaidEpisodes:8,spokenLanguage:'zh',subtitleLanguage:'zh',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
     ]},
-    {id:'7578419155666339600',name:'M1-Netshort-短剧库总库一部',region:'美国,泰国,+80',products:[
-      {id:'P005',name:'三体',tag:'科幻',episodes:30},{id:'P006',name:'琅琊榜',tag:'古装权谋',episodes:54},
+    {id:'7578419155666339600',name:'M1-Netshort-短剧库总库一部',region:'美国,泰国',products:[
+      {productId:'7579096166895224577',seriesName:'Goodbye, My Tempting Wife',seriesId:'1961259372600008706',seriesTags:'BABIES,DISGUISE',totalEpisodes:63,initialPaidEpisodes:10,spokenLanguage:'en',subtitleLanguage:'en',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
+      {productId:'7579096241502488337',seriesName:'(Doblado)Camino de Gloria Celestial',seriesId:'1963810771226447874',seriesTags:'SPIRIT_CULTIVATOR,COME_UPPANCE_RETRIBUTION',totalEpisodes:74,initialPaidEpisodes:11,spokenLanguage:'es',subtitleLanguage:'en',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
+      {productId:'7579096270452279057',seriesName:'(Dubbed)The Goddess\'s Revenge: So Begins His Ruin',seriesId:'1972581831942701057',seriesTags:'SPIRIT_CULTIVATOR,COME_UPPANCE_RETRIBUTION',totalEpisodes:69,initialPaidEpisodes:15,spokenLanguage:'zh',subtitleLanguage:'en',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
+      {productId:'MOCK001',seriesName:'繁花 (Blooming)',seriesId:'MOCK_S001',seriesTags:'URBAN_ROMANCE',totalEpisodes:30,initialPaidEpisodes:8,spokenLanguage:'zh',subtitleLanguage:'zh',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
+      {productId:'MOCK002',seriesName:'庆余年 (Joy of Life)',seriesId:'MOCK_S002',seriesTags:'HISTORICAL',totalEpisodes:46,initialPaidEpisodes:12,spokenLanguage:'zh',subtitleLanguage:'zh',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
     ]},
   ]},
   {id:'7623607732641417217',name:'TT-ZeroDrama-Main',bcid:'7530195152397369362',libraries:[
     {id:'7578806096383510274',name:'零剧商品库A',region:'美国,加拿大',products:[
-      {id:'P007',name:'知否',tag:'古装宅斗',episodes:78},{id:'P008',name:'甄嬛传',tag:'古装宫斗',episodes:76},
-    ]},
+      {productId:'7579096665169970960',seriesName:'(Dubbed) Broken Bonds',seriesId:'1950389511278764033',seriesTags:'OTHERS,COME_UPPANCE_RETRIBUTION',totalEpisodes:63,initialPaidEpisodes:10,spokenLanguage:'zh',subtitleLanguage:'en',imageUrl:'',auditStatus:'processing',activeStatus:'ACTIVATED'},
+      {productId:'7579096760120313617',seriesName:'He Wanted Her... But Lost Me Forever!',seriesId:'1973235072937758721',seriesTags:'HEROINE,COME_UPPANCE_RETRIBUTION',totalEpisodes:67,initialPaidEpisodes:12,spokenLanguage:'zh',subtitleLanguage:'en',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
+      {productId:'7579096867012134672',seriesName:'Pregnant with Billionaire\'s Twins, Love Begins',seriesId:'1948579374435450881',seriesTags:'HEROINE,INDULGENT_LOVE',totalEpisodes:62,initialPaidEpisodes:9,spokenLanguage:'en',subtitleLanguage:'en',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
+      {productId:'MOCK005',seriesName:'漫长的季节 (The Long Season)',seriesId:'MOCK_S005',seriesTags:'SUSPENSE_DRAMA',totalEpisodes:12,initialPaidEpisodes:4,spokenLanguage:'zh',subtitleLanguage:'zh',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
+   ]},
   ]},
 ];
-// 统一选择时，合并所有账号下的商品库（去重）
-const allProductLibraries=(()=>{
-  const seen=new Set();const libs=[];
-  mockProductAccounts.forEach(a=>{a.libraries.forEach(l=>{if(!seen.has(l.id)){seen.add(l.id);libs.push({...l,accountId:a.id,accountName:a.name})}})});
-  return libs;
-})();
-let selectedProducts=[];          // {accountId, libId, productId, name, tag, episodes}
+// dramaMatches: { dramaName: { accountId: { libId, libName, product, targeting? } } }
+let dramaMatches={};
+let currentDramaName=null;
 let currentAccountId=null;
 let currentLibId=null;
 let currentLibProducts=[];
 
-function getPlSelectMode(){
-  const btn=document.querySelector('#plSelectMode .btn-option.active');
-  return btn?btn.dataset.value:'unified';
+function getSelectedDramas(){
+  return Array.from(document.querySelectorAll('.selected-drama-tag span:first-child')).map(t=>t.textContent);
 }
 
 function toggleProductLibraryConnect(){
@@ -1879,39 +1903,137 @@ function toggleProductLibraryConnect(){
   if(obj==='product_sales'){
     const enabled=document.getElementById('salesProductSourceItem').style.display!=='none'&&document.querySelector('#salesProductSource .btn-option.active').dataset.value==='1';
     document.getElementById('salesProductLibraryItem').style.display=enabled?'flex':'none';
-    if(!enabled){selectedProducts=[];renderSelectedProductLibs()}
+    document.getElementById('salesTargetingItem').style.display=enabled?'none':'flex';
+    if(!enabled){dramaMatches={};renderSelectedProductLibs()}
   }else{
     const enabled=document.getElementById('productSourceItem').style.display!=='none'&&document.querySelector('#productSource .btn-option.active').dataset.value==='1';
     document.getElementById('productLibraryItem').style.display=enabled?'flex':'none';
-    if(!enabled){selectedProducts=[];renderSelectedProductLibs()}
+    document.getElementById('appTargetingItem').style.display=enabled?'none':'flex';
+    if(!enabled){dramaMatches={};renderSelectedProductLibs()}
   }
 }
 
 function renderSelectedProductLibs(){
   const containers=[document.getElementById('selectedProductLibs'),document.getElementById('salesSelectedProductLibs')];
-  containers.forEach(c=>{if(!c)return;if(selectedProducts.length===0){c.innerHTML='';return}c.innerHTML=selectedProducts.map(p=>`<span class="selected-pl-tag">${p.name} (${p.id}) <span style="cursor:pointer;color:#909399" onclick="removeSelectedProduct('${p.libId}','${p.id}')">&times;</span></span>`).join('')});
+  containers.forEach(c=>{
+    if(!c)return;
+    const dramas=getSelectedDramas();
+    if(dramas.length===0||Object.keys(dramaMatches).length===0){c.innerHTML='';return}
+    let html='';
+    dramas.forEach(d=>{
+      const matches=dramaMatches[d];
+      if(!matches)return;
+      Object.entries(matches).forEach(([accId,m])=>{
+        const acc=mockProductAccounts.find(a=>a.id===accId);
+        const tinfo=m.targeting?` | ${m.targeting.name}`:'';
+        html+=`<span class="selected-pl-tag">${d} → ${acc?acc.name:accId} → ${m.product.seriesName} (${m.libName})${tinfo} <span style="cursor:pointer;color:#909399" onclick="removeDramaMatch('${d}','${accId}')">&times;</span></span>`;
+      });
+    });
+    c.innerHTML=html;
+  });
 }
 
-function removeSelectedProduct(libId,pid){
-  selectedProducts=selectedProducts.filter(p=>!(p.libId===libId&&p.id===pid));
+const dramaLangToProductLang={
+  '中文':'zh','英文':'en','泰文':'th','马来文':'ms','西班牙文':'es','法文':'fr',
+  '葡萄牙文':'pt','阿拉伯文':'ar','印尼文':'id','越南文':'vi','日语':'ja','韩语':'ko',
+  '德文':'de','意大利文':'it','土耳其文':'tr','繁体中文':'zh',
+};
+const productLangToDisplay={
+  zh_CN:'简体中文',zh_TW:'繁体中文',en_US:'英语',it_IT:'意大利语',tr_TR:'土耳其语',
+  id_ID:'印尼语',th_TH:'泰语',ja_JP:'日语',fr_FR:'法语',de_DE:'德语',
+  ms_MY:'马来语',ko_KR:'韩语',es_ES:'西班牙语',ar_AE:'阿拉伯语',pt_PT:'葡萄牙语',
+  vi_VN:'越南语',zh:'中文',en:'英语',th:'泰语',ms:'马来语',es:'西班牙语',fr:'法语',
+  pt:'葡萄牙语',ar:'阿拉伯语',id:'印尼语',vi:'越南语',ja:'日语',ko:'韩语',
+  de:'德语',it:'意大利语',tr:'土耳其语',
+};
+const langToCTA={
+  zh_CN:'观看更多剧集',zh_TW:'觀看更多劇集',en_US:'Watch More Episodes',
+  it_IT:'Guarda Altri Episodi',tr_TR:'Daha Fazla Bölüm İzle',
+  id_ID:'Tonton Episode Lainnya',th_TH:'ดูตอนเพิ่มเติม',ja_JP:'もっと見る',
+  fr_FR:'Voir Plus d\'Épisodes',de_DE:'Weitere Folgen Ansehen',
+  ms_MY:'Tonton Lebih Banyak Episod',ko_KR:'더 많은 에피소드 보기',
+  es_ES:'Ver Más Episodios',ar_AE:'شاهد المزيد من الحلقات',
+  pt_PT:'Ver Mais Episódios',vi_VN:'Xem Thêm Tập',
+};
+function getCTAForLang(langCode){
+  // langCode may be short (zh) or full (zh_CN); try full first, then prefix match
+  if(langToCTA[langCode])return langToCTA[langCode];
+  const key=Object.keys(langToCTA).find(k=>k.startsWith(langCode));
+  return key?langToCTA[key]:'Watch More Episodes';
+}
+function generateAutoTargeting(product,lib){
+  const parts=[];
+  const lng=productLangToDisplay[product.subtitleLanguage];
+  if(lng)parts.push('语言:'+lng);
+  if(lib.region)parts.push('地区:'+lib.region);
+  return {
+    id:'auto_'+product.productId,
+    name:'定向-'+product.seriesName,
+    type:'auto',
+    language:lng||product.subtitleLanguage,
+    region:lib.region,
+    desc:parts.join(' | ')||'自动定向',
+  };
+}
+
+function autoMatchDramas(){
+  const dramas=getSelectedDramas();
+  if(dramas.length===0){alert('请先在主表单中选择短剧');return}
+  let matchedCount=0;let conflictCount=0;
+  dramas.forEach(dramaName=>{
+    const parts=dramaName.split('-');
+    const nameKey=parts[2]?parts[2].toLowerCase().trim():parts[0].toLowerCase().trim();
+    const langKey=dramaLangToProductLang[parts[3]]||parts[3]||'';
+    mockProductAccounts.forEach(account=>{
+      // 跳过已匹配的
+      if(dramaMatches[dramaName]&&dramaMatches[dramaName][account.id])return;
+      let bestProduct=null,bestLib=null;
+      account.libraries.forEach(lib=>{
+        lib.products.forEach(product=>{
+          const pname=product.seriesName.toLowerCase();
+          const plang=(product.subtitleLanguage||'').toLowerCase();
+          const nameMatch=pname.includes(nameKey)||nameKey.includes(pname);
+          const langMatch=langKey?plang.startsWith(langKey)||pname.includes(langKey):true;
+          if(nameMatch&&langMatch){
+            if(!bestProduct){bestProduct=product;bestLib=lib}
+            else conflictCount++;
+          }
+        });
+      });
+      if(bestProduct&&bestLib){
+        if(!dramaMatches[dramaName])dramaMatches[dramaName]={};
+        dramaMatches[dramaName][account.id]={libId:bestLib.id,libName:bestLib.name,product:bestProduct,targeting:generateAutoTargeting(bestProduct,bestLib)};
+        matchedCount++;
+      }
+    });
+  });
+  renderDramaList();
+  if(currentAccountId)renderAccountListD();
+  if(currentLibId&&currentLibProducts.length>0)renderProductTable(currentLibProducts,document.getElementById('productSearch').value);
   renderSelectedProductLibs();
-  if(currentLibId===libId){renderProductTable(currentLibProducts)}
-  renderProductLibraries(document.getElementById('plSearch').value);
-  renderAccountList();
+  let msg='匹配完成：成功 '+matchedCount+' 个';
+  if(conflictCount>0)msg+='，跳过 '+conflictCount+' 个同名冲突';
+  alert(msg);
+}
+
+function removeDramaMatch(dramaName,accountId){
+  if(dramaMatches[dramaName])delete dramaMatches[dramaName][accountId];
+  if(dramaMatches[dramaName]&&Object.keys(dramaMatches[dramaName]).length===0)delete dramaMatches[dramaName];
+  renderSelectedProductLibs();
 }
 
 function openProductLibraryDrawer(){
+  if(!document.getElementById('accountPackage').value){alert('请先选择投放账户');return}
+  const dramas=getSelectedDramas();
+  if(dramas.length===0){alert('请先选择短剧');return}
   document.getElementById('productLibraryDrawer').style.display='flex';
   document.getElementById('plSearch').value='';document.getElementById('productSearch').value='';
-  currentAccountId=null;currentLibId=null;currentLibProducts=[];
-  document.querySelectorAll('#plSelectMode .btn-option').forEach(b=>b.classList.remove('active'));
-  document.querySelector('#plSelectMode .btn-option[data-value="unified"]').classList.add('active');
-  document.getElementById('plAccountColumn').style.display='flex';
-  renderAccountList();
+  currentDramaName=null;currentAccountId=null;currentLibId=null;currentLibProducts=[];
+  renderDramaList();
+  clearLibList();
   clearProductTable();
-  document.getElementById('plSearch').disabled=false;
-  document.getElementById('refreshLibBtn').disabled=false;
-  renderProductLibraries();
+  document.getElementById('plSearch').disabled=true;
+  document.getElementById('refreshLibBtn').disabled=true;
 }
 
 function closeProductLibraryDrawer(){
@@ -1919,64 +2041,70 @@ function closeProductLibraryDrawer(){
 }
 
 function confirmProductLibraries(){
-  const mode=getPlSelectMode();
-  if(selectedProducts.length===0){
-    alert('请先选择商品');
+  const dramas=getSelectedDramas();
+  const accounts=mockProductAccounts;
+  let missing=[];
+  dramas.forEach(d=>{
+    accounts.forEach(a=>{
+      if(!dramaMatches[d]||!dramaMatches[d][a.id])missing.push(d+' → '+a.name);
+    });
+  });
+  if(missing.length>0){
+    alert('以下短剧-账户尚未匹配商品：\n'+missing.join('\n'));
     return;
-  }
-  if(mode==='per_account'){
-    const unassigned=mockProductAccounts.filter(a=>!selectedProducts.some(p=>p.accountId===a.id));
-    if(unassigned.length>0){
-      alert('以下账户尚未分配商品：'+unassigned.map(a=>a.name).join('、'));
-      return;
-    }
   }
   renderSelectedProductLibs();
   closeProductLibraryDrawer();
 }
 
-// ---- 模式切换 ----
-function togglePlSelectMode(){
-  document.getElementById('plAccountColumn').style.display='flex';
-  currentAccountId=null;currentLibId=null;currentLibProducts=[];
-  clearProductTable();
-  renderAccountList();
-  const mode=getPlSelectMode();
-  if(mode==='unified'){
-    document.getElementById('plSearch').disabled=false;
-    document.getElementById('refreshLibBtn').disabled=false;
-    renderProductLibraries();
-  }else{
-    clearLibList();
-  }
-}
-document.querySelectorAll('#plSelectMode .btn-option').forEach(b=>b.addEventListener('click',function(){
-  document.querySelectorAll('#plSelectMode .btn-option').forEach(x=>x.classList.remove('active'));
-  this.classList.add('active');togglePlSelectMode();
-}));
-
-// ---- 第一栏：账号列表 ----
-function clearAccountList(){
-  document.getElementById('plAccountList').innerHTML='';
-  document.getElementById('plAccountCount').textContent='0';
-}
-function renderAccountList(){
-  const container=document.getElementById('plAccountList');
-  const mode=getPlSelectMode();
-  document.getElementById('plAccountCount').textContent=mockProductAccounts.length;
-  container.innerHTML=mockProductAccounts.map(a=>{
-    const isActive=currentAccountId===a.id;
-    const hasSelection=mode==='unified'?selectedProducts.length>0:selectedProducts.some(p=>p.accountId===a.id);
-    return `<div class="pl-card${isActive?' selected':''}" onclick="selectAccount('${a.id}')">
-      <div class="pl-name">${a.name}${hasSelection?' <span style="color:var(--success);font-size:14px">✓</span>':''}</div>
-      <div class="pl-meta"><span>ID: ${a.id}</span><span>BCID: ${a.bcid}</span></div>
+// ---- 左栏：已选短剧列表 ----
+function renderDramaList(){
+  const dramas=getSelectedDramas();
+  document.getElementById('plDramaCount').textContent=dramas.length;
+  document.getElementById('plDramaList').innerHTML=dramas.map(d=>{
+    const isActive=currentDramaName===d;
+    const matched=Object.keys(dramaMatches[d]||{}).length;
+    const total=mockProductAccounts.length;
+    const done=matched===total;
+    return `<div class="pl-card${isActive?' selected':''}" onclick="selectDrama('${d.replace(/'/g,"\\'")}')">
+      <div class="pl-name">${d}${done?' <span style="color:var(--success);font-size:14px">✓</span>':''}</div>
+      <div class="pl-meta">已匹配 ${matched}/${total} 个账户</div>
     </div>`;
   }).join('');
 }
 
-function selectAccount(id){
+function selectDrama(name){
+  currentDramaName=name;currentAccountId=null;currentLibId=null;currentLibProducts=[];
+  renderDramaList();
+  renderAccountListD();
+  clearLibList();
+  clearProductTable();
+}
+
+// ---- 中栏：投放账户 + 商品库 ----
+function renderAccountListD(){
+  const container=document.getElementById('plAccountListD');
+  document.getElementById('plAccountCount').textContent=mockProductAccounts.length;
+  container.innerHTML=mockProductAccounts.map(a=>{
+    const isActive=currentAccountId===a.id;
+    const match=dramaMatches[currentDramaName]&&dramaMatches[currentDramaName][a.id];
+    const hasMatch=!!match;
+    let tHtml='';
+    if(hasMatch&&match.targeting){
+      tHtml=`<div class="pl-meta" style="margin-top:4px"><span style="color:var(--primary)">${match.targeting.name}</span><span>${match.targeting.desc||''}</span></div>`;
+    }
+    return `<div class="pl-card${isActive?' selected':''}" onclick="selectAccountD('${a.id}')">
+      <div class="pl-name">${a.name}${hasMatch?' <span style="color:var(--success);font-size:14px">✓ '+match.product.seriesName+'</span>':''}</div>
+      <div class="pl-meta"><span>ID: ${a.id}</span><span>BCID: ${a.bcid}</span></div>
+      ${tHtml}
+      ${hasMatch?`<div class="pl-meta" style="margin-top:2px"><a href="#" onclick="event.stopPropagation();targetingSelectTarget='drama';currentDramaName='${currentDramaName}';currentAccountId='${a.id}';openTargetingDrawer();return false" style="font-size:12px">选择定向包</a></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function selectAccountD(id){
   currentAccountId=id;currentLibId=null;currentLibProducts=[];
-  renderAccountList();
+  renderAccountListD();
   renderProductLibraries();
   clearProductTable();
   document.getElementById('plSearch').disabled=false;
@@ -1984,13 +2112,11 @@ function selectAccount(id){
   document.getElementById('plSearch').value='';
 }
 
-// ---- 第二栏：商品库列表 ----
 function filterProductLibraries(){renderProductLibraries(document.getElementById('plSearch').value)}
 function refreshProductLibraries(){document.getElementById('plSearch').value='';renderProductLibraries()}
 function clearLibList(){
   document.getElementById('plListContainer').innerHTML='';
   document.getElementById('plTotalCount').textContent='0';
-  document.getElementById('plSelectedLabel').textContent='无';
   document.getElementById('plSearch').disabled=true;
   document.getElementById('refreshLibBtn').disabled=true;
   document.getElementById('plSearch').value='';
@@ -1998,67 +2124,67 @@ function clearLibList(){
 
 function renderProductLibraries(filter){
   const container=document.getElementById('plListContainer');
-  const mode=getPlSelectMode();
-  let items;
-  if(mode==='per_account'){
-    const account=mockProductAccounts.find(a=>a.id===currentAccountId);
-    if(!account){clearLibList();return}
-    items=account.libraries;
-  }else{
-    items=currentAccountId?allProductLibraries.filter(l=>l.accountId===currentAccountId):allProductLibraries;
-  }
+  if(!currentAccountId){clearLibList();return}
+  const account=mockProductAccounts.find(a=>a.id===currentAccountId);
+  if(!account){clearLibList();return}
+  let items=account.libraries;
   if(filter){const kw=filter.toLowerCase();items=items.filter(l=>l.name.toLowerCase().includes(kw)||l.id.includes(kw))}
   document.getElementById('plTotalCount').textContent=items.length;
-  const selLibIds=[...new Set(selectedProducts.filter(p=>mode==='per_account'?p.accountId===currentAccountId:true).map(p=>p.libId))];
-  const selNames=selLibIds.length?selLibIds.map(id=>{const l=items.find(l=>l.id===id);return l?l.name:''}).filter(Boolean).join(', '):'无';
-  document.getElementById('plSelectedLabel').textContent=selNames;
   container.innerHTML=items.map(l=>{
     const isActive=currentLibId===l.id;
-    const hasSelection=selectedProducts.some(p=>p.libId===l.id);
-    return `<div class="pl-card${isActive?' selected':''}" onclick="selectProductLibrary('${l.id}')">
-      <div class="pl-name">${l.name}${hasSelection?' <span style="color:var(--success);font-size:14px">✓</span>':''}</div>
+    return `<div class="pl-card${isActive?' selected':''}" onclick="selectProductLibraryD('${l.id}')">
+      <div class="pl-name">${l.name}</div>
       <div class="pl-meta"><span>定向地区：${l.region}</span><span>ID: ${l.id}</span></div>
     </div>`;
   }).join('');
 }
 
-function selectProductLibrary(id){
+function selectProductLibraryD(id){
   currentLibId=id;
-  const mode=getPlSelectMode();
-  let lib;
-  if(mode==='per_account'){
-    const account=mockProductAccounts.find(a=>a.id===currentAccountId);
-    lib=account?account.libraries.find(l=>l.id===id):null;
-  }else{
-    lib=allProductLibraries.find(l=>l.id===id);
-    currentAccountId=lib?lib.accountId:null;
-  }
+  const account=mockProductAccounts.find(a=>a.id===currentAccountId);
+  if(!account)return;
+  const lib=account.libraries.find(l=>l.id===id);
   currentLibProducts=lib?lib.products:[];
   renderProductLibraries(document.getElementById('plSearch').value);
   renderProductTable(currentLibProducts);
   document.getElementById('productSearch').disabled=false;
   document.getElementById('refreshProductBtn').disabled=false;
-  document.getElementById('productSelectAll').disabled=false;
   document.getElementById('productSearch').value='';
 }
 
-// ---- 第三栏：商品列表 ----
+// ---- 右栏：商品列表 ----
 function filterProducts(){renderProductTable(currentLibProducts,document.getElementById('productSearch').value)}
 function refreshProducts(){document.getElementById('productSearch').value='';renderProductTable(currentLibProducts)}
 
 function renderProductTable(products,filter){
   let items=products||[];
-  if(filter){const kw=filter.toLowerCase();items=items.filter(p=>p.name.toLowerCase().includes(kw))}
+  if(filter){const kw=filter.toLowerCase();items=items.filter(p=>p.seriesName.toLowerCase().includes(kw))}
   document.getElementById('productTableTitle').textContent='共 '+items.length+' 件商品';
-  const selPids=selectedProducts.filter(p=>p.libId===currentLibId).map(p=>p.id);
-  document.getElementById('productSelectAll').checked=selPids.length>0;
+  // 当前短剧×账户是否已有匹配
+  const currentMatch=dramaMatches[currentDramaName]&&dramaMatches[currentDramaName][currentAccountId];
+  const currentPid=currentMatch?currentMatch.product.productId:null;
   document.getElementById('productTableBody').innerHTML=items.map(p=>{
-    const checked=selPids.includes(p.id)?' checked':'';
-    return `<tr>
-      <td style="text-align:center"><input type="checkbox" value="${p.id}"${checked} onchange="toggleProduct('${p.id}','${p.name}','${p.tag}',${p.episodes})"></td>
-      <td>${p.name}</td><td>${p.tag}</td><td>${p.episodes}</td>
+    const isSelected=currentPid===p.productId;
+    return `<tr style="${isSelected?'background:rgba(64,128,255,.08)':''};cursor:pointer" onclick="assignProduct('${p.productId}')">
+      <td style="text-align:center">${isSelected?'<span style="color:var(--success);font-weight:bold">✓</span>':''}</td>
+      <td>${p.seriesName}</td>
+      <td>${(p.seriesTags||'').replace(/_/g,' ')}</td>
+      <td>${p.totalEpisodes}</td>
     </tr>`;
   }).join('');
+}
+
+function assignProduct(productId){
+  if(!currentDramaName||!currentAccountId||!currentLibId)return;
+  const lib=mockProductAccounts.find(a=>a.id===currentAccountId)?.libraries.find(l=>l.id===currentLibId);
+  if(!lib)return;
+  const product=lib.products.find(p=>p.productId===productId);
+  if(!product)return;
+  if(!dramaMatches[currentDramaName])dramaMatches[currentDramaName]={};
+  dramaMatches[currentDramaName][currentAccountId]={libId:currentLibId,libName:lib.name,product,targeting:generateAutoTargeting(product,lib)};
+  renderProductTable(currentLibProducts,document.getElementById('productSearch').value);
+  renderAccountListD();
+  renderDramaList();
 }
 
 function clearProductTable(){
@@ -2066,31 +2192,7 @@ function clearProductTable(){
   document.getElementById('productTableBody').innerHTML='';
   document.getElementById('productSearch').disabled=true;
   document.getElementById('refreshProductBtn').disabled=true;
-  document.getElementById('productSelectAll').disabled=true;
   document.getElementById('productSearch').value='';
-}
-
-function toggleProduct(pid,name,tag,episodes){
-  const exist=selectedProducts.findIndex(p=>p.libId===currentLibId&&p.id===pid);
-  if(exist>=0){selectedProducts=[]}
-  else{selectedProducts=[{accountId:currentAccountId,libId:currentLibId,id:pid,name,tag,episodes}]}
-  renderProductTable(currentLibProducts,document.getElementById('productSearch').value);
-  renderProductLibraries(document.getElementById('plSearch').value);
-  renderAccountList();
-}
-
-function toggleSelectAllProducts(cb){
-  if(cb.checked){
-    if(currentLibProducts.length>0){
-      const p=currentLibProducts[0];
-      selectedProducts=[{accountId:currentAccountId,libId:currentLibId,id:p.id,name:p.name,tag:p.tag,episodes:p.episodes}];
-    }
-  }else{
-    selectedProducts=[];
-  }
-  renderProductTable(currentLibProducts,document.getElementById('productSearch').value);
-  renderProductLibraries(document.getElementById('plSearch').value);
-  renderAccountList();
 }
 
 // ==================== 表格渲染 ====================
