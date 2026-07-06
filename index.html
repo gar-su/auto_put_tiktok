@@ -773,6 +773,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       <div class="form-group-title">广告设置</div>
 
       <div class="form-item">
+        <label>认证身份</label>
+        <div class="form-control"><span style="line-height:32px;color:#909399;font-size:13px">BC_AUTH_TT（自动按短剧语种匹配，无匹配时英语兜底）</span></div>
+      </div>
+      <div class="form-item">
         <label>行动号召</label>
         <div class="form-control"><span style="line-height:32px;color:#606266">立即观看</span></div>
       </div>
@@ -915,6 +919,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       </div>
       <div class="form-group-title">广告设置</div>
 
+      <div class="form-item">
+        <label>认证身份</label>
+        <div class="form-control"><span style="line-height:32px;color:#909399;font-size:13px">BC_AUTH_TT（自动按短剧语种匹配，无匹配时英语兜底）</span></div>
+      </div>
       <div class="form-item">
         <label>行动号召</label>
         <div class="form-control"><span style="line-height:32px;color:#606266">立即观看</span></div>
@@ -1257,6 +1265,47 @@ const mockTargetingPackages = [
 ];
 let selectedTargetingPackage = null, editingTpId = null, tpSelectedRegions = [];
 const langLabelMap = {zh:'中文',en:'英语',ja:'日语',ko:'韩语',th:'泰语',es:'西班牙语',pt:'葡萄牙语',ar:'阿拉伯语',id:'印尼语',vi:'越南语'};
+// BC_AUTH_TT name → language detection (keyword match, case-insensitive)
+const LANG_NAME_PATTERNS = [
+  {lang:'en', keys:['en','english','英语','英文','美国','英国','加拿大','us','uk','ca','au','nz','北美','欧美','global','通用','default']},
+  {lang:'fr', keys:['fr','french','法语','法文','法国','france','fran']},
+  {lang:'zh', keys:['zh','cn','chinese','中文','中国','台湾','taiwan','tw','hk','香港','华语','国语']},
+  {lang:'es', keys:['es','spanish','español','西班牙语','西语','西班牙','墨西哥','spain','mexico','mx','拉美','南美','latam']},
+  {lang:'ja', keys:['ja','jp','japanese','日语','日文','日本','japan']},
+  {lang:'ko', keys:['ko','kr','korean','韩语','韩文','韩国','korea']},
+  {lang:'th', keys:['th','thai','泰语','泰文','泰国','thailand']},
+  {lang:'pt', keys:['pt','portuguese','葡萄牙语','葡萄牙','巴西','brazil','br','brasil']},
+  {lang:'ar', keys:['ar','arabic','阿拉伯语','阿拉伯','沙特','阿联酋','中东']},
+  {lang:'id', keys:['id','indonesian','印尼语','印尼','印度尼西亚','indonesia']},
+  {lang:'vi', keys:['vi','vietnamese','越南语','越南','vietnam']},
+  {lang:'de', keys:['de','german','德语','德文','德国','germany']},
+  {lang:'tr', keys:['tr','turkish','土耳其语','土耳其','turkey','türk']},
+  {lang:'it', keys:['it','italian','意大利语','意大利','italy']},
+  {lang:'nl', keys:['nl','dutch','荷兰语','荷兰','netherlands']},
+  {lang:'pl', keys:['pl','polish','波兰语','波兰','poland']},
+  {lang:'sv', keys:['sv','swedish','瑞典语','瑞典','sweden']},
+  {lang:'ms', keys:['ms','malay','马来语','马来西亚','malaysia','my']},
+  {lang:'fil', keys:['fil','filipino','tagalog','菲律宾语','菲律宾','philippines','ph']},
+  {lang:'he', keys:['he','hebrew','希伯来语','以色列','israel','il']},
+  {lang:'ru', keys:['ru','russian','俄语','俄文','俄罗斯','russia']},
+];
+function detectLanguageFromName(name){
+  const lower=name.toLowerCase();
+  for(const p of LANG_NAME_PATTERNS){
+    for(const k of p.keys){if(lower.includes(k))return p.lang}
+  }
+  return null;
+}
+function matchIdentityForAd(account, dramaLanguage){
+  const tts=account.bcAuthTTs||[];
+  if(!tts.length)return null;
+  // exact match
+  for(const t of tts){if(detectLanguageFromName(t.name)===dramaLanguage)return t}
+  // english fallback
+  for(const t of tts){if(detectLanguageFromName(t.name)==='en')return t}
+  // last resort: first available
+  return tts[0];
+}
 const allRegions = ['美国','加拿大','英国','德国','法国','日本','韩国','泰国','越南','印尼','巴西','墨西哥','澳大利亚','印度','沙特','阿联酋','新加坡','马来西亚','菲律宾','土耳其','意大利','西班牙','荷兰','瑞典','波兰','埃及','南非','阿根廷','智利','秘鲁'];
 (function(){
   const sel=document.getElementById('accountPackage');
@@ -1779,6 +1828,22 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
   if(!cl||+cl<1||+cl>30){alert('请填写计划创建上限（1-30）');return}
   const accountPkg=document.getElementById('accountPackage').value;
   if(!accountPkg){alert('请选择投放账户');return}
+  // validate BC_AUTH_TT identity matching for all (drama × account) combos
+  const identityResults=[],missingIdentities=[];
+  for(const [dramaName,accounts] of Object.entries(dramaMatches)){
+    for(const [accountId,m] of Object.entries(accounts)){
+      const lang=m.product.spokenLanguage;
+      const acct=mockProductAccounts.find(a=>a.id===accountId);
+      if(!acct)continue;
+      const matched=matchIdentityForAd(acct,lang);
+      if(!matched){
+        missingIdentities.push(dramaName+' ('+lang+') → '+acct.name+': 无匹配 BC_AUTH_TT');
+      }else{
+        identityResults.push({dramaName,accountId,accountName:acct.name,language:lang,identityId:matched.identityId,identityName:matched.name,isFallback:detectLanguageFromName(matched.name)!==lang});
+      }
+    }
+  }
+  if(missingIdentities.length){alert('以下广告缺少 BC_AUTH_TT 认证身份：\n'+missingIdentities.join('\n'));return}
   let campaign,adGroup,ad;
   if(isSales){
     campaign={
@@ -1844,6 +1909,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
     executeFrequency,dramas,endConditions:[{metric:'series_count',operator:'>=',value:ev1},{metric:'account_count',operator:'>=',value:ev2}],campaignLimit:+cl,
     campaignNameSuffix:document.getElementById('campaignNameSuffix').value,
     account:{package:accountPkg,targetingPackage:selectedTargetingPackage},
+    identities:identityResults,
     campaign,adGroup,ad,
     material:{createTime:document.querySelector('#materialCreateTime .btn-option.active').dataset.day,
       filterType:document.querySelector('#materialFilterType .btn-option.active').dataset.type,
@@ -1860,7 +1926,12 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
 
 // ==================== 商品库关联 ====================
 const mockProductAccounts=[
-  {id:'7652323541467234312',name:'TT-MAD-NS-FH-东八-M13-0617-2.0',bcid:'7530195152397369361',libraries:[
+  {id:'7652323541467234312',name:'TT-MAD-NS-FH-东八-M13-0617-2.0',bcid:'7530195152397369361',bcAuthTTs:[
+    {identityId:'idx_mad_en_001',name:'EchoByte-US-English'},
+    {identityId:'idx_mad_fr_001',name:'EchoByte-FR-French'},
+    {identityId:'idx_mad_zh_001',name:'EchoByte-TW-华语'},
+    {identityId:'idx_mad_es_001',name:'EchoByte-ES-Spanish'},
+  ],libraries:[
     {id:'7578806096383510273',name:'短剧库-欧美',region:'美国,加拿大',products:[
       {productId:'7579094770561402640',seriesName:'Imprisoned Phoenix',seriesId:'1936978277919223809',seriesTags:'GANG_MAFIA,BITTER_LOVE',totalEpisodes:63,initialPaidEpisodes:8,spokenLanguage:'en',subtitleLanguage:'en',imageUrl:'https://p16-catalog-sg.ibyteimg.com/i18n-dpa-image/92ce19775206401842a87671f3c22d79~tplv-dw3ygh5mvh-convert.png',auditStatus:'approved',activeStatus:'ACTIVATED'},
       {productId:'7579094884511876880',seriesName:'His Choice Killed Our Daughter',seriesId:'1990271703494557697',seriesTags:'OTHERS,COME_UPPANCE_RETRIBUTION',totalEpisodes:55,initialPaidEpisodes:11,spokenLanguage:'fr',subtitleLanguage:'en',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
@@ -1878,7 +1949,10 @@ const mockProductAccounts=[
       {productId:'MOCK002',seriesName:'庆余年 (Joy of Life)',seriesId:'MOCK_S002',seriesTags:'HISTORICAL',totalEpisodes:46,initialPaidEpisodes:12,spokenLanguage:'zh',subtitleLanguage:'zh',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
     ]},
   ]},
-  {id:'7623607732641417217',name:'TT-ZeroDrama-Main',bcid:'7530195152397369362',libraries:[
+  {id:'7623607732641417217',name:'TT-ZeroDrama-Main',bcid:'7530195152397369362',bcAuthTTs:[
+    {identityId:'idx_zd_en_001',name:'ZeroDrama-Global-English'},
+    {identityId:'idx_zd_zh_001',name:'ZeroDrama-中文站'},
+  ],libraries:[
     {id:'7578806096383510274',name:'零剧商品库A',region:'美国,加拿大',products:[
       {productId:'7579096665169970960',seriesName:'(Dubbed) Broken Bonds',seriesId:'1950389511278764033',seriesTags:'OTHERS,COME_UPPANCE_RETRIBUTION',totalEpisodes:63,initialPaidEpisodes:10,spokenLanguage:'zh',subtitleLanguage:'en',imageUrl:'',auditStatus:'processing',activeStatus:'ACTIVATED'},
       {productId:'7579096760120313617',seriesName:'He Wanted Her... But Lost Me Forever!',seriesId:'1973235072937758721',seriesTags:'HEROINE,COME_UPPANCE_RETRIBUTION',totalEpisodes:67,initialPaidEpisodes:12,spokenLanguage:'zh',subtitleLanguage:'en',imageUrl:'',auditStatus:'approved',activeStatus:'ACTIVATED'},
