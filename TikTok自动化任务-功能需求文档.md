@@ -124,6 +124,21 @@
 - 应用推广 → 显示 `#appPromotionConfig`，隐藏 `#salesConfig`
 - 销量 → 显示 `#salesConfig`，隐藏 `#appPromotionConfig`
 - 切换目标触发素材预览重置
+### 4.3 认证身份匹配（BC_AUTH_TT）
+每个广告创建时需指定 `identity_id` 和 `identity_type=BC_AUTH_TT`。身份数据从 API 实时拉取，存储在账户的 `bcAuthTTs` 数组中（`[{identityId, name}]`）。**匹配不提供手动选择，全自动按语种匹配。**
+
+**语种检测**：`detectLanguageFromName(name)` 基于 BC_AUTH_TT 的 `name` 字段做关键字匹配（不区分大小写），覆盖 19 种语言。示例：
+- `"EchoByte-US-English"` → `en`
+- `"ZeroDrama-中文站"` → `zh`
+- `"Brand-FR-French"` → `fr`
+
+**匹配逻辑** `matchIdentityForAd(account, dramaLanguage)`：
+1. 遍历账户 `bcAuthTTs`，返回 `detectLanguageFromName(t.name) === dramaLanguage` 的**第一个**匹配项
+2. 无匹配 → 返回 `detectLanguageFromName === 'en'` 的第一个作为**英语兜底**
+3. 仍无匹配 → 返回 `bcAuthTTs[0]` 作为**最后兜底**（首个可用身份）
+
+**提交校验**：遍历所有（短剧 × 账户）组合执行匹配，全部有匹配结果方可提交；缺失的组合以 alert 阻断并列出明细。
+**提交字段**：`formData.identities[]`，每项含 `{dramaName, accountId, accountName, language, identityId, identityName, isFallback}`。
 
 ## 5. 应用推广配置 (`APP_PROMOTION`)
 ### 5.1 Smart+ 推广系列
@@ -215,7 +230,9 @@
 显示当前选中定向包名称（未选择时显示「未选择」）+「选择定向包」链接按钮。点击打开定向包选择侧边栏（见 7.2）。
 **联动规则**：商品数据源选择「开启」时，广告组级别定向包隐藏（定向改为商品级别，见 7.3.1）。
 
-### 5.11 广告设置
+### 5.11 认证身份
+只读描述「BC_AUTH_TT（自动按短剧语种匹配，无匹配时英语兜底）」。提交时遍历所有（短剧 × 账户）组合，从账户的 `bcAuthTTs` 列表中按 name 关键字检测语种并匹配，匹配规则见 4.3。
+### 5.12 广告设置
 - **行动号召**：固定文案「立即观看」，不可编辑。对应 API `call_to_action`。
 - **用户评论** 按钮组：关闭(`0`, 默认) / 开启(`1`)。对应 API `user_comments`。
 - **视频下载** 按钮组：关闭(`0`, 默认) / 开启(`1`)。对应 API `video_download`。
@@ -285,8 +302,10 @@
 ### 6.11 广告组设置 — 定向包
 同应用推广 5.10（含商品数据源联动隐藏规则）。
 
-### 6.12 广告设置
-同应用推广 5.11（行动号召固定「立即观看」，评论/下载/共享开关）。
+### 6.12 认证身份
+同应用推广 5.11（只读描述，自动匹配）。
+### 6.13 广告设置
+同应用推广 5.12（行动号召固定「立即观看」，评论/下载/共享开关）。
 
 ## 7. 侧边栏
 ### 7.1 新增账户包
@@ -447,6 +466,8 @@
 **ad:**
 | 表单控件 | 提交字段 | 说明 |
 |---------|---------|------|
+| 认证身份 | `identityId` | 由匹配逻辑自动填入（见 4.3） |
+| 认证身份 | `identityType` | 固定 `"BC_AUTH_TT"` |
 | 行动号召 | `callToAction` | 固定 `"立即观看"` |
 | 用户评论 | `userComments` | `"0"` / `"1"` |
 | 视频下载 | `videoDownload` | `"0"` / `"1"` |
@@ -479,7 +500,7 @@
 | 版位 | `placement` | 同上 |
 
 **ad:**
-同应用推广 8.1 ad 结构。
+同应用推广 8.1 ad 结构（含 `identityId` + `identityType`）。
 
 ### 8.3 公共数据
 | 表单区域 | 提交字段 | 说明 |
@@ -494,6 +515,7 @@
 | 基本信息 | `campaignNameSuffix` | |
 | 投放配置 | `account.package` | 账户包值 |
 | 投放配置 | `account.targetingPackage` | 定向包值 |
+| 认证身份 | `identities` | `[{dramaName, accountId, accountName, language, identityId, identityName, isFallback}]`，见 4.3 |
 | 素材筛选 | `material.*` | 含 createTime/filterType/businessType/media/statRange/sortMetric/materialCount/conditions/repeatCount/dedupAcrossRounds/adCount |
 
 ## 9. 全局交互规则
@@ -529,6 +551,7 @@
 - 计划创建上限 1-30
 - 投放账户 必填
 - 素材筛选 = 自定义时至少一个筛选条件
+- 所有（短剧 × 账户）组合的 BC_AUTH_TT 身份匹配（见 4.3），缺失则阻断
 
 ## 10. 生成监测链接
 监测链接按任务设置自动生成，每条链接对应一个短剧 × 账户组合（与 `dramaMatches` 同粒度）。生成表单为三步向导：基本信息 → 付费策略 → 回传，大部分字段从任务配置自动带入。付费策略需根据是否小程序推广（TikTok Minis）区分字段。
