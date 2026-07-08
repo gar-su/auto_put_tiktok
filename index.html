@@ -706,6 +706,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       <div class="form-group-title">广告组设置</div>
 
       <div class="form-item">
+        <label>广告组名称</label>
+        <div class="form-control"><input type="text" class="input-text" id="appAdgroupName" placeholder="请输入广告组名称" maxlength="50" style="width:100%">
+        <div class="char-count" id="appAdgroupNameCount">0 / 50</div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>广告组状态</label>
+        <div class="form-control"><div class="btn-group" id="appAdgroupStatus">
+          <button type="button" class="btn-option" data-value="1">启用</button>
+          <button type="button" class="btn-option active" data-value="0">暂停</button>
+        </div></div>
+      </div>
+      <div class="form-item">
         <label><span class="required">*</span>优化目标</label>
         <div class="form-control"><div class="btn-group" id="optimizationGoal">
           <button type="button" class="btn-option" data-value="app_event">应用内事件</button>
