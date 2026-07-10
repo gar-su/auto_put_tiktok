@@ -297,12 +297,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <input type="text" placeholder="任务ID" style="width:120px">
         <input type="text" placeholder="任务名称" style="width:150px">
         <select><option value="">任务状态</option><option>启用</option><option>停用</option></select>
-        <select><option value="">请选择竞价策略</option><option>最大转化量</option><option>成本上限</option><option>出价上限</option></select>
         <select><option value="">请选择创建人</option></select>
-        <input type="text" placeholder="最高数量" style="width:120px">
-        <input type="text" placeholder="单次成效费用目标" style="width:160px">
-        <input type="text" placeholder="竞价上限" style="width:120px">
-        <input type="text" placeholder="广告花费回报目标" style="width:160px">
         <button class="btn btn-default btn-sm">查询</button>
         <button class="btn btn-default btn-sm">重置</button>
         <button class="btn btn-primary btn-sm" onclick="openTaskModal()">+ 新建任务</button>
@@ -314,7 +309,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       </div>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>任务名称</th><th>状态</th><th>竞价策略</th><th>日预算</th><th>执行间隔(分钟)</th><th>优化目标</th><th>成效目标</th><th>渠道号</th><th>上次完成时间</th><th>创建人</th><th>更新人</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
+      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>任务名称</th><th>状态</th><th>日预算</th><th>执行间隔(分钟)</th><th>优化目标</th><th>成效目标</th><th>渠道号</th><th>上次完成时间</th><th>创建人</th><th>更新人</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
       <tbody id="autoTaskTableBody"></tbody>
     </table></div>
     <div class="pagination" id="autoTaskPagination"></div>
@@ -352,13 +347,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       <select><option value="">广告系列状态</option><option>已开启</option><option>已关闭</option></select>
       <select><option value="">请选择短剧</option></select>
       <input type="text" placeholder="输入渠道号" style="width:150px">
-      <select><option value="">请选择竞价策略</option><option>最大转化量</option><option>成本上限</option><option>出价上限</option></select>
       <select><option value="">选择业务类型</option><option>付费</option><option>免费</option></select>
       <button class="btn btn-default btn-sm">查询</button>
       <button class="btn btn-default btn-sm">重置</button>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>任务ID</th><th>广告系列ID</th><th>广告系列名称</th><th>账户名称</th><th>账户ID</th><th>渠道名称</th><th>渠道号</th><th>上传状态</th><th>系列状态</th><th>竞价策略</th><th>日预算</th><th>优化目标</th><th>失败原因</th><th>短剧名称</th><th>链接名称</th><th>回传模板</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
+      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>任务ID</th><th>广告系列ID</th><th>广告系列名称</th><th>账户名称</th><th>账户ID</th><th>渠道名称</th><th>渠道号</th><th>上传状态</th><th>系列状态</th><th>日预算</th><th>优化目标</th><th>失败原因</th><th>短剧名称</th><th>链接名称</th><th>回传模板</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
       <tbody id="campaignTableBody"></tbody>
     </table></div>
     <div class="pagination" id="campaignPagination"></div>
@@ -383,7 +377,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       <select><option value="">广告组状态</option><option>已开启</option><option>已关闭</option></select>
       <select><option value="">请选择短剧</option></select>
       <input type="text" placeholder="输入渠道号" style="width:150px">
-      <select><option value="">请选择竞价策略</option><option>最大转化量</option><option>成本上限</option><option>出价上限</option></select>
       <select><option value="">选择业务类型</option><option>付费</option><option>免费</option></select>
       <button class="btn btn-default btn-sm">查询</button>
       <button class="btn btn-default btn-sm">重置</button>
@@ -409,7 +402,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       <select><option value="">选择短剧</option></select>
       <input type="text" placeholder="上传广告组ID" style="width:150px">
       <input type="text" placeholder="广告组ID" style="width:150px">
-      <select><option value="">选择竞价策略</option><option>最大转化量</option><option>成本上限</option><option>出价上限</option></select>
       <select><option value="">选择业务类型</option><option>付费</option><option>免费</option></select>
       <select><option value="">选择上传状态</option><option>待上传</option><option>上传成功</option><option>上传失败</option></select>
       <button class="btn btn-default btn-sm">查询</button>
