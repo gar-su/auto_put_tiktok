@@ -893,7 +893,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <label><span class="required">*</span>出价</label>
         <div class="form-control"><div class="input-group"><span>$</span><input type="text" class="input-text" id="salesBidAmount" placeholder="请输入出价" style="width:160px"><span>USD</span></div></div>
       </div>
-      <div class="form-item">
+      <div class="form-item" id="salesEventCountItem">
         <label><span class="required">*</span>事件统计方式</label>
         <div class="form-control"><div class="btn-group" id="salesEventCount">
           <button type="button" class="btn-option active" data-value="once">仅一次</button>
@@ -1754,11 +1754,28 @@ document.querySelectorAll('#salesPlacement .btn-option').forEach(b=>b.addEventLi
 function toggleSalesOptimizationEvent(e){
   const goal=e.target.dataset.value;
   const item=document.getElementById('salesOptimizationEventItem');
+  const eventCountItem=document.getElementById('salesEventCountItem');
+  const onceBtn=document.querySelector('#salesEventCount .btn-option[data-value="once"]');
+  const everyBtn=document.querySelector('#salesEventCount .btn-option[data-value="every"]');
   if(goal==='landing_page_view'||goal==='value'){
     item.style.display='none';
   }else{
     item.style.display='flex';
     if(goal==='value')document.getElementById('salesAdOptimizationEvent').value='purchase';
+  }
+  // 事件统计方式联动
+  if(goal==='click'||goal==='landing_page_view'){
+    eventCountItem.style.display='none';
+  }else if(goal==='value'){
+    eventCountItem.style.display='flex';
+    onceBtn.style.display='none';
+    everyBtn.classList.add('active');
+  }else{
+    eventCountItem.style.display='flex';
+    onceBtn.style.display='inline-flex';
+    if(!document.querySelector('#salesEventCount .btn-option.active')){
+      onceBtn.classList.add('active');
+    }
   }
   toggleSalesBidStrategyOptions(goal);
 }
