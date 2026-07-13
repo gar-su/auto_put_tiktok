@@ -753,6 +753,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <label><span class="required">*</span>出价</label>
         <div class="form-control"><div class="input-group"><span>$</span><input type="text" class="input-text" id="bidAmount" placeholder="请输入出价" style="width:160px"><span>USD</span></div></div>
       </div>
+      <div class="form-item" id="appEventCountItem">
+        <label><span class="required">*</span>事件统计方式</label>
+        <div class="form-control"><div class="btn-group" id="appEventCount">
+          <button type="button" class="btn-option active" data-value="once">仅一次</button>
+        </div></div>
+      </div>
       <div class="form-item">
         <label><span class="required">*</span>版位</label>
         <div class="form-control"><div class="btn-group" id="placement">
@@ -1628,7 +1634,7 @@ function bindBtnGroup(sel){
 ['#materialCreateTime','#businessTypeBtns','#mediaFilterBtns','#statRangeBtns','#sortMetricBtns','#materialCountType','#repeatCountType','#dedupAcrossRounds'].forEach(bindBtnGroup);
 
 // ==================== 投放配置/广告组设置/广告设置 交互 ====================
-['#campaignObjective','#campaignType','#productSource','#campaignStatus','#optimizationGoal','#placement','#campaignBidStrategy','#userComments','#videoDownload','#videoShare'].forEach(bindBtnGroup);
+['#campaignObjective','#campaignType','#productSource','#campaignStatus','#optimizationGoal','#placement','#campaignBidStrategy','#appEventCount','#userComments','#videoDownload','#videoShare'].forEach(bindBtnGroup);
 
 
 
@@ -1680,6 +1686,8 @@ function toggleAppEventField(){
   document.getElementById('appEventItem').style.display=goal==='app_event'?'flex':'none';
   document.getElementById('valueAppEventItem').style.display=goal==='value'?'flex':'none';
   document.getElementById('targetRoasItem').style.display=(campaignType==='app_install'&&goal==='value')?'flex':'none';
+  // 事件统计方式：仅应用内事件/安装时显示，仅支持「仅一次」
+  document.getElementById('appEventCountItem').style.display=(goal==='app_event'||goal==='install')?'flex':'none';
   toggleBidStrategyOptions();
 }
 document.querySelectorAll('#optimizationGoal .btn-option').forEach(b=>b.addEventListener('click',function(){
@@ -1723,7 +1731,7 @@ function toggleCampaignObjective(){
   document.getElementById('appPromotionConfig').style.display=obj==='app_promotion'?'block':'none';
   document.getElementById('salesConfig').style.display=obj==='product_sales'?'block':'none';
   if(obj==='product_sales'){toggleSalesOptimizationEvent();toggleSalesBidStrategyOptions();toggleProductLibraryConnect();}
-  if(obj==='app_promotion'){toggleCampaignTypeFields();toggleBidStrategyOptions();}
+  if(obj==='app_promotion'){toggleCampaignTypeFields();toggleAppEventField();toggleBidStrategyOptions();}
 }
 document.querySelectorAll('#campaignObjective .btn-option').forEach(b=>b.addEventListener('click',function(){
   document.querySelectorAll('#campaignObjective .btn-option').forEach(x=>x.classList.remove('active'));
@@ -1918,6 +1926,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
     adGroup={
       optimizationGoal:document.querySelector('#optimizationGoal .btn-option.active').dataset.value,
       appEvent:(()=>{const g=document.querySelector('#optimizationGoal .btn-option.active').dataset.value;if(g==='app_event')return document.getElementById('appEvent').value;if(g==='value')return document.getElementById('valueAppEvent').value;return '';})(),
+      eventCount:document.querySelector('#appEventCount .btn-option.active').dataset.value,
       targetRoas:document.getElementById('targetRoas').value,
       bidAmount:document.getElementById('bidAmount').value,
       placement:document.querySelector('#placement .btn-option.active').dataset.value==='manual'?Array.from(document.querySelectorAll('#placementManualItem .placement-checkbox:checked')).map(c=>c.value):'auto',
