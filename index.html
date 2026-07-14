@@ -164,6 +164,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .selected-drama-tag .remove{cursor:pointer;color:var(--text-secondary);font-size:16px;line-height:1}
 .selected-drama-tag .remove:hover{color:#ff4d4f}
 
+/* 短剧定向包行布局 */
+.drama-targeting-row{border:1px solid #ebeef5;border-radius:6px;padding:12px;margin-bottom:8px;background:var(--white)}
+.drama-targeting-row-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.drama-targeting-row-header .drama-targeting-name{font-size:14px;font-weight:500;color:var(--text)}
+.drama-targeting-row-header .drama-targeting-remove{cursor:pointer;color:var(--text-secondary);font-size:18px;line-height:1}
+.drama-targeting-row-header .drama-targeting-remove:hover{color:var(--danger)}
+.drama-targeting-tags{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.drama-targeting-tag{display:inline-flex;align-items:center;gap:4px;background:#ecf5ff;border:1px solid #b3d8ff;border-radius:3px;padding:2px 8px;font-size:12px;color:var(--primary)}
+.drama-targeting-tag .remove-drama-targeting{cursor:pointer;color:var(--primary);font-size:14px;line-height:1;opacity:.7}
+.drama-targeting-tag .remove-drama-targeting:hover{opacity:1;color:var(--danger)}
+.drama-targeting-none{font-size:12px;color:var(--text-secondary)}
+.drama-targeting-add{font-size:13px;color:var(--primary);cursor:pointer;white-space:nowrap}
+.drama-targeting-add:hover{color:var(--primary-light);text-decoration:underline}
+.tp-check{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:2px solid #dcdfe6;border-radius:4px;font-size:12px;color:transparent;transition:all .15s;flex-shrink:0}
+.tp-check.checked{background:var(--primary);border-color:var(--primary);color:var(--white)}
+
 /* 素材预览 */
 .material-preview-section{margin-top:24px;border:1px solid #dcdfe6;border-radius:4px;display:none}
 .material-preview-section.show{display:block}
@@ -477,8 +493,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
           </div>
           <div id="dramaSearchResult"><div class="drama-placeholder">请输入搜索条件进行搜索</div></div>
           <div class="selected-dramas-area" id="selectedDramasArea" style="display:none">
-            <div class="selected-dramas-title">已选短剧</div>
-            <div class="selected-dramas-list" id="selectedDramasList"></div>
+            <div class="selected-dramas-title" style="display:flex;align-items:center;margin-bottom:12px">
+              <span>已选短剧</span>
+              <a href="#" class="add-time-btn" onclick="openTargetingDrawer();return false" style="margin-left:12px;font-size:13px">一键分配定向包</a>
+              <a href="#" class="add-time-btn" onclick="clearAllTargeting();return false" style="margin-left:8px;font-size:13px;color:#ff4d4f">清空定向包</a>
+              <a href="#" class="add-time-btn" onclick="clearAllDramas();return false" style="margin-left:8px;font-size:13px;color:#ff4d4f">清空短剧</a>
+            </div>
+            <div id="selectedDramasList"></div>
           </div>
         </div></div>
       </div>
@@ -773,15 +794,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
           <label class="checkbox-label"><input type="checkbox" value="pangle" class="placement-checkbox"> Pangle</label>
         </div></div>
       </div>
-      <div class="form-item" id="appTargetingItem">
-        <label><span class="required">*</span>定向包</label>
-        <div class="form-control">
-          <div style="display:flex;align-items:center;gap:12px">
-            <span id="appTargetingPackageLabel" style="color:var(--text-secondary);font-size:14px;line-height:32px">未选择</span>
-            <a href="#" class="add-time-btn" style="line-height:32px;text-decoration:none" onclick="openTargetingModal();return false">选择定向包</a>
-          </div>
-        </div>
-      </div>
       <div class="form-group-title">广告设置</div>
 
       <div class="form-item">
@@ -920,15 +932,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
           <label class="checkbox-label"><input type="checkbox" value="pangle" class="placement-checkbox"> Pangle</label>
         </div></div>
       </div>
-      <div class="form-item" id="salesTargetingItem">
-        <label><span class="required">*</span>定向包</label>
-        <div class="form-control">
-          <div style="display:flex;align-items:center;gap:12px">
-            <span id="salesTargetingPackageLabel" style="color:var(--text-secondary);font-size:14px;line-height:32px">未选择</span>
-            <a href="#" class="add-time-btn" style="line-height:32px;text-decoration:none" onclick="openTargetingModal();return false">选择定向包</a>
-          </div>
-        </div>
-      </div>
       <div class="form-group-title">广告设置</div>
 
       <div class="form-item">
@@ -1044,6 +1047,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
     <!-- 列表视图 -->
     <div class="drawer-body" id="tpListView">
       <div style="margin-bottom:12px"><button class="btn btn-primary btn-sm" onclick="showTpForm()">+ 新建定向包</button></div>
+      <div id="batchScopeArea" style="display:none;background:#f5f7fa;border-radius:4px;padding:10px;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:500;margin-bottom:6px">作用域</div>
+        <div id="batchScopeRadios" style="display:flex;gap:20px;font-size:13px"></div>
+      </div>
       <div id="tpListContainer"></div>
     </div>
     <!-- 表单视图 -->
@@ -1132,6 +1139,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <button type="button" class="btn-cancel" onclick="cancelTpForm()">返回列表</button>
         <button type="button" class="btn-submit" onclick="saveTargetingPackage()">保存</button>
       </div>
+    </div>
+    <div class="drawer-footer" id="tpDrawerFooter">
+      <button type="button" class="btn-cancel" onclick="closeTargetingDrawer()">取消</button>
+      <button type="button" class="btn-submit" onclick="confirmTargetingSelection()">确定</button>
     </div>
   </div>
 </div>
@@ -1248,13 +1259,9 @@ function closeTaskModal(){document.getElementById('taskModalOverlay').style.disp
 function resetTaskForm(){
   document.getElementById('autoTaskForm').reset();
   document.getElementById('taskNameCount').textContent='0 / 50';
-  document.querySelectorAll('#selectedDramasList .selected-drama-tag').forEach(t=>t.remove());
+  dramaTargetingMap.clear();
   document.getElementById('selectedDramasArea').style.display='none';
   document.getElementById('dramaSearchResult').innerHTML='<div class="drama-placeholder">请输入搜索条件进行搜索</div>';
-  document.getElementById('appTargetingPackageLabel').textContent='未选择';
-  document.getElementById('appTargetingPackageLabel').style.color='var(--text-secondary)';
-  document.getElementById('salesTargetingPackageLabel').textContent='未选择';
-  document.getElementById('salesTargetingPackageLabel').style.color='var(--text-secondary)';
   closeMaterialPreview();
 }
 
@@ -1275,7 +1282,9 @@ const mockTargetingPackages = [
   {id:'tp3',name:'女性消费定向',gender:'女',ageGroups:['18-24','25-34'],languages:['zh','ja','ko'],os:'iOS',minOsVersion:'14.0',network:'不限',locations:'日本, 韩国'},
   {id:'tp4',name:'广泛匹配',gender:'不限',ageGroups:['18-24','25-34','35-44','45-54','55+'],languages:[],os:'不限',minOsVersion:'',network:'不限',locations:''},
 ];
-let selectedTargetingPackage = null, editingTpId = null, tpSelectedRegions = [];
+let editingTpId = null, tpSelectedRegions = [];
+let dramaTargetingMap = new Map();
+let currentTargetingDramaKey = null, batchSelectedIds = [];
 const langLabelMap = {zh:'中文',en:'英语',ja:'日语',ko:'韩语',th:'泰语',es:'西班牙语',pt:'葡萄牙语',ar:'阿拉伯语',id:'印尼语',vi:'越南语'};
 // BC_AUTH_TT identity name → language via Unicode character range detection
 const UNICODE_SCRIPT_RANGES=[
@@ -1322,8 +1331,12 @@ const allRegions = ['美国','加拿大','英国','德国','法国','日本','�
   document.addEventListener('click',function(e){if(!document.getElementById('tpLanguage').contains(e.target))closeLangDropdown()});
 })();
 // ========== 定向包侧边栏 ==========
-function openTargetingModal(){openTargetingDrawer()}
-function openTargetingDrawer(){
+function openTargetingDrawer(btn){
+  if(btn&&btn.dataset&&btn.dataset.key){
+    currentTargetingDramaKey=btn.dataset.key;
+  }else{
+    currentTargetingDramaKey='__batch__';batchSelectedIds=[];
+  }
   document.getElementById('targetingDrawer').style.display='flex';
   showTpList();
 }
@@ -1331,42 +1344,65 @@ function closeTargetingDrawer(){document.getElementById('targetingDrawer').style
 function showTpList(){
   document.getElementById('tpListView').style.display='block';
   document.getElementById('tpFormView').style.display='none';
-  document.getElementById('tpDrawerTitle').textContent='选择定向包';
+  document.getElementById('tpDrawerFooter').style.display='flex';
+  const isBatch=currentTargetingDramaKey==='__batch__';
+  document.getElementById('tpDrawerTitle').textContent=isBatch?'一键分配定向包':'选择定向包';
+  document.getElementById('batchScopeArea').style.display=isBatch?'block':'none';
   renderTpList();
 }
+function tpDesc(tp){
+  const parts=[tp.gender!=='不限'?tp.gender:'',tp.ageGroups.length?tp.ageGroups.join(',')+'岁':'',tp.os!=='不限'?tp.os:'',tp.locations||'不限地区'].filter(Boolean);
+  return parts.join(' | ')||'全量定向';
+}
 function renderTpList(){
+  const isBatch=currentTargetingDramaKey==='__batch__';
+  const selectedIds=isBatch?batchSelectedIds:(currentTargetingDramaKey?(dramaTargetingMap.get(currentTargetingDramaKey)||[]):[]);
   document.getElementById('tpListContainer').innerHTML=mockTargetingPackages.map(tp=>{
-    const desc=[tp.gender!=='不限'?tp.gender:'',tp.ageGroups.length?tp.ageGroups.join(',')+'岁':'',tp.os!=='不限'?tp.os:'',tp.locations||'不限地区'].filter(Boolean).join(' | ');
-    return `<div class="targeting-list-item${selectedTargetingPackage&&selectedTargetingPackage.id===tp.id?' selected':''}" onclick="selectTargetingPackage('${tp.id}')">
-      <div><div class="tp-name">${tp.name}</div><div class="tp-desc">${desc||'全量定向'}</div></div>
+    const checked=selectedIds.includes(tp.id);
+    return `<div class="targeting-list-item${checked?' selected':''}" onclick="toggleTpSelection('${tp.id}')">
+      <div><span class="tp-check${checked?' checked':''}">✓</span></div>
+      <div style="flex:1"><div class="tp-name">${tp.name}</div><div class="tp-desc">${tpDesc(tp)}</div></div>
       <div class="tp-actions"><button class="btn btn-text btn-sm" onclick="event.stopPropagation();editTp('${tp.id}')">编辑</button><button class="btn btn-text btn-sm" style="color:var(--danger)" onclick="event.stopPropagation();deleteTp('${tp.id}')">删除</button></div>
     </div>`;
-  }).join('')||'<div style="text-align:center;padding:32px;color:var(--text-secondary)">暂无定向包</div>';
+  }).join('')||'<div style="text-align:center;padding:32px;color:var(--text-secondary)">暂无定向包，点击上方按钮新建</div>';
+  if(isBatch){
+    const total=dramaTargetingMap.size,unassigned=Array.from(dramaTargetingMap.values()).filter(pkgs=>pkgs.length===0).length;
+    document.getElementById('batchScopeRadios').innerHTML=`<label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="batchScope" value="all" checked><span>全部短剧 (${total})</span></label><label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="batchScope" value="unassigned"><span>仅未分配的短剧 (${unassigned})</span></label>`;
+  }
 }
-let targetingSelectTarget='task'; // 'task' | 'drama'
-function selectTargetingPackage(id){
-  const tp=mockTargetingPackages.find(t=>t.id===id)||null;
-  if(targetingSelectTarget==='drama'&&currentDramaName&&currentAccountId&&dramaMatches[currentDramaName]&&dramaMatches[currentDramaName][currentAccountId]){
-    dramaMatches[currentDramaName][currentAccountId].targeting={id:tp?tp.id:'',name:tp?tp.name:'手动-未选',type:'manual'};
-    if(tp){dramaMatches[currentDramaName][currentAccountId].targeting.desc=tp.gender!=='不限'?tp.gender:''}
-    targetingSelectTarget='task';
-    renderAccountListD();renderDramaList();renderSelectedProductLibs();
+function toggleTpSelection(tpId){
+  if(!currentTargetingDramaKey)return;
+  if(currentTargetingDramaKey==='__batch__'){
+    const idx=batchSelectedIds.indexOf(tpId);
+    if(idx>=0)batchSelectedIds.splice(idx,1);else batchSelectedIds.push(tpId);
+    renderTpList();return;
+  }
+  const pkgs=dramaTargetingMap.get(currentTargetingDramaKey)||[];
+  const idx=pkgs.indexOf(tpId);
+  if(idx>=0)pkgs.splice(idx,1);else pkgs.push(tpId);
+  dramaTargetingMap.set(currentTargetingDramaKey,pkgs);
+  renderTpList();
+}
+function confirmTargetingSelection(){
+  if(currentTargetingDramaKey==='__batch__'){
+    if(batchSelectedIds.length===0){alert('请选择至少一个定向包');return}
+    const scope=document.querySelector('input[name="batchScope"]:checked').value;
+    dramaTargetingMap.forEach((pkgs,key)=>{
+      if(scope==='all'||(scope==='unassigned'&&pkgs.length===0)){
+        dramaTargetingMap.set(key,[...batchSelectedIds]);
+      }
+    });
     closeTargetingDrawer();
+    renderAllDramaRows();
     return;
   }
-  targetingSelectTarget='task';
-  selectedTargetingPackage=tp;
-  const lbl=selectedTargetingPackage?selectedTargetingPackage.name:'未选择';
-  const clr=selectedTargetingPackage?'#606266':'var(--text-secondary)';
-  document.getElementById('appTargetingPackageLabel').textContent=lbl;
-  document.getElementById('appTargetingPackageLabel').style.color=clr;
-  document.getElementById('salesTargetingPackageLabel').textContent=lbl;
-  document.getElementById('salesTargetingPackageLabel').style.color=clr;
   closeTargetingDrawer();
+  renderAllDramaRows();
 }
 function showTpForm(editData){
   document.getElementById('tpListView').style.display='none';
   document.getElementById('tpFormView').style.display='block';
+  document.getElementById('tpDrawerFooter').style.display='none';
   document.getElementById('tpDrawerTitle').textContent=editData?'编辑定向包':'新建定向包';
   document.getElementById('tpName').value=editData?editData.name:'';
   document.getElementById('tpNameCount').textContent=(editData?editData.name:'').length+' / 50';
@@ -1463,7 +1499,7 @@ function saveTargetingPackage(){
   editingTpId=null;showTpList();
 }
 function editTp(id){const tp=mockTargetingPackages.find(t=>t.id===id);if(tp)showTpForm(tp)}
-function deleteTp(id){if(!confirm('确定删除此定向包？'))return;mockTargetingPackages.splice(mockTargetingPackages.findIndex(t=>t.id===id),1);if(selectedTargetingPackage&&selectedTargetingPackage.id===id){selectedTargetingPackage=null;document.getElementById('appTargetingPackageLabel').textContent='未选择';document.getElementById('appTargetingPackageLabel').style.color='var(--text-secondary)';document.getElementById('salesTargetingPackageLabel').textContent='未选择';document.getElementById('salesTargetingPackageLabel').style.color='var(--text-secondary)'}renderTpList()}
+function deleteTp(id){if(!confirm('确定删除此定向包？'))return;mockTargetingPackages.splice(mockTargetingPackages.findIndex(t=>t.id===id),1);dramaTargetingMap.forEach((pkgs,key)=>{const i=pkgs.indexOf(id);if(i>=0){pkgs.splice(i,1);dramaTargetingMap.set(key,pkgs)}});renderTpList();renderAllDramaRows()}
 function toggleOsVersion(){const os=document.querySelector('#tpOs .btn-option.active').dataset.value;document.querySelectorAll('.tp-os-version').forEach(e=>e.style.display=os==='不限'?'none':'flex')}
 document.getElementById('tpName').addEventListener('input',function(){document.getElementById('tpNameCount').textContent=this.value.length+' / 50'});
 document.querySelectorAll('#tpGender .btn-option').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('#tpGender .btn-option').forEach(x=>x.classList.remove('active'));this.classList.add('active')}));
@@ -1583,23 +1619,67 @@ function addDrama(btn){
   const card=btn.closest('.drama-result-card');
   const items=card.querySelectorAll('.drama-result-item .value');
   const tagText=`${items[1].textContent}-${items[0].textContent}-${items[2].textContent}-${items[3].textContent}`;
-  if(Array.from(document.querySelectorAll('.selected-drama-tag span:first-child')).map(el=>el.textContent).includes(tagText)){alert('该短剧已添加');return}
+  if(dramaTargetingMap.has(tagText)){alert('该短剧已添加');return}
   if(Object.keys(dramaMatches).length>0){
     if(!confirm('添加短剧时将清空商品库列表'))return;
     dramaMatches={};renderSelectedProductLibs();
   }
-  const list=document.getElementById('selectedDramasList'),area=document.getElementById('selectedDramasArea');
-  const tag=document.createElement('div');tag.className='selected-drama-tag';
-  tag.innerHTML=`<span>${tagText}</span><span class="remove" onclick="removeDrama(this)">&times;</span>`;
-  list.appendChild(tag);area.style.display='block';btn.textContent='已添加';btn.disabled=true;resetMaterialPreview();
+  dramaTargetingMap.set(tagText,[]);
+  renderAllDramaRows();
+  btn.textContent='已添加';btn.disabled=true;resetMaterialPreview();
 }
-function removeDrama(btn){
-  btn.closest('.selected-drama-tag').remove();
+function renderDramaRow(dramaKey){
+  const pkgIds=dramaTargetingMap.get(dramaKey)||[];
+  const tags=pkgIds.map(id=>{const tp=mockTargetingPackages.find(t=>t.id===id);return tp?`<span class="drama-targeting-tag">${tp.name}<span class="remove-drama-targeting" data-key="${dramaKey.replace(/"/g,'&quot;')}" data-pkg="${id}">&times;</span></span>`:''}).join('');
+  const none=pkgIds.length===0?'<span class="drama-targeting-none">未分配</span>':'';
+  return `<div class="drama-targeting-row">
+    <div class="drama-targeting-row-header">
+      <span class="drama-targeting-name">${dramaKey}</span>
+      <span class="drama-targeting-remove" data-key="${dramaKey.replace(/"/g,'&quot;')}">&times;</span>
+    </div>
+    <div class="drama-targeting-tags">
+      ${none}${tags}
+      <span class="drama-targeting-add" data-key="${dramaKey.replace(/"/g,'&quot;')}" onclick="openTargetingDrawer(this)">+ 选择定向包</span>
+    </div>
+  </div>`;
+}
+function renderAllDramaRows(){
   const list=document.getElementById('selectedDramasList');
-  if(list.querySelectorAll('.selected-drama-tag').length===0)document.getElementById('selectedDramasArea').style.display='none';
-  if(Object.keys(dramaMatches).length>0){dramaMatches={};renderSelectedProductLibs()}
-  resetMaterialPreview()
+  list.innerHTML=Array.from(dramaTargetingMap.keys()).map(k=>renderDramaRow(k)).join('');
+  document.getElementById('selectedDramasArea').style.display=dramaTargetingMap.size>0?'block':'none';
 }
+function clearAllDramas(){
+  if(!dramaTargetingMap.size)return;
+  if(!confirm('确定清空全部短剧？'))return;
+  dramaTargetingMap.clear();
+  renderAllDramaRows();
+}
+function clearAllTargeting(){
+  if(Array.from(dramaTargetingMap.values()).every(pkgs=>pkgs.length===0))return;
+  if(!confirm('确定清空所有短剧的定向包分配？'))return;
+  dramaTargetingMap.forEach((pkgs,key)=>dramaTargetingMap.set(key,[]));
+  renderAllDramaRows();
+}
+
+// ==================== 短剧行事件委托 ====================
+document.getElementById('selectedDramasList').addEventListener('click',function(e){
+  const removeTag=e.target.closest('.remove-drama-targeting');
+  if(removeTag){
+    const key=removeTag.dataset.key,pkg=removeTag.dataset.pkg;
+    const pkgs=dramaTargetingMap.get(key)||[],i=pkgs.indexOf(pkg);
+    if(i>=0)pkgs.splice(i,1);
+    dramaTargetingMap.set(key,pkgs);
+    renderAllDramaRows();
+    return;
+  }
+  const rm=e.target.closest('.drama-targeting-remove');
+  if(rm){
+    dramaTargetingMap.delete(rm.dataset.key);
+    if(Object.keys(dramaMatches).length>0){dramaMatches={};renderSelectedProductLibs()}
+    renderAllDramaRows();
+    return;
+  }
+});
 
 // ==================== 表单交互 ====================
 document.getElementById('taskName').addEventListener('input',function(){document.getElementById('taskNameCount').textContent=this.value.length+' / 50'});
@@ -1844,12 +1924,12 @@ function resetMaterialPreview(){if(previewVisible)closeMaterialPreview();documen
 document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.preventDefault();
   if(!checkMaterialConditionRequired()){alert('选择自定义时，至少需要输入一个条件');return}
   const taskName=document.getElementById('taskName').value,executeFrequency=document.getElementById('executeFrequency').value;
-  const dramas=Array.from(document.querySelectorAll('.selected-drama-tag span:first-child')).map(t=>t.textContent);
+  const dramas=Array.from(dramaTargetingMap.entries()).map(([key,pkgs])=>({key,targetingPackages:pkgs}));
   const ev1=document.querySelectorAll('#endConditionGroup .condition-input')[0].value,ev2=document.querySelectorAll('#endConditionGroup .condition-input')[1].value;
   const cl=document.getElementById('campaignLimit').value;
   const isSales=document.querySelector('#campaignObjective .btn-option.active').dataset.value==='product_sales';
   if(!taskName){alert('请输入任务名称');return}if(!executeFrequency){alert('请输入执行频率');return}
-  if(dramas.length===0){alert('请选择短剧');return}if(!ev1||!ev2){alert('请填写结束运行条件的数值');return}
+  if(dramas.length===0){alert('请选择短剧');return}if(dramas.some(d=>d.targetingPackages.length===0)){alert('请为每个短剧分配至少一个定向包');return}if(!ev1||!ev2){alert('请填写结束运行条件的数值');return}
   if(!cl||+cl<1||+cl>30){alert('请填写计划创建上限（1-30）');return}
   const accountPkg=document.getElementById('accountPackage').value;
   if(!accountPkg){alert('请选择投放账户');return}
@@ -1942,7 +2022,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
     timeRanges:Array.from(document.querySelectorAll('#timeRangeContainer .time-range-group')).map(r=>({start:r.querySelectorAll('.time-input')[0].value,end:r.querySelectorAll('.time-input')[1].value})),
     executeFrequency,dramas,endConditions:[{metric:'series_count',operator:'>=',value:ev1},{metric:'account_count',operator:'>=',value:ev2}],campaignLimit:+cl,
     campaignNameSuffix:document.getElementById('campaignNameSuffix').value,
-    account:{package:accountPkg,targetingPackage:selectedTargetingPackage},
+    account:{package:accountPkg},
     identities:identityResults,
     campaign,adGroup,ad,
     material:{createTime:document.querySelector('#materialCreateTime .btn-option.active').dataset.day,
@@ -2011,7 +2091,7 @@ let currentLibId=null;
 let currentLibProducts=[];
 
 function getSelectedDramas(){
-  return Array.from(document.querySelectorAll('.selected-drama-tag span:first-child')).map(t=>t.textContent);
+  return Array.from(dramaTargetingMap.keys());
 }
 
 function toggleProductLibraryConnect(){
@@ -2019,12 +2099,10 @@ function toggleProductLibraryConnect(){
   if(obj==='product_sales'){
     const enabled=document.getElementById('salesProductSourceItem').style.display!=='none'&&document.querySelector('#salesProductSource .btn-option.active').dataset.value==='1';
     document.getElementById('salesProductLibraryItem').style.display=enabled?'flex':'none';
-    document.getElementById('salesTargetingItem').style.display=enabled?'none':'flex';
     if(!enabled){dramaMatches={};renderSelectedProductLibs()}
   }else{
     const enabled=document.getElementById('productSourceItem').style.display!=='none'&&document.querySelector('#productSource .btn-option.active').dataset.value==='1';
     document.getElementById('productLibraryItem').style.display=enabled?'flex':'none';
-    document.getElementById('appTargetingItem').style.display=enabled?'none':'flex';
     if(!enabled){dramaMatches={};renderSelectedProductLibs()}
   }
 }
@@ -2213,7 +2291,6 @@ function renderAccountListD(){
       <div class="pl-name">${a.name}${hasMatch?' <span style="color:var(--success);font-size:14px">✓ '+match.product.seriesName+'</span>':''}</div>
       <div class="pl-meta"><span>ID: ${a.id}</span><span>BCID: ${a.bcid}</span></div>
       ${tHtml}
-      ${hasMatch?`<div class="pl-meta" style="margin-top:2px"><a href="#" onclick="event.stopPropagation();targetingSelectTarget='drama';currentDramaName='${currentDramaName}';currentAccountId='${a.id}';openTargetingDrawer();return false" style="font-size:12px">选择定向包</a></div>`:''}
     </div>`;
   }).join('');
 }
