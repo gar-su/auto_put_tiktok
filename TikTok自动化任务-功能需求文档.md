@@ -357,17 +357,12 @@
 从右侧滑入的抽屉（720px 宽）。
 **表单字段：**
 - 账号包名称：文本，必填，最大 50 字符，带计数
-- 推广渠道：文本，必填
-- 渠道号：文本，必填
-- 投放策略 按钮组：直投(`直投`, 默认) / W2A(`W2A`)
-- W2A 模式下额外显示：
-  - 行动号召（落地页文案）：文本，最大 26 字符，带计数
-  - 像素ID：文本
 - **账户范围**：标题显示账户总数，搜索框可过滤账户名
   - 表格列：账户ID、账户名称、操作（「添加」按钮，已添加显示绿色 ✓「已添加」）
   - 分页
   - 底部「已选账户 (N)」标签区，可逐个移除
 - 抽屉底部：取消 / 确定 按钮
+注：投放相关字段（业务类型、推广渠道、渠道号、投放策略、像素ID）已迁移至任务表单（见 4.3-4.7）。
 
 ### 7.2 定向包
 从右侧滑入的抽屉。
@@ -512,7 +507,7 @@
 **ad:**
 | 表单控件 | 提交字段 | 说明 |
 |---------|---------|------|
-| 认证身份 | `identityId` | 由匹配逻辑自动填入（见 4.3） |
+| 认证身份 | `identityId` | 由匹配逻辑自动填入（见 4.8） |
 | 认证身份 | `identityType` | 固定 `"BC_AUTH_TT"` |
 | 行动号召 | `callToAction` | 固定 `"立即观看"` |
 | 用户评论 | `userComments` | `"0"` / `"1"` |
@@ -566,7 +561,7 @@
 | 投放配置 | `account.channelNo` | 渠道号（文本输入） |
 | 投放配置 | `account.strategy` | 投放策略（自动推导，见 4.6） |
 | 投放配置 | `account.pixelId` | 像素ID（仅销量模式） |
-| 认证身份 | `identities` | `[{dramaName, accountId, accountName, language, identityId, identityName, isFallback}]`，见 4.3 |
+| 认证身份 | `identities` | `[{dramaName, accountId, accountName, language, identityId, identityName, isFallback}]`，见 4.8 |
 | 素材筛选 | `material.*` | 含 createTime/filterType/businessType/media/statRange/sortMetric/materialCount/conditions/repeatCount/dedupAcrossRounds/adCount |
 
 ## 9. 生成监测链接
