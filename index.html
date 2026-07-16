@@ -340,7 +340,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       <button class="btn btn-primary btn-sm" onclick="openAccountPackageDrawer()">+ 新增账户包</button>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>账户包名称</th><th>业务类型</th><th>渠道名称</th><th>渠道号</th><th>投放策略</th><th>回传模板</th><th>像素名称</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
+      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>账户包名称</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
       <tbody id="accountPackageTableBody"></tbody>
     </table></div>
     <div class="pagination" id="accountPackagePagination"></div>
@@ -702,6 +702,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
           <div id="selectedProductLibs" style="margin-top:8px;font-size:13px;color:#909399"></div>
         </div>
       </div>
+      <div class="form-item">
+        <label><span class="required">*</span>业务类型</label>
+        <div class="form-control"><div class="btn-group" id="appBizType">
+          <button type="button" class="btn-option active" data-type="免费">免费</button>
+          <button type="button" class="btn-option" data-type="付费">付费</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>推广渠道</label>
+        <div class="form-control"><span style="line-height:32px;color:#606266" id="appChannel">TikTok ads</span></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>渠道号</label>
+        <div class="form-control"><input type="text" class="input-text" id="appChannelNo" placeholder="请输入渠道号" style="width:100%"></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>投放策略</label>
+        <div class="form-control"><span style="line-height:32px;color:#606266">直投</span></div>
+      </div>
+
       <div class="form-item" id="dailyBudgetItem">
         <label id="budgetAmountLabel"><span class="required">*</span>单日预算额度</label>
         <div class="form-control"><div class="input-group">
@@ -831,6 +851,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 
       <div id="salesConfig" style="display:none">
 
+      <div class="form-item">
+        <label><span class="required">*</span>选择应用</label>
+        <div class="form-control"><select class="condition-select" id="salesSelectApp" style="min-width:200px">
+          <option value="netshort" selected>Netshort</option>
+          <option value="nettoon">Nettoon</option>
+        </select></div>
+      </div>
       <div class="form-item" id="salesProductSourceItem">
         <label>商品数据源</label>
         <div class="form-control"><div class="btn-group" id="salesProductSource">
@@ -845,6 +872,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
           <div id="salesSelectedProductLibs" style="margin-top:8px;font-size:13px;color:#909399"></div>
         </div>
       </div>
+      <div class="form-item">
+        <label><span class="required">*</span>业务类型</label>
+        <div class="form-control"><div class="btn-group" id="salesBizType">
+          <button type="button" class="btn-option active" data-type="免费">免费</button>
+          <button type="button" class="btn-option" data-type="付费">付费</button>
+        </div></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>推广渠道</label>
+        <div class="form-control"><span style="line-height:32px;color:#606266" id="salesChannel">TikTok ads</span></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>渠道号</label>
+        <div class="form-control"><input type="text" class="input-text" id="salesChannelNo" placeholder="请输入渠道号" style="width:100%"></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>投放策略</label>
+        <div class="form-control"><span style="line-height:32px;color:#606266">W2A</span></div>
+      </div>
+      <div class="form-item">
+        <label><span class="required">*</span>像素ID</label>
+        <div class="form-control"><input type="text" class="input-text" id="salesPixelId" placeholder="输入"></div>
+      </div>
+
       <div class="form-item">
         <label id="salesBudgetAmountLabel"><span class="required">*</span>单日预算额度</label>
         <div class="form-control"><div class="input-group">
@@ -990,32 +1041,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
           <input type="text" class="input-text" id="apName" maxlength="50" placeholder="请输入账号包名称">
           <div class="char-count" id="apNameCount">0 / 50</div>
         </div>
-      </div>
-      <div class="form-item">
-        <label><span class="required">*</span>业务类型</label>
-        <div class="form-control"><div class="btn-group" id="apBizType">
-          <button type="button" class="btn-option active" data-type="免费">免费</button>
-          <button type="button" class="btn-option" data-type="付费">付费</button>
-        </div></div>
-      </div>
-      <div class="form-item">
-        <label><span class="required">*</span>推广渠道</label>
-        <div class="form-control"><input type="text" class="input-text" id="apChannel" placeholder="请输入推广渠道"></div>
-      </div>
-      <div class="form-item">
-        <label><span class="required">*</span>渠道号</label>
-        <div class="form-control"><input type="text" class="input-text" id="apChannelNo" placeholder="请输入渠道号"></div>
-      </div>
-      <div class="form-item">
-        <label><span class="required">*</span>投放策略</label>
-        <div class="form-control"><div class="btn-group" id="apStrategy">
-          <button type="button" class="btn-option active" data-strategy="直投">直投</button>
-          <button type="button" class="btn-option" data-strategy="W2A">W2A</button>
-        </div></div>
-      </div>
-      <div class="form-item ap-w2a-field" style="display:none">
-        <label><span class="required">*</span>像素ID</label>
-        <div class="form-control"><input type="text" class="input-text" id="apPixelId" placeholder="输入"></div>
       </div>
       <div class="drawer-section-title">账户范围 <span style="font-weight:400;color:var(--text-secondary);font-size:13px">(3465)</span></div>
       <div style="margin-bottom:12px"><input type="text" class="input-text" id="apAccountSearch" placeholder="搜索账户名" style="width:100%" oninput="filterAccountList()"></div>
@@ -1267,14 +1292,14 @@ function resetTaskForm(){
 
 // ==================== 账户包 ====================
 const mockAccountPackages = [
-  {id:355,name:'账户包A-北美投放',bizType:'免费',channel:'通用默认渠道',channelNo:'CH001',strategy:'W2A',template:'回传模板_001',pixel:'像素_A001',created:'2026-05-12',updated:'2026-06-20'},
-  {id:356,name:'账户包B-东南亚投放',bizType:'付费',channel:'通用默认渠道',channelNo:'CH002',strategy:'直投',template:'回传模板_002',pixel:'像素_B002',created:'2026-05-15',updated:'2026-06-18'},
-  {id:357,name:'账户包C-欧洲投放',bizType:'免费',channel:'TikTok渠道',channelNo:'CH003',strategy:'W2A',template:'回传模板_003',pixel:'像素_C003',created:'2026-05-20',updated:'2026-06-22'},
-  {id:358,name:'账户包D-日韩投放',bizType:'付费',channel:'TikTok渠道',channelNo:'CH004',strategy:'直投',template:'回传模板_004',pixel:'像素_D004',created:'2026-06-01',updated:'2026-06-21'},
-  {id:359,name:'账户包E-全球投放',bizType:'免费',channel:'通用默认渠道',channelNo:'CH005',strategy:'W2A',template:'回传模板_005',pixel:'像素_E005',created:'2026-06-05',updated:'2026-06-23'},
-  {id:360,name:'复制 - ja_JP_JP',bizType:'免费',channel:'通用默认渠道',channelNo:'CH006',strategy:'W2A',template:'回传模板_JP',pixel:'像素_JP006',created:'2026-06-10',updated:'2026-06-23'},
-  {id:361,name:'账户包F-测试专用',bizType:'收费',channel:'测试渠道',channelNo:'CH007',strategy:'直投',template:'回传模板_TEST',pixel:'像素_TEST',created:'2026-06-12',updated:'2026-06-24'},
-  {id:362,name:'账户包G-南美投放',bizType:'付费',channel:'TikTok渠道',channelNo:'CH008',strategy:'直投',template:'回传模板_007',pixel:'像素_G007',created:'2026-06-15',updated:'2026-06-24'},
+  {id:355,name:'账户包A-北美投放',created:'2026-05-12',updated:'2026-06-20'},
+  {id:356,name:'账户包B-东南亚投放',created:'2026-05-15',updated:'2026-06-18'},
+  {id:357,name:'账户包C-欧洲投放',created:'2026-05-20',updated:'2026-06-22'},
+  {id:358,name:'账户包D-日韩投放',created:'2026-06-01',updated:'2026-06-21'},
+  {id:359,name:'账户包E-全球投放',created:'2026-06-05',updated:'2026-06-23'},
+  {id:360,name:'复制 - ja_JP_JP',created:'2026-06-10',updated:'2026-06-23'},
+  {id:361,name:'账户包F-测试专用',created:'2026-06-12',updated:'2026-06-24'},
+  {id:362,name:'账户包G-南美投放',created:'2026-06-15',updated:'2026-06-24'},
 ];
 const mockTargetingPackages = [
   {id:'tp1',name:'兴趣标签定向',gender:'不限',ageGroups:['18-24','25-34'],languages:['zh','en'],os:'不限',minOsVersion:'',network:'不限',locations:'美国, 加拿大, 英国'},
@@ -1579,8 +1604,6 @@ function submitAccountPackage(){
   closeAccountPackageDrawer();
 }
 document.getElementById('apName').addEventListener('input',function(){document.getElementById('apNameCount').textContent=this.value.length+' / 50'});
-document.querySelectorAll('#apBizType .btn-option').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('#apBizType .btn-option').forEach(x=>x.classList.remove('active'));this.classList.add('active')}));
-document.querySelectorAll('#apStrategy .btn-option').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('#apStrategy .btn-option').forEach(x=>x.classList.remove('active'));this.classList.add('active');const isW2A=this.dataset.strategy==='W2A';document.querySelectorAll('.ap-w2a-field').forEach(el=>el.style.display=isW2A?'flex':'none')}));
 
 // ==================== 短剧搜索 ====================
 function switchDramaMode(mode){
@@ -1714,7 +1737,7 @@ function bindBtnGroup(sel){
 ['#materialCreateTime','#businessTypeBtns','#mediaFilterBtns','#statRangeBtns','#sortMetricBtns','#materialCountType','#repeatCountType','#dedupAcrossRounds'].forEach(bindBtnGroup);
 
 // ==================== 投放配置/广告组设置/广告设置 交互 ====================
-['#campaignObjective','#campaignType','#productSource','#campaignStatus','#optimizationGoal','#placement','#campaignBidStrategy','#appEventCount','#userComments','#videoDownload','#videoShare'].forEach(bindBtnGroup);
+['#campaignObjective','#campaignType','#productSource','#campaignStatus','#optimizationGoal','#placement','#campaignBidStrategy','#appEventCount','#userComments','#videoDownload','#videoShare','#appBizType'].forEach(bindBtnGroup);
 
 
 
@@ -1756,7 +1779,7 @@ function toggleCampaignTypeFields(){
 }
 document.querySelectorAll('#campaignType .btn-option').forEach(b=>b.addEventListener('click',function(){
   document.querySelectorAll('#campaignType .btn-option').forEach(x=>x.classList.remove('active'));
-  this.classList.add('active');toggleCampaignTypeFields();toggleAppEventField();resetMaterialPreview();
+  this.classList.add('active');toggleCampaignTypeFields();toggleAppEventField();resetMaterialPreview();updateChannelDisplay();
 }));
 
 // ===== 优化目标联动 — 应用内事件（应用推广） =====
@@ -1812,6 +1835,7 @@ function toggleCampaignObjective(){
   document.getElementById('salesConfig').style.display=obj==='product_sales'?'block':'none';
   if(obj==='product_sales'){toggleSalesOptimizationEvent();toggleSalesBidStrategyOptions();toggleProductLibraryConnect();}
   if(obj==='app_promotion'){toggleCampaignTypeFields();toggleAppEventField();toggleBidStrategyOptions();}
+  updateChannelDisplay();
 }
 document.querySelectorAll('#campaignObjective .btn-option').forEach(b=>b.addEventListener('click',function(){
   document.querySelectorAll('#campaignObjective .btn-option').forEach(x=>x.classList.remove('active'));
@@ -1891,8 +1915,19 @@ function toggleSalesBidAmount(){
   const strategy=active?active.dataset.value:'';
   document.getElementById('salesBidAmountItem').style.display=strategy==='cost_cap'?'flex':'none';
 }
+// ===== 推广渠道联动 =====
+function updateChannelDisplay(){
+  const obj=document.querySelector('#campaignObjective .btn-option.active').dataset.value;
+  if(obj==='app_promotion'){
+    const type=document.querySelector('#campaignType .btn-option.active').dataset.value;
+    const channelVal=type==='tiktok_minis'?'TikTokMinis ads':'TikTok ads';
+    const el=document.getElementById('appChannel');if(el)el.textContent=channelVal;
+  }else{
+    const el=document.getElementById('salesChannel');if(el)el.textContent='TikTok ads';
+  }
+}
 // ===== 销量模式 交互 =====
-['#salesCampaignStatus','#salesAdgroupStatus','#salesProductSource','#salesOptimizationEvent','#salesPlacement','#salesBidStrategy','#salesEventCount','#salesUserComments','#salesVideoDownload','#salesVideoShare'].forEach(bindBtnGroup);
+['#salesCampaignStatus','#salesAdgroupStatus','#salesProductSource','#salesOptimizationEvent','#salesPlacement','#salesBidStrategy','#salesEventCount','#salesUserComments','#salesVideoDownload','#salesVideoShare','#salesBizType'].forEach(bindBtnGroup);
 document.querySelectorAll('#salesBidStrategy .btn-option').forEach(b=>b.addEventListener('click',toggleSalesBidAmount));
 document.getElementById('campaignNameSuffix').addEventListener('input',function(){document.getElementById('campaignNameSuffixCount').textContent=this.value.length+' / 50'});
 document.getElementById('salesAdgroupName').addEventListener('input',function(){document.getElementById('salesAdgroupNameCount').textContent=this.value.length+' / 50'});
@@ -1933,6 +1968,8 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
   if(!cl||+cl<1||+cl>30){alert('请填写计划创建上限（1-30）');return}
   const accountPkg=document.getElementById('accountPackage').value;
   if(!accountPkg){alert('请选择投放账户');return}
+  const appChannelNo=isSales?document.getElementById('salesChannelNo').value:document.getElementById('appChannelNo').value;
+  if(!appChannelNo){alert('请输入渠道号');return}
   // validate identity matching for all (drama × account) combos
   const getHasPangle=isSales=>{
     const pl=isSales?document.querySelector('#salesPlacement .btn-option.active'):document.querySelector('#placement .btn-option.active');
@@ -1968,6 +2005,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
       budgetType:'daily',
       dailyBudget:document.getElementById('salesDailyBudget').value,
       status:document.querySelector('#salesCampaignStatus .btn-option.active').dataset.value,
+      selectApp:document.getElementById('salesSelectApp').value,
     };
     adGroup={
       name:document.getElementById('salesAdgroupName').value,
@@ -2022,7 +2060,12 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
     timeRanges:Array.from(document.querySelectorAll('#timeRangeContainer .time-range-group')).map(r=>({start:r.querySelectorAll('.time-input')[0].value,end:r.querySelectorAll('.time-input')[1].value})),
     executeFrequency,dramas,endConditions:[{metric:'series_count',operator:'>=',value:ev1},{metric:'account_count',operator:'>=',value:ev2}],campaignLimit:+cl,
     campaignNameSuffix:document.getElementById('campaignNameSuffix').value,
-    account:{package:accountPkg},
+    account:{package:accountPkg,
+      bizType:isSales?document.querySelector('#salesBizType .btn-option.active').dataset.type:document.querySelector('#appBizType .btn-option.active').dataset.type,
+      channel:isSales?document.getElementById('salesChannel').textContent:document.getElementById('appChannel').textContent,
+      channelNo:isSales?document.getElementById('salesChannelNo').value:document.getElementById('appChannelNo').value,
+      strategy:isSales?'W2A':'直投',
+      pixelId:isSales?document.getElementById('salesPixelId').value:''},
     identities:identityResults,
     campaign,adGroup,ad,
     material:{createTime:document.querySelector('#materialCreateTime .btn-option.active').dataset.day,
@@ -2400,10 +2443,11 @@ const autoTasks=Array.from({length:20},(_,i)=>{const user=mockUsers[i%10],time=m
 function renderAutoTasks(p=1){renderTable('autoTaskTableBody',autoTasks,['id',{key:'name',render:r=>`<span class="col-name" style="cursor:pointer" onclick="openTaskModal({name:'${r.name}'})">${r.name}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='启用'?'running':'stopped'}">${r.status}</span>`},'bidStrategy','dailyBudget','interval','optimization','target','channelNo','lastComplete','creator','updater','created','updated'],10,[{label:'编辑',onclick:r=>`openTaskModal({name:'${r.name}'})`},{label:'复制'},{label:'日志'}]);renderPagination('autoTaskPagination',autoTasks.length,10,p=>renderAutoTasks(p))}
 
 // 账户包
-function renderAccountPackages(p=1){renderTable('accountPackageTableBody',mockAccountPackages,['id','name','bizType','channel','channelNo','strategy','template','pixel','created','updated'],10,[{label:'编辑'},{label:'复制'},{label:'删除'}]);renderPagination('accountPackagePagination',mockAccountPackages.length,10,p=>renderAccountPackages(p))}
+function renderAccountPackages(p=1){renderTable('accountPackageTableBody',mockAccountPackages,['id','name','created','updated'],10,[{label:'编辑'},{label:'复制'},{label:'删除'}]);renderPagination('accountPackagePagination',mockAccountPackages.length,10,p=>renderAccountPackages(p))}
 
 // 广告系列
-const campaigns=Array.from({length:20},(_,i)=>{const drama=mockDramas[i%8],pkg=mockAccountPackages[i%8],strategies=['最大转化量','成本上限','出价上限'];return{id:1000+i,taskId:`T2026${String(i%10+1).padStart(5,'0')}`,campaignId:`C2026${String(i+1).padStart(5,'0')}`,name:`${drama}-系列_${String(i+1).padStart(3,'0')}`,accountName:pkg.name,accountId:`A${String(i+100).padStart(5,'0')}`,channelName:pkg.channel,channelNo:pkg.channelNo,uploadStatus:Math.random()>.3?'上传成功':'上传失败',status:Math.random()>.3?'已开启':'已关闭',bidStrategy:strategies[Math.floor(Math.random()*3)],dailyBudget:`$${Math.floor(Math.random()*500+50)}`,optimization:mockOptimizations[Math.floor(Math.random()*3)],failReason:Math.random()>.7?'网络超时':'',drama,linkName:`${drama}_Link`,template:pkg.template,created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
+const mockChannels=['通用默认渠道','TikTok渠道','测试渠道'],mockTemplates=['回传模板_001','回传模板_002','回传模板_003','回传模板_004','回传模板_005'];
+const campaigns=Array.from({length:20},(_,i)=>{const drama=mockDramas[i%8],pkg=mockAccountPackages[i%8],strategies=['最大转化量','成本上限','出价上限'];return{id:1000+i,taskId:`T2026${String(i%10+1).padStart(5,'0')}`,campaignId:`C2026${String(i+1).padStart(5,'0')}`,name:`${drama}-系列_${String(i+1).padStart(3,'0')}`,accountName:pkg.name,accountId:`A${String(i+100).padStart(5,'0')}`,channelName:mockChannels[i%3],channelNo:`CH${String(i+1).padStart(3,'0')}`,uploadStatus:Math.random()>.3?'上传成功':'上传失败',status:Math.random()>.3?'已开启':'已关闭',bidStrategy:strategies[Math.floor(Math.random()*3)],dailyBudget:`$${Math.floor(Math.random()*500+50)}`,optimization:mockOptimizations[Math.floor(Math.random()*3)],failReason:Math.random()>.7?'网络超时':'',drama,linkName:`${drama}_Link`,template:mockTemplates[i%5],created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
 function renderCampaigns(p=1){renderTable('campaignTableBody',campaigns,['id','taskId',{key:'campaignId',render:r=>`<span class="col-id">${r.campaignId}</span>`},'name','accountName','accountId','channelName','channelNo',{key:'uploadStatus',render:r=>`<span class="col-status ${r.uploadStatus==='上传成功'?'running':'error'}">${r.uploadStatus}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'bidStrategy','dailyBudget','optimization','failReason','drama','linkName','template','created','updated'],10,[{label:'重试'}]);renderPagination('campaignPagination',campaigns.length,10,p=>renderCampaigns(p))}
 
 // 广告组
@@ -2415,6 +2459,7 @@ const adsList=Array.from({length:20},(_,i)=>{const pkg=mockAccountPackages[i%8];
 function renderAds(p=1){renderTable('adTableBody',adsList,['id','taskId','campaignId','adgroupId','uploadAdgroupId','adId','accountName','accountId',{key:'uploadStatus',render:r=>`<span class="col-status ${r.uploadStatus==='上传成功'?'running':(r.uploadStatus==='上传失败'?'error':'pending')}">${r.uploadStatus}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'multiAdvertiser','failReason','material','created','updated'],10,[{label:'重试'}]);renderPagination('adPagination',adsList.length,10,p=>renderAds(p))}
 
 // ==================== 初始化 ====================
+toggleCampaignTypeFields();
 renderAutoTasks();renderAccountPackages();renderCampaigns();renderAdGroups();renderAds();
 </script>
 </body>
