@@ -282,7 +282,6 @@
 | 值 | 说明 |
 |---|------|
 | `netshort` | Netshort（默认） |
-| `nettoon` | Nettoon |
 ### 6.2 商品数据源
 按钮组，始终可见，二选一：
 | 按钮文案 | data-value | 默认 |
@@ -526,7 +525,7 @@
 | 固定 | `budgetType` | `"daily"` |
 | 单日预算 | `dailyBudget` | |
 | 状态 | `status` | `"1"` / `"0"` |
-| 选择应用 | `selectApp` | `"netshort"` / `"nettoon"` |
+| 选择应用 | `selectApp` | `"netshort"` |
 
 **adGroup:**
 | 表单控件 | 提交字段 | 说明 |
