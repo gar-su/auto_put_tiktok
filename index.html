@@ -361,15 +361,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       <input type="text" placeholder="账户名称" style="width:150px">
       <input type="text" placeholder="系列名称" style="width:150px">
       <select><option value="">广告系列状态</option><option>已开启</option><option>已关闭</option></select>
+      <select><option value="">请选择剧本</option></select>
       <select><option value="">请选择短剧</option></select>
       <input type="text" placeholder="输入渠道号" style="width:150px">
       <select><option value="">选择业务类型</option><option>付费</option><option>免费</option></select>
       <select><option value="">选择上传状态</option><option>待上传</option><option>上传成功</option><option>上传失败</option></select>
+      <span style="position:relative;display:inline-block">
+        <input type="text" placeholder="监测链接ID/名称" style="width:150px;padding-right:24px">
+        <span onclick="openBatchLinkModal()" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);cursor:pointer;color:#909399;font-size:14px;line-height:1" title="批量搜索">☰</span>
+      </span>
       <button class="btn btn-default btn-sm">查询</button>
       <button class="btn btn-default btn-sm">重置</button>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>任务ID</th><th>广告系列ID</th><th>广告系列名称</th><th>账户名称</th><th>账户ID</th><th>渠道名称</th><th>渠道号</th><th>上传状态</th><th>系列状态</th><th>日预算</th><th>优化目标</th><th>失败原因</th><th>短剧名称</th><th>链接名称</th><th>回传模板</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
+      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>任务ID</th><th>广告系列ID</th><th>广告系列名称</th><th>账户名称</th><th>账户ID</th><th>剧本编号</th><th>剧本名称</th><th>短剧名称</th><th>渠道名称</th><th>渠道号</th><th>上传状态</th><th>系列状态</th><th>日预算</th><th>优化目标</th><th>失败原因</th><th>链接名称</th><th>回传模板</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
       <tbody id="campaignTableBody"></tbody>
     </table></div>
     <div class="pagination" id="campaignPagination"></div>
@@ -1170,6 +1175,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
   </div>
 </div>
 
+<!-- ============ 批量搜索监测链接弹窗 ============ -->
+<div class="modal-overlay" id="batchLinkModal" style="display:none">
+  <div class="modal" style="width:500px;background:#fff;border-radius:8px;padding:24px;position:relative">
+    <div class="modal-close" onclick="closeBatchLinkModal()">&times;</div>
+    <div class="modal-title">批量搜索监测链接</div>
+    <div style="margin-top:16px">
+      <textarea id="batchLinkInput" rows="8" placeholder="请输入监测链接ID，每行一个或用逗号/空格分隔" style="width:100%;padding:8px;border:1px solid #dcdfe6;border-radius:4px;resize:vertical;font-size:13px"></textarea>
+    </div>
+    <div style="margin-top:16px;text-align:right">
+      <button class="btn btn-default" onclick="closeBatchLinkModal()">取消</button>
+      <button class="btn btn-primary" onclick="applyBatchLinkFilter()">搜索</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ 商品库选择侧边栏 ============ -->
 <div class="drawer-overlay" id="productLibraryDrawer" style="display:none">
   <div class="drawer" style="width:1100px">
@@ -1279,6 +1299,9 @@ function openTaskModal(editData){
   checkMaterialFilterVisible();checkMaterialConditionRequired();
 }
 function closeTaskModal(){document.getElementById('taskModalOverlay').style.display='none';resetTaskForm()}
+function openBatchLinkModal(){document.getElementById('batchLinkModal').style.display='flex';document.getElementById('batchLinkInput').value=''}
+function closeBatchLinkModal(){document.getElementById('batchLinkModal').style.display='none'}
+function applyBatchLinkFilter(){const raw=document.getElementById('batchLinkInput').value;if(!raw.trim()){closeBatchLinkModal();return}const ids=raw.split(/[\n,，\s]+/).filter(Boolean);document.querySelector('#page-campaign input[placeholder="监测链接ID/名称"]').value=ids.join(',');closeBatchLinkModal()}
 function resetTaskForm(){
   document.getElementById('autoTaskForm').reset();
   document.getElementById('taskNameCount').textContent='0 / 50';
@@ -2445,8 +2468,8 @@ function renderAccountPackages(p=1){renderTable('accountPackageTableBody',mockAc
 
 // 广告系列
 const mockChannels=['通用默认渠道','TikTok渠道','测试渠道'],mockTemplates=['回传模板_001','回传模板_002','回传模板_003','回传模板_004','回传模板_005'];
-const campaigns=Array.from({length:20},(_,i)=>{const drama=mockDramas[i%8],pkg=mockAccountPackages[i%8],strategies=['最大转化量','成本上限','出价上限'];return{id:1000+i,taskId:`T2026${String(i%10+1).padStart(5,'0')}`,campaignId:`C2026${String(i+1).padStart(5,'0')}`,name:`${drama}-系列_${String(i+1).padStart(3,'0')}`,accountName:pkg.name,accountId:`A${String(i+100).padStart(5,'0')}`,channelName:mockChannels[i%3],channelNo:`CH${String(i+1).padStart(3,'0')}`,uploadStatus:Math.random()>.3?'上传成功':'上传失败',status:Math.random()>.3?'已开启':'已关闭',bidStrategy:strategies[Math.floor(Math.random()*3)],dailyBudget:`$${Math.floor(Math.random()*500+50)}`,optimization:mockOptimizations[Math.floor(Math.random()*3)],failReason:Math.random()>.7?'网络超时':'',drama,linkName:`${drama}_Link`,template:mockTemplates[i%5],created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
-function renderCampaigns(p=1){renderTable('campaignTableBody',campaigns,['id','taskId',{key:'campaignId',render:r=>`<span class="col-id">${r.campaignId}</span>`},'name','accountName','accountId','channelName','channelNo',{key:'uploadStatus',render:r=>`<span class="col-status ${r.uploadStatus==='上传成功'?'running':'error'}">${r.uploadStatus}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'bidStrategy','dailyBudget','optimization','failReason','drama','linkName','template','created','updated'],10,[{label:'重试'}]);renderPagination('campaignPagination',campaigns.length,10,p=>renderCampaigns(p))}
+const campaigns=Array.from({length:20},(_,i)=>{const drama=mockDramas[i%8],pkg=mockAccountPackages[i%8],strategies=['最大转化量','成本上限','出价上限'];return{id:1000+i,taskId:`T2026${String(i%10+1).padStart(5,'0')}`,campaignId:`C2026${String(i+1).padStart(5,'0')}`,name:`${drama}-系列_${String(i+1).padStart(3,'0')}`,accountName:pkg.name,accountId:`A${String(i+100).padStart(5,'0')}`,scriptNo:`SC${String(i+1).padStart(5,'0')}`,scriptName:`${drama}`,channelName:mockChannels[i%3],channelNo:`CH${String(i+1).padStart(3,'0')}`,uploadStatus:Math.random()>.3?'上传成功':'上传失败',status:Math.random()>.3?'已开启':'已关闭',bidStrategy:strategies[Math.floor(Math.random()*3)],dailyBudget:`$${Math.floor(Math.random()*500+50)}`,optimization:mockOptimizations[Math.floor(Math.random()*3)],failReason:Math.random()>.7?'网络超时':'',drama,linkName:`${drama}_Link`,template:mockTemplates[i%5],created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
+function renderCampaigns(p=1){renderTable('campaignTableBody',campaigns,['id','taskId',{key:'campaignId',render:r=>`<span class="col-id">${r.campaignId}</span>`},'name','accountName','accountId','scriptNo','scriptName','drama','channelName','channelNo',{key:'uploadStatus',render:r=>`<span class="col-status ${r.uploadStatus==='上传成功'?'running':'error'}">${r.uploadStatus}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'bidStrategy','dailyBudget','optimization','failReason','linkName','template','created','updated'],10,[{label:'重试'}]);renderPagination('campaignPagination',campaigns.length,10,p=>renderCampaigns(p))}
 
 // 广告组
 const adGroups=Array.from({length:20},(_,i)=>{const drama=mockDramas[i%8],lang=mockLangs[i%7],pkg=mockAccountPackages[i%8];return{id:2000+i,taskId:`T2026${String(i%10+1).padStart(5,'0')}`,uploadSeriesId:`C2026${String(i%20+1).padStart(5,'0')}`,name:`${drama}-${lang}-G${String(i+1).padStart(3,'0')}`,accountInfo:pkg.name,drama:`${drama}-${lang}`,status:Math.random()>.3?'已开启':'已关闭',targeting:mockTargetingPackages[i%5],failReason:Math.random()>.7?'图片尺寸不符':'',optimization:mockOptimizations[Math.floor(Math.random()*3)],created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
