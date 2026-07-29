@@ -192,6 +192,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .material-preview-empty{text-align:center;padding:32px;color:var(--text-secondary);font-size:14px}
 .material-preview-footer{padding:8px 16px;border-top:1px solid #ebeef5;font-size:12px;color:var(--text-secondary);text-align:center}
 
+/* 素材标签 */
+.material-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:#ecf5ff;border:1px solid #b3d8ff;border-radius:3px;font-size:12px;color:var(--primary)}
+.material-tag .tag-remove{cursor:pointer;font-size:14px;color:#a0cfff;line-height:1}
+.material-tag .tag-remove:hover{color:#f56c6c}
+.material-empty{color:var(--text-secondary);font-size:13px;padding:4px 0}
+.material-drawer-search{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
+.material-drawer-search .search-field{display:flex;align-items:center;gap:6px;font-size:13px}
+.material-drawer-search .search-field label{color:var(--text-secondary);white-space:nowrap}
+.material-drawer-search input,.material-drawer-search select{height:32px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:13px;outline:none}
+.material-drawer-search input:focus,.material-drawer-search select:focus{border-color:var(--primary)}
+.material-drawer-table{width:100%;border-collapse:collapse;font-size:12px}
+.material-drawer-table th{position:sticky;top:0;background:#f5f7fa;color:var(--text-secondary);font-weight:500;padding:8px 10px;text-align:left;white-space:nowrap;border-bottom:2px solid #ebeef5;z-index:1}
+.material-drawer-table td{padding:8px 10px;border-bottom:1px solid #f5f5f5}
+.material-drawer-table tbody tr{cursor:pointer}
+.material-drawer-table tbody tr:hover{background:#f5f7fa}
+.material-drawer-table tbody tr.selected{background:#ecf5ff}
+.material-drawer-table .check-col{width:36px;text-align:center}
+.material-drawer-pagination{display:flex;justify-content:center;align-items:center;gap:6px;padding:12px 0}
+.material-drawer-pagination button{padding:4px 10px;border:1px solid #dcdfe6;background:var(--white);border-radius:4px;cursor:pointer;font-size:12px}
+.material-drawer-pagination button.active{background:var(--primary);color:var(--white);border-color:var(--primary)}
+.material-drawer-pagination button:disabled{color:#c0c4cc;cursor:not-allowed}
+.material-drawer-pagination span{font-size:12px;color:var(--text-secondary)}
+.material-drawer-footer{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-top:1px solid var(--border);flex-shrink:0}
+.empty-state{text-align:center;color:var(--text-secondary);font-size:13px;padding:40px}
+.btn-link{color:var(--primary);cursor:pointer;font-size:13px;border:none;background:none;padding:0}
+.btn-link:hover{text-decoration:underline}
+
 /* 侧边栏抽屉 */
 .drawer-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1001;display:flex;justify-content:flex-end}
 .drawer{background:var(--white);width:720px;max-width:95%;height:100%;display:flex;flex-direction:column;box-shadow:-4px 0 12px rgba(0,0,0,.15);animation:slideInRight .25s ease-out}
@@ -533,6 +560,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 
       <div class="form-group-title">素材配置</div>
 
+      <div class="form-item">
+        <label><span class="required">*</span>素材选择方式</label>
+        <div class="form-control"><div class="btn-group" id="materialModeBtns">
+          <button type="button" class="btn-option active" data-mode="filter">筛选模式</button>
+          <button type="button" class="btn-option" data-mode="specify">指定素材</button>
+        </div>
+        <div style="color:var(--text-secondary);font-size:12px;margin-top:4px">
+          <span class="mode-hint mode-hint-filter">通过指标与条件表达式圈定素材池</span>
+          <span class="mode-hint mode-hint-specify" style="display:none">从素材库搜索并指定具体素材</span>
+        </div></div>
+      </div>
+
+      <div id="filterModeFields">
       <div class="form-item" id="materialTimeItem">
         <label><span class="required">*</span>素材创建时间</label>
         <div class="form-control"><div class="btn-group" id="materialCreateTime">
@@ -622,6 +662,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
           <button type="button" class="btn-option" data-metric="old_compliance">老达标率</button>
         </div></div>
       </div>
+      </div>
+      <!-- /filterModeFields -->
+
       <div class="form-item">
         <label>素材重复次数</label>
         <div class="form-control"><div class="btn-group" id="repeatCountType">
@@ -630,7 +673,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         </div>
         <div class="input-group" id="repeatCountInput" style="display:none"><input type="number" class="input-text" id="repeatCount" min="1" placeholder="请输入"><span class="tip-text">不填写默认30</span></div></div>
       </div>
-      <div class="form-item">
+      <div class="form-item" id="dedupItem">
         <label style="white-space:nowrap">多轮执行不投重复素材</label>
         <div class="form-control"><div class="btn-group" id="dedupAcrossRounds">
           <button type="button" class="btn-option" data-value="0">关闭</button>
@@ -646,6 +689,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <div class="material-preview-header"><span>素材预览</span><span style="cursor:pointer" onclick="closeMaterialPreview()">&times;</span></div>
         <div id="materialPreviewContent"><div class="material-preview-empty">点击「预览素材」查看匹配结果</div></div>
       </div>
+
+      <div id="specifyModeFields" style="display:none">
+      <div class="form-item">
+        <label>已选素材</label>
+        <div class="form-control">
+          <div class="material-tags" id="selectedMaterialTags" style="flex-wrap:wrap;gap:6px;display:flex"></div>
+          <button type="button" class="btn-link" onclick="openMaterialDrawer()" style="margin-top:6px">+ 选择素材</button>
+        </div>
+      </div>
+      </div>
+      <!-- /specifyModeFields -->
 
       <div class="form-group-title">投放配置</div>
 
@@ -1025,7 +1079,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 
       <div class="form-footer">
         <button type="button" class="btn-cancel" onclick="closeTaskModal()">取消</button>
-        <button type="button" class="btn-cancel" id="btnPreview" onclick="toggleMaterialPreview()" style="border-color:var(--primary);color:var(--primary)">预览素材</button>
+        <button type="button" class="btn-cancel" id="btnPreview" onclick="toggleMaterialPreview()" style="border-color:var(--primary);color:var(--primary);display:none">预览素材</button>
         <button type="submit" class="btn-submit">确定</button>
       </div>
     </form>
@@ -1253,6 +1307,46 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
   </div>
 </div>
 
+<!-- ============ 素材搜索侧边栏 ============ -->
+<div class="drawer-overlay" id="materialDrawerOverlay" style="display:none">
+  <div class="drawer" style="width:960px">
+    <div class="drawer-header">
+      素材选择
+      <span class="drawer-close" onclick="closeMaterialDrawer()">&times;</span>
+    </div>
+    <div class="material-drawer-search">
+      <div class="search-field"><label>素材名称/ID</label><input type="text" id="drawerSearchName" placeholder="请输入" onkeydown="if(event.key==='Enter')searchMaterials()"></div>
+      <div class="search-field"><label>短剧名称</label><input type="text" id="drawerSearchDrama" placeholder="请输入" onkeydown="if(event.key==='Enter')searchMaterials()"></div>
+      <div class="search-field"><label>语言</label><select id="drawerSearchLang"><option value="">不限</option><option value="中文">中文</option><option value="英文">英文</option><option value="泰文">泰文</option><option value="马来文">马来文</option><option value="日文">日文</option><option value="韩文">韩文</option></select></div>
+      <div class="search-field"><label>业务类型</label><select id="drawerSearchBiz"><option value="">不限</option><option value="免费">免费</option><option value="付费">付费</option></select></div>
+      <div class="search-field"><label>媒体</label><select id="drawerSearchMedia"><option value="">不限</option><option value="TikTok">TikTok</option><option value="Facebook">Facebook</option></select></div>
+      <button type="button" class="btn btn-primary" onclick="searchMaterials()">搜索</button>
+      <button type="button" class="btn btn-default" onclick="resetDrawerSearch()">重置</button>
+    </div>
+    <div class="drawer-body" style="padding:14px 20px">
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px" id="drawerResultCount">共 0 条</div>
+      <table class="material-drawer-table">
+        <thead><tr>
+          <th class="check-col"><input type="checkbox" id="drawerSelectAll" onchange="toggleSelectAll(this)"></th>
+          <th>素材名称</th><th>素材ID</th><th>剧本名称</th><th>短剧</th><th>语言</th><th>业务类型</th><th>媒体</th><th>消耗</th><th>DOROI</th><th>D0广告ROI</th><th>综合达标率</th><th>创建时间</th>
+        </tr></thead>
+        <tbody id="drawerTableBody"></tbody>
+      </table>
+      <div class="material-drawer-pagination" id="drawerPagination"></div>
+    </div>
+    <div class="material-drawer-footer">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:13px;color:var(--text-secondary)" id="drawerSelectedCount">已选 0 个素材</span>
+        <div class="material-tags" id="drawerSelectedTags" style="flex-wrap:wrap;gap:4px;display:flex"></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button type="button" class="btn-cancel" onclick="closeMaterialDrawer()">取消</button>
+        <button type="button" class="btn-submit" onclick="confirmMaterialDrawer()">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ==================== Tab 切换 ====================
 const breadcrumbPage = document.getElementById('breadcrumbPage');
@@ -1298,7 +1392,7 @@ function openTaskModal(editData){
   document.getElementById('taskModalOverlay').style.display = 'flex';
   document.getElementById('taskModalTitle').textContent = editData ? '编辑TikTok自动化任务' : '新建TikTok自动化任务';
   if(editData){document.getElementById('taskName').value=editData.name||'';document.getElementById('taskNameCount').textContent=(editData.name||'').length+' / 50'}
-  checkMaterialFilterVisible();checkMaterialConditionRequired();
+  checkMaterialFilterVisible();checkMaterialConditionRequired();toggleMaterialModeUI();
 }
 function closeTaskModal(){document.getElementById('taskModalOverlay').style.display='none';resetTaskForm()}
 function openBatchLinkModal(){document.getElementById('batchLinkModal').style.display='flex';document.getElementById('batchLinkInput').value=''}
@@ -1311,6 +1405,8 @@ function resetTaskForm(){
   document.getElementById('selectedDramasArea').style.display='none';
   document.getElementById('dramaSearchResult').innerHTML='<div class="drama-placeholder">请输入搜索条件进行搜索</div>';
   closeMaterialPreview();
+  confirmedMaterials=[];drawerSelectedIds.clear();
+  if(materialMode==='specify'){document.querySelectorAll('#materialModeBtns .btn-option').forEach(b=>b.classList.remove('active'));document.querySelector('#materialModeBtns .btn-option[data-mode="filter"]').classList.add('active');materialMode='filter';toggleMaterialModeUI();}
 }
 
 // ==================== 账户包 ====================
@@ -1333,6 +1429,7 @@ const mockTargetingPackages = [
 let editingTpId = null, tpSelectedRegions = [];
 let dramaTargetingMap = new Map();
 let currentTargetingDramaKey = null, batchSelectedIds = [];
+let materialMode = 'filter', confirmedMaterials = [], drawerSelectedIds = new Set(), drawerPage = 0, drawerSearchResults = [];
 const langLabelMap = {zh:'中文',en:'英语',ja:'日语',ko:'韩语',th:'泰语',es:'西班牙语',pt:'葡萄牙语',ar:'阿拉伯语',id:'印尼语',vi:'越南语'};
 // BC_AUTH_TT identity name → language via Unicode character range detection
 const UNICODE_SCRIPT_RANGES=[
@@ -1742,6 +1839,13 @@ function checkMaterialFilterVisible(){
   ['statRangeItem','materialConditionItem','sortMetricItem','materialCountItem','businessTypeItem','mediaFilterItem'].forEach(id=>document.getElementById(id).style.display=isCustom?'flex':'none');
 }
 function checkMaterialConditionRequired(){
+  if(materialMode==='specify'){
+    const hasSelection=confirmedMaterials.length>0;
+    document.getElementById('materialConditionRequired').classList.remove('show');
+    const btn=document.getElementById('btnPreview');
+    if(btn){btn.disabled=!hasSelection;btn.style.opacity=hasSelection?'1':'0.5';btn.style.cursor=hasSelection?'pointer':'not-allowed'}
+    return;
+  }
   const filterType=document.querySelector('#materialFilterType .btn-option.active').dataset.type;
   const needCheck=filterType==='custom',hasRows=document.querySelectorAll('#materialConditionGroup .condition-row').length>0;
   document.getElementById('materialConditionRequired').classList.toggle('show',needCheck&&!hasRows);
@@ -1758,6 +1862,110 @@ function bindBtnGroup(sel){
     resetMaterialPreview()})});
 }
 ['#materialCreateTime','#businessTypeBtns','#mediaFilterBtns','#statRangeBtns','#sortMetricBtns','#materialCountType','#repeatCountType','#dedupAcrossRounds'].forEach(bindBtnGroup);
+
+// ==================== 素材选择方式切换 ====================
+document.querySelectorAll('#materialModeBtns .btn-option').forEach(btn=>{btn.addEventListener('click',function(){
+  if(this.dataset.mode===materialMode)return;
+  if(materialMode==='specify'&&confirmedMaterials.length>0){if(!confirm('切换至筛选模式将清空已选素材，确定切换吗？'))return}
+  document.querySelectorAll('#materialModeBtns .btn-option').forEach(b=>b.classList.remove('active'));
+  this.classList.add('active');
+  materialMode=this.dataset.mode;
+  toggleMaterialModeUI();
+  resetModeData();
+  closeMaterialPreview();
+})});
+function toggleMaterialModeUI(){
+  const isFilter=materialMode==='filter';
+  document.getElementById('filterModeFields').style.display=isFilter?'':'none';
+  document.getElementById('specifyModeFields').style.display=isFilter?'none':'';
+  document.querySelector('.mode-hint-filter').style.display=isFilter?'':'none';
+  document.querySelector('.mode-hint-specify').style.display=isFilter?'none':'';
+  if(!isFilter)renderSelectedTags();
+  checkMaterialConditionRequired();
+}
+function resetModeData(){
+  if(materialMode==='filter'){drawerSelectedIds.clear();confirmedMaterials=[]}
+}
+function renderSelectedTags(){
+  const container=document.getElementById('selectedMaterialTags');
+  if(confirmedMaterials.length===0){container.innerHTML='<div class="material-empty">暂未选择素材，请点击下方按钮添加</div>';return}
+  container.innerHTML=confirmedMaterials.map(m=>`<span class="material-tag">${m.name}<span class="tag-remove" onclick="removeConfirmedMaterial('${m.id}')">&times;</span></span>`).join('');
+}
+
+// ==================== 素材搜索侧边栏 ====================
+const DRAWER_PAGE_SIZE=8;
+function searchMaterials(){
+  const name=(document.getElementById('drawerSearchName').value||'').trim().toLowerCase();
+  const drama=(document.getElementById('drawerSearchDrama').value||'').trim().toLowerCase();
+  const lang=document.getElementById('drawerSearchLang').value;
+  const biz=document.getElementById('drawerSearchBiz').value;
+  const media=document.getElementById('drawerSearchMedia').value;
+  drawerSearchResults=mockMaterialData.filter(m=>{
+    if(name&&!m.name.toLowerCase().includes(name)&&!m.bookId.toLowerCase().includes(name))return false;
+    if(drama&&!m.drama.toLowerCase().includes(drama))return false;
+    if(lang&&m.lang!==lang)return false;
+    if(biz&&m.businessType!==biz)return false;
+    if(media&&m.media!==media)return false;
+    return true;
+  });
+  drawerPage=0;renderDrawerTable();
+}
+function resetDrawerSearch(){
+  document.getElementById('drawerSearchName').value='';
+  document.getElementById('drawerSearchDrama').value='';
+  document.getElementById('drawerSearchLang').value='';
+  document.getElementById('drawerSearchBiz').value='';
+  document.getElementById('drawerSearchMedia').value='';
+  drawerSearchResults=[...mockMaterialData];
+  drawerPage=0;renderDrawerTable();
+}
+function openMaterialDrawer(){
+  document.getElementById('materialDrawerOverlay').style.display='flex';
+  drawerSelectedIds=new Set(confirmedMaterials.map(m=>m.id));
+  drawerSearchResults=[...mockMaterialData];
+  drawerPage=0;renderDrawerTable();updateDrawerFooter();
+}
+function closeMaterialDrawer(){
+  document.getElementById('materialDrawerOverlay').style.display='none';
+}
+function confirmMaterialDrawer(){
+  if(drawerSelectedIds.size===0){alert('请至少选择 1 个素材');return}
+  confirmedMaterials=mockMaterialData.filter(m=>drawerSelectedIds.has(m.id));
+  renderSelectedTags();
+  closeMaterialDrawer();
+  if(materialMode==='specify')updateSpecifyPreview();
+}
+function renderDrawerTable(){
+  const totalPages=Math.ceil(drawerSearchResults.length/DRAWER_PAGE_SIZE)||1;
+  if(drawerPage>=totalPages)drawerPage=totalPages-1;
+  if(drawerPage<0)drawerPage=0;
+  const start=drawerPage*DRAWER_PAGE_SIZE;
+  const pageItems=drawerSearchResults.slice(start,start+DRAWER_PAGE_SIZE);
+  document.getElementById('drawerResultCount').textContent=`共 ${drawerSearchResults.length} 条，已选 ${drawerSelectedIds.size} 个`;
+  const tbody=document.getElementById('drawerTableBody');
+  if(pageItems.length===0){tbody.innerHTML='<tr><td colspan="13"><div class="empty-state">未找到匹配的素材</div></td></tr>'}
+  else {tbody.innerHTML=pageItems.map(m=>{const checked=drawerSelectedIds.has(m.id);return `<tr class="${checked?'selected':''}" onclick="toggleDrawerItem('${m.id}')"><td class="check-col"><input type="checkbox" ${checked?'checked':''} onclick="event.stopPropagation();toggleDrawerItem('${m.id}')"></td><td style="color:var(--primary);text-decoration:underline;cursor:pointer">${m.name}</td><td>${m.id}</td><td>${m.bookName}</td><td>${m.drama}</td><td>${m.lang}</td><td>${m.businessType}</td><td>${m.media}</td><td>$${m.cost.toLocaleString()}</td><td>${m.doroi}</td><td>${m.d0AdRoi}%</td><td>${m.compliance}%</td><td>${m.created}</td></tr>`}).join('')}
+  const pag=document.getElementById('drawerPagination');
+  if(totalPages<=1){pag.innerHTML=''}else{
+    let html=`<button ${drawerPage===0?'disabled':''} onclick="goDrawerPage(${drawerPage-1})">上一页</button>`;
+    for(let i=0;i<totalPages;i++)html+=`<button class="${i===drawerPage?'active':''}" onclick="goDrawerPage(${i})">${i+1}</button>`;
+    html+=`<button ${drawerPage>=totalPages-1?'disabled':''} onclick="goDrawerPage(${drawerPage+1})">下一页</button>`;
+    html+=`<span>第 ${drawerPage+1}/${totalPages} 页</span>`;pag.innerHTML=html;
+  }
+  const allOnPage=pageItems.length>0&&pageItems.every(m=>drawerSelectedIds.has(m.id));
+  document.getElementById('drawerSelectAll').checked=allOnPage;
+}
+function toggleDrawerItem(id){drawerSelectedIds.has(id)?drawerSelectedIds.delete(id):drawerSelectedIds.add(id);renderDrawerTable();updateDrawerFooter()}
+function toggleSelectAll(cb){const start=drawerPage*DRAWER_PAGE_SIZE;const pageItems=drawerSearchResults.slice(start,start+DRAWER_PAGE_SIZE);if(cb.checked)pageItems.forEach(m=>drawerSelectedIds.add(m.id));else pageItems.forEach(m=>drawerSelectedIds.delete(m.id));renderDrawerTable();updateDrawerFooter()}
+function goDrawerPage(p){drawerPage=p;renderDrawerTable()}
+function updateDrawerFooter(){
+  document.getElementById('drawerSelectedCount').textContent=`已选 ${drawerSelectedIds.size} 个素材`;
+  const selectedItems=mockMaterialData.filter(m=>drawerSelectedIds.has(m.id));
+  const tagsDiv=document.getElementById('drawerSelectedTags');
+  tagsDiv.innerHTML=selectedItems.slice(0,5).map(m=>`<span class="material-tag">${m.name}<span class="tag-remove" onclick="event.stopPropagation();toggleDrawerItem('${m.id}');renderDrawerTable();updateDrawerFooter()">&times;</span></span>`).join('');
+  if(selectedItems.length>5)tagsDiv.innerHTML+=`<span style="font-size:12px;color:var(--text-secondary)">...还有 ${selectedItems.length-5} 个</span>`;
+}
+function removeConfirmedMaterial(id){confirmedMaterials=confirmedMaterials.filter(m=>m.id!==id);drawerSelectedIds.delete(id);renderSelectedTags();if(materialMode==='specify')updateSpecifyPreview()}
 
 // ==================== 投放配置/广告组设置/广告设置 交互 ====================
 ['#campaignObjective','#campaignType','#productSource','#campaignStatus','#optimizationGoal','#placement','#campaignBidStrategy','#appEventCount','#userComments','#videoDownload','#videoShare','#appBizType'].forEach(bindBtnGroup);
@@ -1971,16 +2179,21 @@ document.querySelectorAll('#materialConditionGroup .condition-delete').forEach(b
 checkMaterialFilterVisible();checkMaterialConditionRequired();
 
 // ==================== 素材预览 ====================
-const mockMaterialData=[{name:'素材_001.mp4',bookId:'L0001',bookName:'繁花',drama:'繁花',lang:'中文',cost:1234,doroi:2.3,d0AdRoi:1.8,d0Iaa:456,compliance:85,oldCompliance:78,created:'2026-05-12',businessType:'免费',media:'TikTok'},{name:'素材_002.mp4',bookId:'L0001',bookName:'繁花',drama:'Blooming',lang:'英文',cost:856,doroi:1.8,d0AdRoi:1.2,d0Iaa:320,compliance:72,oldCompliance:65,created:'2026-05-11',businessType:'付费',media:'TikTok'},{name:'素材_003.mp4',bookId:'L0001',bookName:'繁花',drama:'บุษบา',lang:'泰文',cost:2100,doroi:3.1,d0AdRoi:2.5,d0Iaa:780,compliance:91,oldCompliance:88,created:'2026-05-10',businessType:'免费',media:'TikTok'},{name:'素材_004.mp4',bookId:'L0001',bookName:'繁花',drama:'Mekar',lang:'马来文',cost:450,doroi:0.9,d0AdRoi:0.6,d0Iaa:180,compliance:58,oldCompliance:42,created:'2026-05-13',businessType:'付费',media:'TikTok'},{name:'素材_005.mp4',bookId:'L0002',bookName:'狂飙',drama:'狂飙',lang:'中文',cost:3200,doroi:4.5,d0AdRoi:3.8,d0Iaa:1200,compliance:95,oldCompliance:91,created:'2026-05-09',businessType:'付费',media:'TikTok'},{name:'素材_006.mp4',bookId:'L0002',bookName:'狂飙',drama:'The Knockout',lang:'英文',cost:1890,doroi:2.7,d0AdRoi:2.1,d0Iaa:650,compliance:80,oldCompliance:73,created:'2026-05-08',businessType:'免费',media:'TikTok'},{name:'素材_007.mp4',bookId:'L0003',bookName:'漫长的季节',drama:'漫长的季节',lang:'中文',cost:670,doroi:1.5,d0AdRoi:1.0,d0Iaa:240,compliance:66,oldCompliance:55,created:'2026-05-11',businessType:'免费',media:'TikTok'},{name:'素材_008.mp4',bookId:'L0003',bookName:'漫长的季节',drama:'The Long Season',lang:'英文',cost:980,doroi:2.0,d0AdRoi:1.6,d0Iaa:410,compliance:74,oldCompliance:68,created:'2026-05-07',businessType:'付费',media:'TikTok'},{name:'素材_009.mp4',bookId:'L0004',bookName:'三体',drama:'三体',lang:'中文',cost:5600,doroi:5.2,d0AdRoi:4.5,d0Iaa:2100,compliance:98,oldCompliance:96,created:'2026-05-13',businessType:'付费',media:'TikTok'},{name:'素材_010.mp4',bookId:'L0004',bookName:'三体',drama:'Three-Body',lang:'英文',cost:4200,doroi:4.8,d0AdRoi:4.0,d0Iaa:1650,compliance:93,oldCompliance:90,created:'2026-05-06',businessType:'免费',media:'TikTok'},{name:'素材_011.mp4',bookId:'L0005',bookName:'庆余年',drama:'庆余年',lang:'中文',cost:1500,doroi:2.9,d0AdRoi:2.2,d0Iaa:580,compliance:82,oldCompliance:76,created:'2026-05-12',businessType:'免费',media:'TikTok'},{name:'素材_012.mp4',bookId:'L0005',bookName:'庆余年',drama:'Joy of Life',lang:'英文',cost:1100,doroi:2.1,d0AdRoi:1.7,d0Iaa:390,compliance:76,oldCompliance:69,created:'2026-05-10',businessType:'付费',media:'TikTok'}];
+const mockMaterialData=[{id:'mat_001',name:'素材_001.mp4',bookId:'L0001',bookName:'繁花',drama:'繁花',lang:'中文',cost:1234,doroi:2.3,d0AdRoi:1.8,d0Iaa:456,compliance:85,oldCompliance:78,created:'2026-05-12',businessType:'免费',media:'TikTok'},{id:'mat_002',name:'素材_002.mp4',bookId:'L0001',bookName:'繁花',drama:'Blooming',lang:'英文',cost:856,doroi:1.8,d0AdRoi:1.2,d0Iaa:320,compliance:72,oldCompliance:65,created:'2026-05-11',businessType:'付费',media:'TikTok'},{id:'mat_003',name:'素材_003.mp4',bookId:'L0001',bookName:'繁花',drama:'บุษบา',lang:'泰文',cost:2100,doroi:3.1,d0AdRoi:2.5,d0Iaa:780,compliance:91,oldCompliance:88,created:'2026-05-10',businessType:'免费',media:'TikTok'},{id:'mat_004',name:'素材_004.mp4',bookId:'L0001',bookName:'繁花',drama:'Mekar',lang:'马来文',cost:450,doroi:0.9,d0AdRoi:0.6,d0Iaa:180,compliance:58,oldCompliance:42,created:'2026-05-13',businessType:'付费',media:'TikTok'},{id:'mat_005',name:'素材_005.mp4',bookId:'L0002',bookName:'狂飙',drama:'狂飙',lang:'中文',cost:3200,doroi:4.5,d0AdRoi:3.8,d0Iaa:1200,compliance:95,oldCompliance:91,created:'2026-05-09',businessType:'付费',media:'TikTok'},{id:'mat_006',name:'素材_006.mp4',bookId:'L0002',bookName:'狂飙',drama:'The Knockout',lang:'英文',cost:1890,doroi:2.7,d0AdRoi:2.1,d0Iaa:650,compliance:80,oldCompliance:73,created:'2026-05-08',businessType:'免费',media:'TikTok'},{id:'mat_007',name:'素材_007.mp4',bookId:'L0003',bookName:'漫长的季节',drama:'漫长的季节',lang:'中文',cost:670,doroi:1.5,d0AdRoi:1.0,d0Iaa:240,compliance:66,oldCompliance:55,created:'2026-05-11',businessType:'免费',media:'TikTok'},{id:'mat_008',name:'素材_008.mp4',bookId:'L0003',bookName:'漫长的季节',drama:'The Long Season',lang:'英文',cost:980,doroi:2.0,d0AdRoi:1.6,d0Iaa:410,compliance:74,oldCompliance:68,created:'2026-05-07',businessType:'付费',media:'TikTok'},{id:'mat_009',name:'素材_009.mp4',bookId:'L0004',bookName:'三体',drama:'三体',lang:'中文',cost:5600,doroi:5.2,d0AdRoi:4.5,d0Iaa:2100,compliance:98,oldCompliance:96,created:'2026-05-13',businessType:'付费',media:'TikTok'},{id:'mat_010',name:'素材_010.mp4',bookId:'L0004',bookName:'三体',drama:'Three-Body',lang:'英文',cost:4200,doroi:4.8,d0AdRoi:4.0,d0Iaa:1650,compliance:93,oldCompliance:90,created:'2026-05-06',businessType:'免费',media:'TikTok'},{id:'mat_011',name:'素材_011.mp4',bookId:'L0005',bookName:'庆余年',drama:'庆余年',lang:'中文',cost:1500,doroi:2.9,d0AdRoi:2.2,d0Iaa:580,compliance:82,oldCompliance:76,created:'2026-05-12',businessType:'免费',media:'TikTok'},{id:'mat_012',name:'素材_012.mp4',bookId:'L0005',bookName:'庆余年',drama:'Joy of Life',lang:'英文',cost:1100,doroi:2.1,d0AdRoi:1.7,d0Iaa:390,compliance:76,oldCompliance:69,created:'2026-05-10',businessType:'付费',media:'TikTok'}];
 let previewVisible=false,previewTimer=null;
 
-function toggleMaterialPreview(){clearTimeout(previewTimer);const section=document.getElementById('materialPreviewSection'),content=document.getElementById('materialPreviewContent'),btn=document.getElementById('btnPreview');if(previewVisible){closeMaterialPreview();return}previewVisible=true;section.classList.add('show');btn.textContent='收起预览';content.innerHTML='<div class="material-preview-empty">正在查询匹配素材...</div>';previewTimer=setTimeout(()=>{const shuffled=[...mockMaterialData].sort(()=>Math.random()-.5),count=Math.floor(Math.random()*10)+6,data=shuffled.slice(0,count).sort((a,b)=>b.cost-a.cost);if(data.length===0){content.innerHTML='<div class="material-preview-empty">未找到匹配的素材</div>';return}const displayData=data.length>10?data.slice(0,10):data;const rows=displayData.map(d=>`<tr><td style="color:var(--primary);text-decoration:underline;cursor:pointer">${d.name}</td><td>${d.bookId}</td><td>${d.bookName}</td><td>${d.drama}</td><td>${d.lang}</td><td>${d.businessType}</td><td>${d.media}</td><td>$${d.cost.toLocaleString()}</td><td>${d.doroi}</td><td>${d.d0AdRoi}%</td><td>$${d.d0Iaa.toLocaleString()}</td><td>${d.compliance}%</td><td>${d.oldCompliance}%</td><td>${d.created}</td></tr>`).join(''),note=data.length>10?`<div class="material-preview-footer">共 ${data.length} 条，仅展示前 10 条</div>`:`<div class="material-preview-footer">共 ${data.length} 条</div>`;content.innerHTML=`<div class="material-preview-table-wrap"><table class="material-preview-table"><thead><tr><th>素材名称</th><th>剧本ID</th><th>剧本名称</th><th>短剧</th><th>语言</th><th>业务类型</th><th>媒体</th><th>消耗</th><th>DOROI</th><th>D0广告ROI</th><th>D0 IAA</th><th>综合达标率</th><th>老达标率</th><th>创建时间</th></tr></thead><tbody>${rows}</tbody></table></div>${note}`},600)}
+function toggleMaterialPreview(){clearTimeout(previewTimer);const section=document.getElementById('materialPreviewSection'),content=document.getElementById('materialPreviewContent'),btn=document.getElementById('btnPreview');if(previewVisible){closeMaterialPreview();return}previewVisible=true;section.classList.add('show');btn.textContent='收起预览';
+  if(materialMode==='specify'){renderSpecifyPreview(content);return}
+  content.innerHTML='<div class="material-preview-empty">正在查询匹配素材...</div>';previewTimer=setTimeout(()=>{const shuffled=[...mockMaterialData].sort(()=>Math.random()-.5),count=Math.floor(Math.random()*10)+6,data=shuffled.slice(0,count).sort((a,b)=>b.cost-a.cost);if(data.length===0){content.innerHTML='<div class="material-preview-empty">未找到匹配的素材</div>';return}const displayData=data.length>10?data.slice(0,10):data;const rows=displayData.map(d=>`<tr><td style="color:var(--primary);text-decoration:underline;cursor:pointer">${d.name}</td><td>${d.bookId}</td><td>${d.bookName}</td><td>${d.drama}</td><td>${d.lang}</td><td>${d.businessType}</td><td>${d.media}</td><td>$${d.cost.toLocaleString()}</td><td>${d.doroi}</td><td>${d.d0AdRoi}%</td><td>$${d.d0Iaa.toLocaleString()}</td><td>${d.compliance}%</td><td>${d.oldCompliance}%</td><td>${d.created}</td></tr>`).join(''),note=data.length>10?`<div class="material-preview-footer">共 ${data.length} 条，仅展示前 10 条</div>`:`<div class="material-preview-footer">共 ${data.length} 条</div>`;content.innerHTML=`<div class="material-preview-table-wrap"><table class="material-preview-table"><thead><tr><th>素材名称</th><th>剧本ID</th><th>剧本名称</th><th>短剧</th><th>语言</th><th>业务类型</th><th>媒体</th><th>消耗</th><th>DOROI</th><th>D0广告ROI</th><th>D0 IAA</th><th>综合达标率</th><th>老达标率</th><th>创建时间</th></tr></thead><tbody>${rows}</tbody></table></div>${note}`},600)}
+function renderSpecifyPreview(content){const data=confirmedMaterials;if(data.length===0){content.innerHTML='<div class="material-preview-empty">未找到匹配的素材</div>';return}const displayData=data.length>10?data.slice(0,10):data;const rows=displayData.map(d=>`<tr><td style="color:var(--primary);text-decoration:underline;cursor:pointer">${d.name}</td><td>${d.bookId}</td><td>${d.bookName}</td><td>${d.drama}</td><td>${d.lang}</td><td>${d.businessType}</td><td>${d.media}</td><td>$${d.cost.toLocaleString()}</td><td>${d.doroi}</td><td>${d.d0AdRoi}%</td><td>$${d.d0Iaa.toLocaleString()}</td><td>${d.compliance}%</td><td>${d.oldCompliance}%</td><td>${d.created}</td></tr>`).join(''),note=data.length>10?`<div class="material-preview-footer">共 ${data.length} 条，仅展示前 10 条</div>`:`<div class="material-preview-footer">共 ${data.length} 条</div>`;content.innerHTML=`<div class="material-preview-table-wrap"><table class="material-preview-table"><thead><tr><th>素材名称</th><th>剧本ID</th><th>剧本名称</th><th>短剧</th><th>语言</th><th>业务类型</th><th>媒体</th><th>消耗</th><th>DOROI</th><th>D0广告ROI</th><th>D0 IAA</th><th>综合达标率</th><th>老达标率</th><th>创建时间</th></tr></thead><tbody>${rows}</tbody></table></div>${note}`}
+function updateSpecifyPreview(){if(previewVisible){const content=document.getElementById('materialPreviewContent');renderSpecifyPreview(content)}}
 function closeMaterialPreview(){clearTimeout(previewTimer);previewVisible=false;document.getElementById('materialPreviewSection').classList.remove('show');document.getElementById('btnPreview').textContent='预览素材'}
 function resetMaterialPreview(){if(previewVisible)closeMaterialPreview();document.getElementById('materialPreviewContent').innerHTML='<div class="material-preview-empty">点击「预览素材」查看匹配结果</div>'}
 
 // ==================== 表单提交 ====================
 document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.preventDefault();
-  if(!checkMaterialConditionRequired()){alert('选择自定义时，至少需要输入一个条件');return}
+  if(materialMode==='specify'){if(confirmedMaterials.length===0){alert('请至少选择 1 个素材');return}}
+  else {if(!checkMaterialConditionRequired()){alert('选择自定义时，至少需要输入一个条件');return}}
   const taskName=document.getElementById('taskName').value,executeFrequency=document.getElementById('executeFrequency').value;
   const dramas=Array.from(dramaTargetingMap.entries()).map(([key,pkgs])=>({key,targetingPackages:pkgs}));
   const ev1=document.querySelectorAll('#endConditionGroup .condition-input')[0].value,ev2=document.querySelectorAll('#endConditionGroup .condition-input')[1].value;
@@ -2091,7 +2304,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
       pixelId:isSales?document.getElementById('salesPixelId').value:''},
     identities:identityResults,
     campaign,adGroup,ad,
-    material:{createTime:document.querySelector('#materialCreateTime .btn-option.active').dataset.day,
+    material:materialMode==='specify'?{mode:'specify',items:confirmedMaterials.map(m=>m.id),repeatCount:document.querySelector('#repeatCountType .btn-option.active').dataset.type==='custom'?(document.getElementById('repeatCount').value||30):'unlimit',dedupAcrossRounds:document.querySelector('#dedupAcrossRounds .btn-option.active').dataset.value==='1',adCount:document.getElementById('adCount').value||30}:{mode:'filter',createTime:document.querySelector('#materialCreateTime .btn-option.active').dataset.day,
       filterType:document.querySelector('#materialFilterType .btn-option.active').dataset.type,
       businessType:document.querySelector('#businessTypeBtns .btn-option.active').dataset.type,
       media:document.querySelector('#mediaFilterBtns .btn-option.active').dataset.type,
