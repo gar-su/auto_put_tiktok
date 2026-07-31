@@ -1794,6 +1794,7 @@ function addDrama(btn){
     dramaMatches={};renderSelectedProductLibs();
   }
   dramaTargetingMap.set(tagText,[]);
+  dramaStatusMap.set(tagText,card.dataset.status||'已上线');
   renderAllDramaRows();
   btn.textContent='已添加';btn.disabled=true;resetMaterialPreview();
 }
