@@ -1728,7 +1728,7 @@ function submitAccountPackage(){
 document.getElementById('apName').addEventListener('input',function(){document.getElementById('apNameCount').textContent=this.value.length+' / 50'});
 
 // ==================== 短剧库 ====================
-const mockDramas=[
+const mockDramaLib=[
   {playbookId:'L0001',playbookName:'繁花',name:'繁花',lang:'中文',status:'已上线'},
   {playbookId:'L0001',playbookName:'繁花',name:'Blooming',lang:'英文',status:'已上线'},
   {playbookId:'L0001',playbookName:'繁花',name:'บุษบา',lang:'泰文',status:'已上线'},
@@ -1762,21 +1762,26 @@ function searchDramas(){
   const playbookRaw=document.getElementById('playbookInput').value.trim();
   const lang=document.getElementById('dramaLangSelect').value;
   const result=document.getElementById('dramaSearchResult');
-  const mockNames=['繁花','狂飙','漫长的季节','三体','庆余年','琅琊榜','知否','甄嬛传'];
-  const langMap={zh:'中文',en:'英文',th:'泰文',ms:'马来文'},nameMap={zh:'繁花',en:'Blooming',th:'บุษบา',ms:'Mekar'};
+  const langMap={zh:'中文',en:'英文',th:'泰文',ms:'马来文'};
+  const cardFor=d=>`<div class="drama-result-card" data-status="${d.status}"><div class="drama-result-info"><div class="drama-result-item"><span class="label">剧本名称：</span><span class="value">${d.playbookName}</span></div><div class="drama-result-item"><span class="label">剧本ID：</span><span class="value">${d.playbookId}</span></div><div class="drama-result-item"><span class="label">短剧名称：</span><span class="value">${d.name}</span></div><div class="drama-result-item"><span class="label">语言：</span><span class="value">${d.lang}</span></div></div><div class="drama-result-actions"><button class="drama-add-btn" onclick="addDrama(this)">+ 添加到投放</button></div></div>`;
+  const eligible=dramas=>dramas.filter(d=>d.status!=='待上线');
+  const empty='<div class="drama-placeholder">未找到相关短剧</div>';
   if(mode==='drama'){
     if(!dramaNameRaw){alert('请输入短剧名称');return}
     const names=dramaNameRaw.split('\n').map(s=>s.trim()).filter(s=>s);
-    result.innerHTML=names.map((name,i)=>`<div class="drama-result-card"><div class="drama-result-info"><div class="drama-result-item"><span class="label">剧本名称：</span><span class="value">${mockNames[i%mockNames.length]}</span></div><div class="drama-result-item"><span class="label">剧本ID：</span><span class="value">L${String(i+1).padStart(4,'0')}</span></div><div class="drama-result-item"><span class="label">短剧名称：</span><span class="value">${name}</span></div><div class="drama-result-item"><span class="label">语言：</span><span class="value">中文</span></div></div><div class="drama-result-actions"><button class="drama-add-btn" onclick="addDrama(this)">+ 添加到投放</button></div></div>`).join('');
+    const matched=[];
+    names.forEach(n=>{eligible(mockDramaLib).forEach(d=>{if(d.name===n)matched.push(d)})});
+    result.innerHTML=matched.length?matched.map(cardFor).join(''):empty;
   }else{
     if(!playbookRaw){alert('请输入剧本ID或剧本名');return}
     const playbooks=playbookRaw.split('\n').map(s=>s.trim()).filter(s=>s);
-    let cards='';
+    const matched=[];
     playbooks.forEach(pb=>{
-      if(lang){cards+=`<div class="drama-result-card"><div class="drama-result-info"><div class="drama-result-item"><span class="label">剧本名称：</span><span class="value">繁花</span></div><div class="drama-result-item"><span class="label">剧本ID：</span><span class="value">${pb}</span></div><div class="drama-result-item"><span class="label">短剧名称：</span><span class="value">${nameMap[lang]}</span></div><div class="drama-result-item"><span class="label">语言：</span><span class="value">${langMap[lang]}</span></div></div><div class="drama-result-actions"><button class="drama-add-btn" onclick="addDrama(this)">+ 添加到投放</button></div></div>`}
-      else{Object.keys(langMap).forEach(l=>{cards+=`<div class="drama-result-card"><div class="drama-result-info"><div class="drama-result-item"><span class="label">剧本名称：</span><span class="value">繁花</span></div><div class="drama-result-item"><span class="label">剧本ID：</span><span class="value">${pb}</span></div><div class="drama-result-item"><span class="label">短剧名称：</span><span class="value">${nameMap[l]}</span></div><div class="drama-result-item"><span class="label">语言：</span><span class="value">${langMap[l]}</span></div></div><div class="drama-result-actions"><button class="drama-add-btn" onclick="addDrama(this)">+ 添加到投放</button></div></div>`})}
+      eligible(mockDramaLib).forEach(d=>{
+        if((d.playbookId===pb||d.playbookName===pb)&&(!lang||d.lang===langMap[lang]))matched.push(d);
+      });
     });
-    result.innerHTML=cards;
+    result.innerHTML=matched.length?matched.map(cardFor).join(''):empty;
   }
 }
 function addDrama(btn){
