@@ -2229,12 +2229,14 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
   if(materialMode==='specify'){if(confirmedMaterials.length===0){alert('请至少选择 1 个素材');return}}
   else {if(!checkMaterialConditionRequired()){alert('选择自定义时，至少需要输入一个条件');return}}
   const taskName=document.getElementById('taskName').value,executeFrequency=document.getElementById('executeFrequency').value;
-  const dramas=Array.from(dramaTargetingMap.entries()).map(([key,pkgs])=>({key,targetingPackages:pkgs}));
+  const dramas=Array.from(dramaTargetingMap.entries()).map(([key,pkgs])=>({key,targetingPackages:pkgs,status:dramaStatusMap.get(key)||'已上线'}));
+  const scheduleTime=document.getElementById('scheduleTime').value;
   const ev1=document.querySelectorAll('#endConditionGroup .condition-input')[0].value,ev2=document.querySelectorAll('#endConditionGroup .condition-input')[1].value;
   const cl=document.getElementById('campaignLimit').value;
   const isSales=document.querySelector('#campaignObjective .btn-option.active').dataset.value==='product_sales';
   if(!taskName){alert('请输入任务名称');return}if(!executeFrequency){alert('请输入执行频率');return}
   if(dramas.length===0){alert('请选择短剧');return}if(dramas.some(d=>d.targetingPackages.length===0)){alert('请为每个短剧分配至少一个定向包');return}if(!ev1||!ev2){alert('请填写结束运行条件的数值');return}
+  if(dramas.some(d=>d.status==='预上线')&&!scheduleTime){alert('已选预上线短剧，请填写排期时间');return}
   if(!cl||+cl<1||+cl>30){alert('请填写计划创建上限（1-30）');return}
   const accountPkg=document.getElementById('accountPackage').value;
   if(!accountPkg){alert('请选择投放账户');return}
@@ -2328,6 +2330,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
   }
   const formData={taskName,status:document.querySelector('.btn-option[data-status].active').dataset.status,
     timeRanges:Array.from(document.querySelectorAll('#timeRangeContainer .time-range-group')).map(r=>({start:r.querySelectorAll('.time-input')[0].value,end:r.querySelectorAll('.time-input')[1].value})),
+    scheduleTime:scheduleTime||null,
     executeFrequency,dramas,endConditions:[{metric:'series_count',operator:'>=',value:ev1},{metric:'account_count',operator:'>=',value:ev2}],campaignLimit:+cl,
     campaignNameSuffix:document.getElementById('campaignNameSuffix').value,
     account:{package:accountPkg,
