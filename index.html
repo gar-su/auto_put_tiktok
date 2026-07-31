@@ -1725,6 +1725,25 @@ function submitAccountPackage(){
 }
 document.getElementById('apName').addEventListener('input',function(){document.getElementById('apNameCount').textContent=this.value.length+' / 50'});
 
+// ==================== 短剧库 ====================
+const mockDramas=[
+  {playbookId:'L0001',playbookName:'繁花',name:'繁花',lang:'中文',status:'已上线'},
+  {playbookId:'L0001',playbookName:'繁花',name:'Blooming',lang:'英文',status:'已上线'},
+  {playbookId:'L0001',playbookName:'繁花',name:'บุษบา',lang:'泰文',status:'已上线'},
+  {playbookId:'L0001',playbookName:'繁花',name:'Mekar',lang:'马来文',status:'预上线'},
+  {playbookId:'L0002',playbookName:'狂飙',name:'狂飙',lang:'中文',status:'已上线'},
+  {playbookId:'L0002',playbookName:'狂飙',name:'The Knockout',lang:'英文',status:'预上线'},
+  {playbookId:'L0003',playbookName:'漫长的季节',name:'漫长的季节',lang:'中文',status:'已上线'},
+  {playbookId:'L0003',playbookName:'漫长的季节',name:'The Long Season',lang:'英文',status:'预上线'},
+  {playbookId:'L0004',playbookName:'三体',name:'三体',lang:'中文',status:'已上线'},
+  {playbookId:'L0004',playbookName:'三体',name:'Three-Body',lang:'英文',status:'预上线'},
+  {playbookId:'L0005',playbookName:'庆余年',name:'庆余年',lang:'中文',status:'已上线'},
+  {playbookId:'L0006',playbookName:'琅琊榜',name:'琅琊榜',lang:'中文',status:'已上线'},
+  {playbookId:'L0007',playbookName:'知否',name:'知否',lang:'中文',status:'已上线'},
+  {playbookId:'L0008',playbookName:'甄嬛传',name:'甄嬛传',lang:'中文',status:'已上线'},
+  {playbookId:'L0009',playbookName:'待映剧',name:'待映剧',lang:'中文',status:'待上线'},
+];
+
 // ==================== 短剧搜索 ====================
 function switchDramaMode(mode){
   const isDrama=mode==='drama';
