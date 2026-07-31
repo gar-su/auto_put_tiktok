@@ -1402,6 +1402,7 @@ function resetTaskForm(){
   document.getElementById('autoTaskForm').reset();
   document.getElementById('taskNameCount').textContent='0 / 50';
   dramaTargetingMap.clear();
+  dramaStatusMap.clear();
   document.getElementById('selectedDramasArea').style.display='none';
   document.getElementById('dramaSearchResult').innerHTML='<div class="drama-placeholder">请输入搜索条件进行搜索</div>';
   closeMaterialPreview();
@@ -1428,6 +1429,7 @@ const mockTargetingPackages = [
 ];
 let editingTpId = null, tpSelectedRegions = [];
 let dramaTargetingMap = new Map();
+let dramaStatusMap = new Map();
 let currentTargetingDramaKey = null, batchSelectedIds = [];
 let materialMode = 'filter', confirmedMaterials = [], drawerSelectedIds = new Set(), drawerPage = 0, drawerSearchResults = [];
 const langLabelMap = {zh:'中文',en:'英语',ja:'日语',ko:'韩语',th:'泰语',es:'西班牙语',pt:'葡萄牙语',ar:'阿拉伯语',id:'印尼语',vi:'越南语'};
@@ -1814,6 +1816,7 @@ function clearAllDramas(){
   if(!dramaTargetingMap.size)return;
   if(!confirm('确定清空全部短剧？'))return;
   dramaTargetingMap.clear();
+  dramaStatusMap.clear();
   renderAllDramaRows();
 }
 function clearAllTargeting(){
