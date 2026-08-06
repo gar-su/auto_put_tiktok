@@ -197,24 +197,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .material-tag .tag-remove{cursor:pointer;font-size:14px;color:#a0cfff;line-height:1}
 .material-tag .tag-remove:hover{color:#f56c6c}
 .material-empty{color:var(--text-secondary);font-size:13px;padding:4px 0}
-.material-drawer-search{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
-.material-drawer-search .search-field{display:flex;align-items:center;gap:6px;font-size:13px}
-.material-drawer-search .search-field label{color:var(--text-secondary);white-space:nowrap}
-.material-drawer-search input,.material-drawer-search select{height:32px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:13px;outline:none}
-.material-drawer-search input:focus,.material-drawer-search select:focus{border-color:var(--primary)}
-.material-drawer-table{width:100%;border-collapse:collapse;font-size:12px}
-.material-drawer-table th{position:sticky;top:0;background:#f5f7fa;color:var(--text-secondary);font-weight:500;padding:8px 10px;text-align:left;white-space:nowrap;border-bottom:2px solid #ebeef5;z-index:1}
-.material-drawer-table td{padding:8px 10px;border-bottom:1px solid #f5f5f5}
-.material-drawer-table tbody tr{cursor:pointer}
-.material-drawer-table tbody tr:hover{background:#f5f7fa}
-.material-drawer-table tbody tr.selected{background:#ecf5ff}
-.material-drawer-table .check-col{width:36px;text-align:center}
-.material-drawer-pagination{display:flex;justify-content:center;align-items:center;gap:6px;padding:12px 0}
-.material-drawer-pagination button{padding:4px 10px;border:1px solid #dcdfe6;background:var(--white);border-radius:4px;cursor:pointer;font-size:12px}
-.material-drawer-pagination button.active{background:var(--primary);color:var(--white);border-color:var(--primary)}
-.material-drawer-pagination button:disabled{color:#c0c4cc;cursor:not-allowed}
-.material-drawer-pagination span{font-size:12px;color:var(--text-secondary)}
-.material-drawer-footer{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-top:1px solid var(--border);flex-shrink:0}
+/* 素材选择弹窗 */
+.material-dialog{background:var(--white);border-radius:8px;width:1100px;max-width:95%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.material-dialog-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border);font-size:18px;font-weight:500;flex-shrink:0}
+.material-dialog-search{padding:14px 24px 4px;border-bottom:1px solid var(--border);flex-shrink:0}
+.material-dialog-search .condition-select,.material-dialog-search .input-text{min-width:0;font-size:13px;padding:4px 8px}
+.material-dialog-body{flex:1;overflow-y:auto;padding:16px 24px}
+.material-card{position:relative;border:1px solid var(--border);border-radius:6px;padding:10px;cursor:pointer;transition:border-color .2s}
+.material-card:hover{border-color:var(--primary)}
+.material-card.selected{border-color:var(--primary);background:#ecf5ff}
+.material-card-thumb{width:100%;height:160px;background:#f0f2f5;margin:12px 0 8px;display:flex;align-items:center;justify-content:center;color:#999;font-size:13px;border-radius:4px}
+.mat-card-badge{font-size:12px;padding:2px 6px;border-radius:3px;white-space:nowrap}
+.mat-page-btn{padding:4px 10px;border:1px solid #dcdfe6;background:var(--white);border-radius:4px;cursor:pointer;font-size:12px;min-width:28px}
+.mat-page-btn.active{background:var(--primary);color:var(--white);border-color:var(--primary)}
+.mat-page-btn:disabled{color:#c0c4cc;cursor:not-allowed}
+.material-dialog-footer{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-top:1px solid var(--border);flex-shrink:0}
+.material-dialog-footer .btn-cancel,.material-dialog-footer .btn-submit{height:32px;padding:0 16px}
 .empty-state{text-align:center;color:var(--text-secondary);font-size:13px;padding:40px}
 .btn-link{color:var(--primary);cursor:pointer;font-size:13px;border:none;background:none;padding:0}
 .btn-link:hover{text-decoration:underline}
@@ -701,7 +699,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <label>已选素材</label>
         <div class="form-control">
           <div class="material-tags" id="selectedMaterialTags" style="flex-wrap:wrap;gap:6px;display:flex"></div>
-          <button type="button" class="btn-link" onclick="openMaterialDrawer()" style="margin-top:6px">+ 选择素材</button>
+          <button type="button" class="btn-link" onclick="openMaterialDialog()" style="margin-top:6px">+ 选择素材</button>
         </div>
       </div>
       </div>
@@ -1313,41 +1311,53 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
   </div>
 </div>
 
-<!-- ============ 素材搜索侧边栏 ============ -->
-<div class="drawer-overlay" id="materialDrawerOverlay" style="display:none">
-  <div class="drawer" style="width:960px">
-    <div class="drawer-header">
-      素材选择
-      <span class="drawer-close" onclick="closeMaterialDrawer()">&times;</span>
+<!-- ============ 素材选择弹窗 ============ -->
+<div class="modal-overlay" id="materialDialogOverlay" style="display:none">
+  <div class="material-dialog">
+    <div class="material-dialog-header">
+      <span>选择素材</span>
+      <span class="drawer-close" onclick="closeMaterialDialog()">&times;</span>
     </div>
-    <div class="material-drawer-search">
-      <div class="search-field"><label>素材名称/ID</label><input type="text" id="drawerSearchName" placeholder="请输入" onkeydown="if(event.key==='Enter')searchMaterials()"></div>
-      <div class="search-field"><label>短剧名称</label><input type="text" id="drawerSearchDrama" placeholder="请输入" onkeydown="if(event.key==='Enter')searchMaterials()"></div>
-      <div class="search-field"><label>语言</label><select id="drawerSearchLang"><option value="">不限</option><option value="中文">中文</option><option value="英文">英文</option><option value="泰文">泰文</option><option value="马来文">马来文</option><option value="日文">日文</option><option value="韩文">韩文</option></select></div>
-      <div class="search-field"><label>业务类型</label><select id="drawerSearchBiz"><option value="">不限</option><option value="免费">免费</option><option value="付费">付费</option></select></div>
-      <div class="search-field"><label>媒体</label><select id="drawerSearchMedia"><option value="">不限</option><option value="TikTok">TikTok</option><option value="Facebook">Facebook</option></select></div>
-      <button type="button" class="btn btn-primary" onclick="searchMaterials()">搜索</button>
-      <button type="button" class="btn btn-default" onclick="resetDrawerSearch()">重置</button>
-    </div>
-    <div class="drawer-body" style="padding:14px 20px">
-      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px" id="drawerResultCount">共 0 条</div>
-      <table class="material-drawer-table">
-        <thead><tr>
-          <th class="check-col"><input type="checkbox" id="drawerSelectAll" onchange="toggleSelectAll(this)"></th>
-          <th>素材名称</th><th>素材ID</th><th>剧本名称</th><th>短剧</th><th>语言</th><th>业务类型</th><th>媒体</th><th>消耗</th><th>DOROI</th><th>D0广告ROI</th><th>综合达标率</th><th>创建时间</th>
-        </tr></thead>
-        <tbody id="drawerTableBody"></tbody>
-      </table>
-      <div class="material-drawer-pagination" id="drawerPagination"></div>
-    </div>
-    <div class="material-drawer-footer">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:13px;color:var(--text-secondary)" id="drawerSelectedCount">已选 0 个素材</span>
-        <div class="material-tags" id="drawerSelectedTags" style="flex-wrap:wrap;gap:4px;display:flex"></div>
+    <div class="material-dialog-search">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px">
+        <select class="condition-select" style="width:100px"><option>视频</option></select>
+        <select class="condition-select" style="width:100px"><option>素材名称</option></select>
+        <input type="text" class="input-text" id="matSearchInput" placeholder="请输入素材名称" style="width:200px" onkeydown="if(event.key==='Enter')searchMaterials()">
+        <button type="button" class="btn btn-default" onclick="searchMaterials()" style="min-width:auto;padding:6px 10px">🔍</button>
+        <select class="condition-select" id="matLang" style="width:110px"></select>
+        <select class="condition-select" id="matUser" style="width:110px"></select>
+        <select class="condition-select" id="matTag" style="width:130px"></select>
+        <select class="condition-select" id="matScript" style="width:200px"></select>
       </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px">
+        <select class="condition-select" id="matDrama" style="width:200px"></select>
+        <span style="font-size:12px;color:var(--text-secondary)">创建开始日期</span>
+        <input type="date" class="condition-select" id="matStartDate" style="width:140px">
+        <span style="font-size:12px;color:var(--text-secondary)">-</span>
+        <input type="date" class="condition-select" id="matEndDate" style="width:140px">
+        <select class="condition-select" id="matFolder" style="width:200px"></select>
+        <span style="font-size:12px;color:var(--text-secondary)">宽*高</span>
+        <input type="text" class="input-text" id="matWMin" style="width:70px" placeholder="">
+        <span style="font-size:12px;color:var(--text-secondary)">~</span>
+        <input type="text" class="input-text" id="matWMax" style="width:70px" placeholder="">
+        <button type="button" class="btn btn-primary" onclick="searchMaterials()">查询</button>
+        <label style="font-size:12px"><input type="checkbox" id="matCheckAll" onchange="toggleAllMaterials()">全选</label>
+        <label style="font-size:12px"><input type="checkbox" id="matShuffle">乱序</label>
+        <button type="button" class="btn btn-default">上传素材</button>
+      </div>
+    </div>
+    <div class="material-dialog-body">
+      <div id="materialCardGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:16px">
+        <span style="font-size:13px;color:var(--text-secondary)">共 <b id="matTotalCount">0</b> 条</span>
+        <div id="matPagination" style="display:flex;align-items:center;gap:8px"></div>
+      </div>
+    </div>
+    <div class="material-dialog-footer">
+      <span style="font-size:13px;color:var(--text-secondary)" id="matSelectedTip">已选 0 个素材</span>
       <div style="display:flex;gap:10px">
-        <button type="button" class="btn-cancel" onclick="closeMaterialDrawer()">取消</button>
-        <button type="button" class="btn-submit" onclick="confirmMaterialDrawer()">确定</button>
+        <button type="button" class="btn-cancel" onclick="closeMaterialDialog()">取消</button>
+        <button type="button" class="btn-submit" onclick="confirmMaterialSelect()">确定</button>
       </div>
     </div>
   </div>
@@ -1412,7 +1422,7 @@ function resetTaskForm(){
   document.getElementById('selectedDramasArea').style.display='none';
   document.getElementById('dramaSearchResult').innerHTML='<div class="drama-placeholder">请输入搜索条件进行搜索</div>';
   closeMaterialPreview();
-  confirmedMaterials=[];drawerSelectedIds.clear();
+  confirmedMaterials=[];materialSelected={};
   if(materialMode==='specify'){document.querySelectorAll('#materialModeBtns .btn-option').forEach(b=>b.classList.remove('active'));document.querySelector('#materialModeBtns .btn-option[data-mode="filter"]').classList.add('active');materialMode='filter';toggleMaterialModeUI();}
 }
 
@@ -1437,7 +1447,7 @@ let editingTpId = null, tpSelectedRegions = [];
 let dramaTargetingMap = new Map();
 let dramaStatusMap = new Map();
 let currentTargetingDramaKey = null, batchSelectedIds = [];
-let materialMode = 'filter', confirmedMaterials = [], drawerSelectedIds = new Set(), drawerPage = 0, drawerSearchResults = [];
+let materialMode = 'filter', confirmedMaterials = [], materialSelected = {}, materialFiltered = [], matPage = 0;
 const langLabelMap = {zh:'中文',en:'英语',ja:'日语',ko:'韩语',th:'泰语',es:'西班牙语',pt:'葡萄牙语',ar:'阿拉伯语',id:'印尼语',vi:'越南语'};
 // BC_AUTH_TT identity name → language via Unicode character range detection
 const UNICODE_SCRIPT_RANGES=[
@@ -1918,7 +1928,7 @@ function toggleMaterialModeUI(){
   checkMaterialConditionRequired();
 }
 function resetModeData(){
-  if(materialMode==='filter'){drawerSelectedIds.clear();confirmedMaterials=[]}
+  if(materialMode==='filter'){materialSelected={};confirmedMaterials=[]}
 }
 function renderSelectedTags(){
   const container=document.getElementById('selectedMaterialTags');
@@ -1926,80 +1936,84 @@ function renderSelectedTags(){
   container.innerHTML=confirmedMaterials.map(m=>`<span class="material-tag">${m.name}<span class="tag-remove" onclick="removeConfirmedMaterial('${m.id}')">&times;</span></span>`).join('');
 }
 
-// ==================== 素材搜索侧边栏 ====================
-const DRAWER_PAGE_SIZE=8;
+// ==================== 素材选择弹窗 ====================
+const MAT_PAGE_SIZE=10;
+function initMaterialFilters(){
+  const opts=(selId,key,ph)=>{const vals=[...new Set(mockMaterialData.map(m=>m[key]).filter(Boolean))].sort();document.getElementById(selId).innerHTML=`<option value="">${ph}</option>`+vals.map(v=>`<option value="${v}">${v}</option>`).join('')};
+  opts('matLang','lang','不限');opts('matUser','user','选择用户');opts('matScript','script','请选择剧本');opts('matDrama','drama','请选择短剧');opts('matFolder','folder','请选择文件夹');
+  const tagVals=[...new Set(mockMaterialData.flatMap(m=>m.tags||[]))].sort();
+  document.getElementById('matTag').innerHTML=`<option value="">请选择标签</option>`+tagVals.map(v=>`<option value="${v}">${v}</option>`).join('');
+}
 function searchMaterials(){
-  const name=(document.getElementById('drawerSearchName').value||'').trim().toLowerCase();
-  const drama=(document.getElementById('drawerSearchDrama').value||'').trim().toLowerCase();
-  const lang=document.getElementById('drawerSearchLang').value;
-  const biz=document.getElementById('drawerSearchBiz').value;
-  const media=document.getElementById('drawerSearchMedia').value;
-  drawerSearchResults=mockMaterialData.filter(m=>{
-    if(name&&!m.name.toLowerCase().includes(name)&&!m.bookId.toLowerCase().includes(name))return false;
-    if(drama&&!m.drama.toLowerCase().includes(drama))return false;
+  const name=(document.getElementById('matSearchInput').value||'').trim().toLowerCase();
+  const lang=document.getElementById('matLang').value,user=document.getElementById('matUser').value,tag=document.getElementById('matTag').value;
+  const script=document.getElementById('matScript').value,drama=document.getElementById('matDrama').value;
+  const start=document.getElementById('matStartDate').value,end=document.getElementById('matEndDate').value,folder=document.getElementById('matFolder').value;
+  const wMin=document.getElementById('matWMin').value,wMax=document.getElementById('matWMax').value;
+  materialFiltered=mockMaterialData.filter(m=>{
+    if(name&&!m.name.toLowerCase().includes(name)&&!m.id.toLowerCase().includes(name))return false;
     if(lang&&m.lang!==lang)return false;
-    if(biz&&m.businessType!==biz)return false;
-    if(media&&m.media!==media)return false;
+    if(user&&m.user!==user)return false;
+    if(tag&&!(m.tags||[]).includes(tag))return false;
+    if(script&&m.script!==script)return false;
+    if(drama&&m.drama!==drama)return false;
+    if(start&&m.created<start)return false;
+    if(end&&m.created>end)return false;
+    if(folder&&m.folder!==folder)return false;
+    if(wMin&&m.w<+wMin)return false;
+    if(wMax&&m.w>+wMax)return false;
     return true;
   });
-  drawerPage=0;renderDrawerTable();
+  if(document.getElementById('matShuffle').checked)materialFiltered=materialFiltered.slice().sort(()=>Math.random()-.5);
+  matPage=0;renderMaterialCards();updateMatFooter();
 }
-function resetDrawerSearch(){
-  document.getElementById('drawerSearchName').value='';
-  document.getElementById('drawerSearchDrama').value='';
-  document.getElementById('drawerSearchLang').value='';
-  document.getElementById('drawerSearchBiz').value='';
-  document.getElementById('drawerSearchMedia').value='';
-  drawerSearchResults=[...mockMaterialData];
-  drawerPage=0;renderDrawerTable();
+function openMaterialDialog(){
+  document.getElementById('materialDialogOverlay').style.display='flex';
+  materialSelected={};materialFiltered=mockMaterialData.slice();
+  confirmedMaterials.forEach(m=>materialSelected[m.id]=true);
+  matPage=0;renderMaterialCards();updateMatFooter();
 }
-function openMaterialDrawer(){
-  document.getElementById('materialDrawerOverlay').style.display='flex';
-  drawerSelectedIds=new Set(confirmedMaterials.map(m=>m.id));
-  drawerSearchResults=[...mockMaterialData];
-  drawerPage=0;renderDrawerTable();updateDrawerFooter();
+function closeMaterialDialog(){document.getElementById('materialDialogOverlay').style.display='none'}
+function toggleMaterialSelect(id){if(materialSelected[id])delete materialSelected[id];else materialSelected[id]=true;renderMaterialCards();updateMatFooter()}
+function toggleAllMaterials(){
+  const isAll=document.getElementById('matCheckAll').checked,start=matPage*MAT_PAGE_SIZE,pageItems=materialFiltered.slice(start,start+MAT_PAGE_SIZE);
+  pageItems.forEach(m=>{if(isAll)materialSelected[m.id]=true;else delete materialSelected[m.id]});
+  renderMaterialCards();updateMatFooter();
 }
-function closeMaterialDrawer(){
-  document.getElementById('materialDrawerOverlay').style.display='none';
+function goMatPage(p){matPage=p;renderMaterialCards()}
+function renderMaterialCards(){
+  const grid=document.getElementById('materialCardGrid');
+  document.getElementById('matTotalCount').textContent=materialFiltered.length;
+  const totalPages=Math.ceil(materialFiltered.length/MAT_PAGE_SIZE)||1;
+  if(matPage>=totalPages)matPage=totalPages-1;
+  if(matPage<0)matPage=0;
+  const start=matPage*MAT_PAGE_SIZE,pageItems=materialFiltered.slice(start,start+MAT_PAGE_SIZE);
+  if(pageItems.length===0){grid.innerHTML='<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-secondary)">暂无素材</div>'}
+  else{
+    grid.innerHTML=pageItems.map(m=>{
+      const sel=materialSelected[m.id]?' selected':'',ck=materialSelected[m.id]?' checked':'';
+      return `<div class="material-card${sel}" onclick="toggleMaterialSelect('${m.id}')"><input type="checkbox" style="position:absolute;top:8px;left:8px"${ck} onclick="event.stopPropagation();toggleMaterialSelect('${m.id}')"><span class="mat-card-badge" style="position:absolute;top:8px;right:8px;background:#fff2cc;color:#e69820">无消耗</span><div class="material-card-thumb">素材</div><div style="display:flex;justify-content:space-between;font-size:12px;color:#333;margin-bottom:4px"><span>${m.w} * ${m.h}</span><span style="background:#555;color:#fff;padding:2px 5px;border-radius:3px">${m.size}</span></div><div style="display:flex;justify-content:flex-end;font-size:12px;color:#333;margin-bottom:4px"><span>${m.duration}</span></div><div style="font-size:12px;color:#666;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin-bottom:8px" title="${m.name}">${m.name}</div><div style="font-size:13px;color:#9944cc;background:#f8f0ff;padding:3px 4px;border-radius:3px;margin-bottom:6px">${m.vnName||''}</div><div style="display:flex;justify-content:space-between;font-size:12px"><span class="mat-card-badge" style="background:#fff2cc;color:#e69820">${m.source}</span><span class="mat-card-badge" style="background:#e6ffe6;color:#289c28">${m.time}</span></div></div>`;
+    }).join('');
+  }
+  const pag=document.getElementById('matPagination');
+  if(totalPages<=1){pag.innerHTML=''}else{
+    let html=`<button class="mat-page-btn" ${matPage===0?'disabled':''} onclick="goMatPage(${matPage-1})">&lt;</button>`;
+    for(let i=0;i<totalPages;i++)html+=`<button class="mat-page-btn ${i===matPage?'active':''}" onclick="goMatPage(${i})">${i+1}</button>`;
+    html+=`<button class="mat-page-btn" ${matPage>=totalPages-1?'disabled':''} onclick="goMatPage(${matPage+1})">&gt;</button>`;
+    pag.innerHTML=html;
+  }
+  document.getElementById('matCheckAll').checked=pageItems.length>0&&pageItems.every(m=>materialSelected[m.id]);
 }
-function confirmMaterialDrawer(){
-  if(drawerSelectedIds.size===0){alert('请至少选择 1 个素材');return}
-  confirmedMaterials=mockMaterialData.filter(m=>drawerSelectedIds.has(m.id));
+function updateMatFooter(){document.getElementById('matSelectedTip').textContent=`已选 ${Object.keys(materialSelected).length} 个素材`}
+function confirmMaterialSelect(){
+  const ids=Object.keys(materialSelected);
+  if(ids.length===0){alert('请至少选择 1 个素材');return}
+  confirmedMaterials=mockMaterialData.filter(m=>materialSelected[m.id]);
   renderSelectedTags();
-  closeMaterialDrawer();
+  closeMaterialDialog();
   if(materialMode==='specify')updateSpecifyPreview();
 }
-function renderDrawerTable(){
-  const totalPages=Math.ceil(drawerSearchResults.length/DRAWER_PAGE_SIZE)||1;
-  if(drawerPage>=totalPages)drawerPage=totalPages-1;
-  if(drawerPage<0)drawerPage=0;
-  const start=drawerPage*DRAWER_PAGE_SIZE;
-  const pageItems=drawerSearchResults.slice(start,start+DRAWER_PAGE_SIZE);
-  document.getElementById('drawerResultCount').textContent=`共 ${drawerSearchResults.length} 条，已选 ${drawerSelectedIds.size} 个`;
-  const tbody=document.getElementById('drawerTableBody');
-  if(pageItems.length===0){tbody.innerHTML='<tr><td colspan="13"><div class="empty-state">未找到匹配的素材</div></td></tr>'}
-  else {tbody.innerHTML=pageItems.map(m=>{const checked=drawerSelectedIds.has(m.id);return `<tr class="${checked?'selected':''}" onclick="toggleDrawerItem('${m.id}')"><td class="check-col"><input type="checkbox" ${checked?'checked':''} onclick="event.stopPropagation();toggleDrawerItem('${m.id}')"></td><td style="color:var(--primary);text-decoration:underline;cursor:pointer">${m.name}</td><td>${m.id}</td><td>${m.bookName}</td><td>${m.drama}</td><td>${m.lang}</td><td>${m.businessType}</td><td>${m.media}</td><td>$${m.cost.toLocaleString()}</td><td>${m.doroi}</td><td>${m.d0AdRoi}%</td><td>${m.compliance}%</td><td>${m.created}</td></tr>`}).join('')}
-  const pag=document.getElementById('drawerPagination');
-  if(totalPages<=1){pag.innerHTML=''}else{
-    let html=`<button ${drawerPage===0?'disabled':''} onclick="goDrawerPage(${drawerPage-1})">上一页</button>`;
-    for(let i=0;i<totalPages;i++)html+=`<button class="${i===drawerPage?'active':''}" onclick="goDrawerPage(${i})">${i+1}</button>`;
-    html+=`<button ${drawerPage>=totalPages-1?'disabled':''} onclick="goDrawerPage(${drawerPage+1})">下一页</button>`;
-    html+=`<span>第 ${drawerPage+1}/${totalPages} 页</span>`;pag.innerHTML=html;
-  }
-  const allOnPage=pageItems.length>0&&pageItems.every(m=>drawerSelectedIds.has(m.id));
-  document.getElementById('drawerSelectAll').checked=allOnPage;
-}
-function toggleDrawerItem(id){drawerSelectedIds.has(id)?drawerSelectedIds.delete(id):drawerSelectedIds.add(id);renderDrawerTable();updateDrawerFooter()}
-function toggleSelectAll(cb){const start=drawerPage*DRAWER_PAGE_SIZE;const pageItems=drawerSearchResults.slice(start,start+DRAWER_PAGE_SIZE);if(cb.checked)pageItems.forEach(m=>drawerSelectedIds.add(m.id));else pageItems.forEach(m=>drawerSelectedIds.delete(m.id));renderDrawerTable();updateDrawerFooter()}
-function goDrawerPage(p){drawerPage=p;renderDrawerTable()}
-function updateDrawerFooter(){
-  document.getElementById('drawerSelectedCount').textContent=`已选 ${drawerSelectedIds.size} 个素材`;
-  const selectedItems=mockMaterialData.filter(m=>drawerSelectedIds.has(m.id));
-  const tagsDiv=document.getElementById('drawerSelectedTags');
-  tagsDiv.innerHTML=selectedItems.slice(0,5).map(m=>`<span class="material-tag">${m.name}<span class="tag-remove" onclick="event.stopPropagation();toggleDrawerItem('${m.id}');renderDrawerTable();updateDrawerFooter()">&times;</span></span>`).join('');
-  if(selectedItems.length>5)tagsDiv.innerHTML+=`<span style="font-size:12px;color:var(--text-secondary)">...还有 ${selectedItems.length-5} 个</span>`;
-}
-function removeConfirmedMaterial(id){confirmedMaterials=confirmedMaterials.filter(m=>m.id!==id);drawerSelectedIds.delete(id);renderSelectedTags();if(materialMode==='specify')updateSpecifyPreview()}
+function removeConfirmedMaterial(id){confirmedMaterials=confirmedMaterials.filter(m=>m.id!==id);delete materialSelected[id];renderSelectedTags();if(materialMode==='specify')updateSpecifyPreview()}
 
 // ==================== 投放配置/广告组设置/广告设置 交互 ====================
 ['#campaignObjective','#campaignType','#productSource','#campaignStatus','#optimizationGoal','#placement','#campaignBidStrategy','#appEventCount','#userComments','#videoDownload','#videoShare','#appBizType'].forEach(bindBtnGroup);
@@ -2213,7 +2227,21 @@ document.querySelectorAll('#materialConditionGroup .condition-delete').forEach(b
 checkMaterialFilterVisible();checkMaterialConditionRequired();
 
 // ==================== 素材预览 ====================
-const mockMaterialData=[{id:'mat_001',name:'素材_001.mp4',bookId:'L0001',bookName:'繁花',drama:'繁花',lang:'中文',cost:1234,doroi:2.3,d0AdRoi:1.8,d0Iaa:456,compliance:85,oldCompliance:78,created:'2026-05-12',businessType:'免费',media:'TikTok'},{id:'mat_002',name:'素材_002.mp4',bookId:'L0001',bookName:'繁花',drama:'Blooming',lang:'英文',cost:856,doroi:1.8,d0AdRoi:1.2,d0Iaa:320,compliance:72,oldCompliance:65,created:'2026-05-11',businessType:'付费',media:'TikTok'},{id:'mat_003',name:'素材_003.mp4',bookId:'L0001',bookName:'繁花',drama:'บุษบา',lang:'泰文',cost:2100,doroi:3.1,d0AdRoi:2.5,d0Iaa:780,compliance:91,oldCompliance:88,created:'2026-05-10',businessType:'免费',media:'TikTok'},{id:'mat_004',name:'素材_004.mp4',bookId:'L0001',bookName:'繁花',drama:'Mekar',lang:'马来文',cost:450,doroi:0.9,d0AdRoi:0.6,d0Iaa:180,compliance:58,oldCompliance:42,created:'2026-05-13',businessType:'付费',media:'TikTok'},{id:'mat_005',name:'素材_005.mp4',bookId:'L0002',bookName:'狂飙',drama:'狂飙',lang:'中文',cost:3200,doroi:4.5,d0AdRoi:3.8,d0Iaa:1200,compliance:95,oldCompliance:91,created:'2026-05-09',businessType:'付费',media:'TikTok'},{id:'mat_006',name:'素材_006.mp4',bookId:'L0002',bookName:'狂飙',drama:'The Knockout',lang:'英文',cost:1890,doroi:2.7,d0AdRoi:2.1,d0Iaa:650,compliance:80,oldCompliance:73,created:'2026-05-08',businessType:'免费',media:'TikTok'},{id:'mat_007',name:'素材_007.mp4',bookId:'L0003',bookName:'漫长的季节',drama:'漫长的季节',lang:'中文',cost:670,doroi:1.5,d0AdRoi:1.0,d0Iaa:240,compliance:66,oldCompliance:55,created:'2026-05-11',businessType:'免费',media:'TikTok'},{id:'mat_008',name:'素材_008.mp4',bookId:'L0003',bookName:'漫长的季节',drama:'The Long Season',lang:'英文',cost:980,doroi:2.0,d0AdRoi:1.6,d0Iaa:410,compliance:74,oldCompliance:68,created:'2026-05-07',businessType:'付费',media:'TikTok'},{id:'mat_009',name:'素材_009.mp4',bookId:'L0004',bookName:'三体',drama:'三体',lang:'中文',cost:5600,doroi:5.2,d0AdRoi:4.5,d0Iaa:2100,compliance:98,oldCompliance:96,created:'2026-05-13',businessType:'付费',media:'TikTok'},{id:'mat_010',name:'素材_010.mp4',bookId:'L0004',bookName:'三体',drama:'Three-Body',lang:'英文',cost:4200,doroi:4.8,d0AdRoi:4.0,d0Iaa:1650,compliance:93,oldCompliance:90,created:'2026-05-06',businessType:'免费',media:'TikTok'},{id:'mat_011',name:'素材_011.mp4',bookId:'L0005',bookName:'庆余年',drama:'庆余年',lang:'中文',cost:1500,doroi:2.9,d0AdRoi:2.2,d0Iaa:580,compliance:82,oldCompliance:76,created:'2026-05-12',businessType:'免费',media:'TikTok'},{id:'mat_012',name:'素材_012.mp4',bookId:'L0005',bookName:'庆余年',drama:'Joy of Life',lang:'英文',cost:1100,doroi:2.1,d0AdRoi:1.7,d0Iaa:390,compliance:76,oldCompliance:69,created:'2026-05-10',businessType:'付费',media:'TikTok'}];
+const mockMaterialData=[
+  {id:'mat_001',type:'视频',name:'素材_001.mp4',vnName:'Hoa Phồn Hoa',w:1080,h:1920,size:'350MB',duration:'00:19:08',source:'椿芽',time:'2026-05-12 13:38:53',user:'运营A',tags:['爆款'],script:'繁花',folder:'短剧库/繁花',bookId:'L0001',bookName:'繁花',drama:'繁花',lang:'中文',cost:1234,doroi:2.3,d0AdRoi:1.8,d0Iaa:456,compliance:85,oldCompliance:78,created:'2026-05-12',businessType:'免费',media:'TikTok'},
+  {id:'mat_002',type:'视频',name:'素材_002.mp4',vnName:'Hoa Phồn Hoa',w:720,h:1280,size:'230MB',duration:'00:15:14',source:'椿芽',time:'2026-05-11 13:38:53',user:'运营B',tags:['新素材'],script:'繁花',folder:'短剧库/繁花',bookId:'L0001',bookName:'繁花',drama:'Blooming',lang:'英文',cost:856,doroi:1.8,d0AdRoi:1.2,d0Iaa:320,compliance:72,oldCompliance:65,created:'2026-05-11',businessType:'付费',media:'TikTok'},
+  {id:'mat_003',type:'视频',name:'素材_003.mp4',vnName:'Hoa Phồn Hoa',w:1080,h:1920,size:'350MB',duration:'00:19:08',source:'檀檀灰',time:'2026-05-10 09:12:40',user:'运营A',tags:['爆款'],script:'繁花',folder:'短剧库/繁花',bookId:'L0001',bookName:'繁花',drama:'บุษบา',lang:'泰文',cost:2100,doroi:3.1,d0AdRoi:2.5,d0Iaa:780,compliance:91,oldCompliance:88,created:'2026-05-10',businessType:'免费',media:'TikTok'},
+  {id:'mat_004',type:'视频',name:'素材_004.mp4',vnName:'Hoa Phồn Hoa',w:720,h:1280,size:'230MB',duration:'00:15:14',source:'檀檀灰',time:'2026-05-13 09:12:40',user:'运营C',tags:['测试'],script:'繁花',folder:'短剧库/繁花',bookId:'L0001',bookName:'繁花',drama:'Mekar',lang:'马来文',cost:450,doroi:0.9,d0AdRoi:0.6,d0Iaa:180,compliance:58,oldCompliance:42,created:'2026-05-13',businessType:'付费',media:'TikTok'},
+  {id:'mat_005',type:'视频',name:'素材_005.mp4',vnName:'Cuồng Phong',w:1080,h:1920,size:'348MB',duration:'00:19:02',source:'繁星',time:'2026-05-09 15:26:10',user:'运营B',tags:['爆款'],script:'狂飙',folder:'短剧库/狂飙',bookId:'L0002',bookName:'狂飙',drama:'狂飙',lang:'中文',cost:3200,doroi:4.5,d0AdRoi:3.8,d0Iaa:1200,compliance:95,oldCompliance:91,created:'2026-05-09',businessType:'付费',media:'TikTok'},
+  {id:'mat_006',type:'视频',name:'素材_006.mp4',vnName:'Cuồng Phong',w:720,h:1280,size:'230MB',duration:'00:15:14',source:'繁星',time:'2026-05-08 15:26:10',user:'运营A',tags:['新素材'],script:'狂飙',folder:'短剧库/狂飙',bookId:'L0002',bookName:'狂飙',drama:'The Knockout',lang:'英文',cost:1890,doroi:2.7,d0AdRoi:2.1,d0Iaa:650,compliance:80,oldCompliance:73,created:'2026-05-08',businessType:'免费',media:'TikTok'},
+  {id:'mat_007',type:'视频',name:'素材_007.mp4',vnName:'Mùa Dài Đằng Đẵng',w:1080,h:1920,size:'350MB',duration:'00:19:08',source:'椿芽',time:'2026-05-11 11:04:22',user:'运营C',tags:['测试'],script:'漫长的季节',folder:'短剧库/漫长的季节',bookId:'L0003',bookName:'漫长的季节',drama:'漫长的季节',lang:'中文',cost:670,doroi:1.5,d0AdRoi:1.0,d0Iaa:240,compliance:66,oldCompliance:55,created:'2026-05-11',businessType:'免费',media:'TikTok'},
+  {id:'mat_008',type:'视频',name:'素材_008.mp4',vnName:'Mùa Dài Đằng Đẵng',w:720,h:1280,size:'230MB',duration:'00:15:14',source:'椿芽',time:'2026-05-07 11:04:22',user:'运营B',tags:['爆款'],script:'漫长的季节',folder:'短剧库/漫长的季节',bookId:'L0003',bookName:'漫长的季节',drama:'The Long Season',lang:'英文',cost:980,doroi:2.0,d0AdRoi:1.6,d0Iaa:410,compliance:74,oldCompliance:68,created:'2026-05-07',businessType:'付费',media:'TikTok'},
+  {id:'mat_009',type:'视频',name:'素材_009.mp4',vnName:'Tam Thể',w:1080,h:1920,size:'347MB',duration:'00:18:59',source:'繁星',time:'2026-05-13 10:42:55',user:'运营A',tags:['爆款','新素材'],script:'三体',folder:'短剧库/三体',bookId:'L0004',bookName:'三体',drama:'三体',lang:'中文',cost:5600,doroi:5.2,d0AdRoi:4.5,d0Iaa:2100,compliance:98,oldCompliance:96,created:'2026-05-13',businessType:'付费',media:'TikTok'},
+  {id:'mat_010',type:'视频',name:'素材_010.mp4',vnName:'Tam Thể',w:720,h:1280,size:'230MB',duration:'00:15:14',source:'繁星',time:'2026-05-06 10:42:55',user:'运营B',tags:['新素材'],script:'三体',folder:'短剧库/三体',bookId:'L0004',bookName:'三体',drama:'Three-Body',lang:'英文',cost:4200,doroi:4.8,d0AdRoi:4.0,d0Iaa:1650,compliance:93,oldCompliance:90,created:'2026-05-06',businessType:'免费',media:'TikTok'},
+  {id:'mat_011',type:'视频',name:'素材_011.mp4',vnName:'Khánh Dư Niên',w:1080,h:1920,size:'350MB',duration:'00:19:08',source:'檀檀灰',time:'2026-05-12 16:31:47',user:'运营C',tags:['爆款'],script:'庆余年',folder:'短剧库/庆余年',bookId:'L0005',bookName:'庆余年',drama:'庆余年',lang:'中文',cost:1500,doroi:2.9,d0AdRoi:2.2,d0Iaa:580,compliance:82,oldCompliance:76,created:'2026-05-12',businessType:'免费',media:'TikTok'},
+  {id:'mat_012',type:'视频',name:'素材_012.mp4',vnName:'Khánh Dư Niên',w:720,h:1280,size:'230MB',duration:'00:15:14',source:'檀檀灰',time:'2026-05-10 16:31:47',user:'运营A',tags:['测试'],script:'庆余年',folder:'短剧库/庆余年',bookId:'L0005',bookName:'庆余年',drama:'Joy of Life',lang:'英文',cost:1100,doroi:2.1,d0AdRoi:1.7,d0Iaa:390,compliance:76,oldCompliance:69,created:'2026-05-10',businessType:'付费',media:'TikTok'}
+];
+initMaterialFilters();
 let previewVisible=false,previewTimer=null;
 
 function toggleMaterialPreview(){clearTimeout(previewTimer);const section=document.getElementById('materialPreviewSection'),content=document.getElementById('materialPreviewContent'),btn=document.getElementById('btnPreview');if(previewVisible){closeMaterialPreview();return}previewVisible=true;section.classList.add('show');btn.textContent='收起预览';
