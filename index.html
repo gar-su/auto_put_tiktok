@@ -699,7 +699,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <label>已选素材</label>
         <div class="form-control">
           <div class="material-tags" id="selectedMaterialTags" style="flex-wrap:wrap;gap:6px;display:flex"></div>
-          <button type="button" class="btn-link" onclick="openMaterialDialog()" style="margin-top:6px">+ 选择素材</button>
+          <div style="display:flex;gap:14px;margin-top:6px">
+            <button type="button" class="btn-link" onclick="openMaterialDialog()">+ 选择素材</button>
+            <button type="button" class="btn-link" onclick="clearConfirmedMaterials()" id="btnClearMaterials" style="display:none;color:#f56c6c">清空已选</button>
+          </div>
         </div>
       </div>
       </div>
@@ -1932,12 +1935,20 @@ function resetModeData(){
 }
 function renderSelectedTags(){
   const container=document.getElementById('selectedMaterialTags');
+  document.getElementById('btnClearMaterials').style.display=confirmedMaterials.length?'':'none';
   if(confirmedMaterials.length===0){container.innerHTML='<div class="material-empty">暂未选择素材，请点击下方按钮添加</div>';return}
   container.innerHTML=confirmedMaterials.map(m=>`<span class="material-tag">${m.name}<span class="tag-remove" onclick="removeConfirmedMaterial('${m.id}')">&times;</span></span>`).join('');
 }
+function clearConfirmedMaterials(){
+  if(confirmedMaterials.length===0)return;
+  if(!confirm('确定清空全部已选素材吗？'))return;
+  confirmedMaterials=[];materialSelected={};
+  renderSelectedTags();
+  if(materialMode==='specify')updateSpecifyPreview();
+}
 
 // ==================== 素材选择弹窗 ====================
-const MAT_PAGE_SIZE=10;
+const MAT_PAGE_SIZE=10,MAT_MAX_SELECT=100;
 function initMaterialFilters(){
   const opts=(selId,key,ph)=>{const vals=[...new Set(mockMaterialData.map(m=>m[key]).filter(Boolean))].sort();document.getElementById(selId).innerHTML=`<option value="">${ph}</option>`+vals.map(v=>`<option value="${v}">${v}</option>`).join('')};
   opts('matLang','lang','不限');opts('matUser','user','选择用户');opts('matScript','script','请选择剧本');opts('matDrama','drama','请选择短剧');opts('matFolder','folder','请选择文件夹');
@@ -1974,10 +1985,20 @@ function openMaterialDialog(){
   matPage=0;renderMaterialCards();updateMatFooter();
 }
 function closeMaterialDialog(){document.getElementById('materialDialogOverlay').style.display='none'}
-function toggleMaterialSelect(id){if(materialSelected[id])delete materialSelected[id];else materialSelected[id]=true;renderMaterialCards();updateMatFooter()}
+function toggleMaterialSelect(id){
+  if(materialSelected[id]){delete materialSelected[id]}
+  else{
+    if(Object.keys(materialSelected).length>=MAT_MAX_SELECT){alert(`最多选择 ${MAT_MAX_SELECT} 个素材`);return}
+    materialSelected[id]=true;
+  }
+  renderMaterialCards();updateMatFooter();
+}
 function toggleAllMaterials(){
   const isAll=document.getElementById('matCheckAll').checked,start=matPage*MAT_PAGE_SIZE,pageItems=materialFiltered.slice(start,start+MAT_PAGE_SIZE);
-  pageItems.forEach(m=>{if(isAll)materialSelected[m.id]=true;else delete materialSelected[m.id]});
+  if(isAll){
+    pageItems.forEach(m=>{if(Object.keys(materialSelected).length<MAT_MAX_SELECT)materialSelected[m.id]=true});
+    if(Object.keys(materialSelected).length>=MAT_MAX_SELECT)alert(`最多选择 ${MAT_MAX_SELECT} 个素材`);
+  }else{pageItems.forEach(m=>delete materialSelected[m.id]);}
   renderMaterialCards();updateMatFooter();
 }
 function goMatPage(p){matPage=p;renderMaterialCards()}
@@ -2004,10 +2025,11 @@ function renderMaterialCards(){
   }
   document.getElementById('matCheckAll').checked=pageItems.length>0&&pageItems.every(m=>materialSelected[m.id]);
 }
-function updateMatFooter(){document.getElementById('matSelectedTip').textContent=`已选 ${Object.keys(materialSelected).length} 个素材`}
+function updateMatFooter(){document.getElementById('matSelectedTip').textContent=`已选 ${Object.keys(materialSelected).length}/${MAT_MAX_SELECT} 个素材`}
 function confirmMaterialSelect(){
   const ids=Object.keys(materialSelected);
   if(ids.length===0){alert('请至少选择 1 个素材');return}
+  if(ids.length>MAT_MAX_SELECT){alert(`最多选择 ${MAT_MAX_SELECT} 个素材`);return}
   confirmedMaterials=mockMaterialData.filter(m=>materialSelected[m.id]);
   renderSelectedTags();
   closeMaterialDialog();
