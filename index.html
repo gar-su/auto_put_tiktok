@@ -566,7 +566,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <div class="form-control"><input type="number" class="input-text" id="campaignLimit" min="1" max="30" value="1" style="width:130px"></div>
       </div>
       <div class="form-item">
-        <label style="width:180px"><span class="required">*</span>每轮账户数<i class="tip-icon">?<span class="tip-box">每轮从账户包随机抽取 N 个账户并行创建，N 范围 1~包内账户总数。每个账户独立执行：各自筛选取素材、各自创建不超过单轮单短剧计划创建上限的计划、各自遵守素材重复次数与跨轮去重；同一素材可跨账户复用。</span></i></label>
+        <label style="width:180px"><span class="required">*</span>每轮账户数<i class="tip-icon">?<span class="tip-box">每轮从账户包随机抽取 N 个账户并行创建，N 范围 1~包内账户总数。每个账户独立执行：各自筛选取素材、各自创建不超过单轮单短剧计划创建上限的计划、各自遵守素材单轮投放次数与累计投放次数；同一素材可跨账户复用。</span></i></label>
         <div class="form-control"><div class="input-group"><input type="number" class="input-text" id="accountCount" min="1" step="1" value="1" placeholder="请输入" style="width:110px"><span class="tip-text" id="accountCountHint">请先选择账户包</span></div></div>
       </div>
 
@@ -678,19 +678,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       <!-- /filterModeFields -->
 
       <div class="form-item">
-        <label>素材重复次数</label>
-        <div class="form-control"><div class="btn-group" id="repeatCountType">
-          <button type="button" class="btn-option active" data-type="unlimit">不限</button>
-          <button type="button" class="btn-option" data-type="custom">自定义</button>
+        <label>素材单轮投放次数</label>
+        <div class="form-control"><div class="btn-group" id="singleRoundRepeatType">
+          <button type="button" class="btn-option" data-type="unlimit">不限</button>
+          <button type="button" class="btn-option active" data-type="custom">自定义</button>
         </div>
-        <div class="input-group" id="repeatCountInput" style="display:none"><input type="number" class="input-text" id="repeatCount" min="1" placeholder="请输入"><span class="tip-text">不填写默认30</span></div></div>
+        <div class="input-group" id="singleRoundRepeatInput"><input type="number" class="input-text" id="singleRoundRepeat" min="1" value="1" placeholder="请输入"><span class="tip-text">单轮内最多使用次数</span></div></div>
       </div>
-      <div class="form-item" id="dedupItem">
-        <label style="white-space:nowrap">多轮执行不投重复素材</label>
-        <div class="form-control"><div class="btn-group" id="dedupAcrossRounds">
-          <button type="button" class="btn-option" data-value="0">关闭</button>
-          <button type="button" class="btn-option active" data-value="1">开启</button>
-        </div></div>
+      <div class="form-item">
+        <label>素材累计投放次数</label>
+        <div class="form-control"><div class="btn-group" id="totalRepeatType">
+          <button type="button" class="btn-option" data-type="unlimit">不限</button>
+          <button type="button" class="btn-option active" data-type="custom">自定义</button>
+        </div>
+        <div class="input-group" id="totalRepeatInput"><input type="number" class="input-text" id="totalRepeatCount" min="1" value="1" placeholder="请输入"><span class="tip-text">累计投满即退出</span></div></div>
       </div>
       <div class="form-item">
         <label>广告数</label>
@@ -1927,12 +1928,13 @@ document.querySelectorAll('#materialFilterType .btn-option').forEach(btn=>{btn.a
 function bindBtnGroup(sel){
   document.querySelectorAll(sel+' .btn-option').forEach(btn=>{btn.addEventListener('click',function(){document.querySelectorAll(sel+' .btn-option').forEach(b=>b.classList.remove('active'));this.classList.add('active');
     if(sel==='#materialCountType')document.getElementById('materialCountInput').style.display=this.dataset.type==='custom'?'flex':'none';
-    if(sel==='#repeatCountType')document.getElementById('repeatCountInput').style.display=this.dataset.type==='custom'?'flex':'none';
+    if(sel==='#singleRoundRepeatType')document.getElementById('singleRoundRepeatInput').style.display=this.dataset.type==='custom'?'flex':'none';
+    if(sel==='#totalRepeatType')document.getElementById('totalRepeatInput').style.display=this.dataset.type==='custom'?'flex':'none';
     if(sel==='#productSource')toggleProductLibraryConnect();
     if(sel==='#salesProductSource')toggleProductLibraryConnect();
     resetMaterialPreview()})});
 }
-['#materialCreateTime','#businessTypeBtns','#mediaFilterBtns','#statRangeBtns','#sortMetricBtns','#materialCountType','#repeatCountType','#dedupAcrossRounds'].forEach(bindBtnGroup);
+['#materialCreateTime','#businessTypeBtns','#mediaFilterBtns','#statRangeBtns','#sortMetricBtns','#materialCountType','#singleRoundRepeatType','#totalRepeatType'].forEach(bindBtnGroup);
 
 // ==================== 素材选择方式切换 ====================
 document.querySelectorAll('#materialModeBtns .btn-option').forEach(btn=>{btn.addEventListener('click',function(){
@@ -2435,6 +2437,8 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
       videoShare:document.querySelector('#videoShare .btn-option.active').dataset.value,
     };
   }
+  const singleRoundRepeat=document.querySelector('#singleRoundRepeatType .btn-option.active').dataset.type==='custom'?(document.getElementById('singleRoundRepeat').value||1):'unlimit';
+  const totalRepeatCount=document.querySelector('#totalRepeatType .btn-option.active').dataset.type==='custom'?(document.getElementById('totalRepeatCount').value||1):'unlimit';
   const formData={taskName,status:document.querySelector('.btn-option[data-status].active').dataset.status,
     timeRanges:Array.from(document.querySelectorAll('#timeRangeContainer .time-range-group')).map(r=>({start:r.querySelectorAll('.time-input')[0].value,end:r.querySelectorAll('.time-input')[1].value})),
     scheduleTime:scheduleTime?scheduleTime+'+08:00':null,
@@ -2448,7 +2452,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
       pixelId:isSales?document.getElementById('salesPixelId').value:''},
     identities:identityResults,
     campaign,adGroup,ad,
-    material:materialMode==='specify'?{mode:'specify',items:confirmedMaterials.map(m=>m.id),repeatCount:document.querySelector('#repeatCountType .btn-option.active').dataset.type==='custom'?(document.getElementById('repeatCount').value||30):'unlimit',dedupAcrossRounds:document.querySelector('#dedupAcrossRounds .btn-option.active').dataset.value==='1',adCount:document.getElementById('adCount').value||30}:{mode:'filter',createTime:document.querySelector('#materialCreateTime .btn-option.active').dataset.day,
+    material:materialMode==='specify'?{mode:'specify',items:confirmedMaterials.map(m=>m.id),repeatCount:singleRoundRepeat,totalRepeatCount,adCount:document.getElementById('adCount').value||30}:{mode:'filter',createTime:document.querySelector('#materialCreateTime .btn-option.active').dataset.day,
       filterType:document.querySelector('#materialFilterType .btn-option.active').dataset.type,
       businessType:document.querySelector('#businessTypeBtns .btn-option.active').dataset.type,
       media:document.querySelector('#mediaFilterBtns .btn-option.active').dataset.type,
@@ -2456,8 +2460,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
       sortMetric:document.querySelector('#sortMetricBtns .btn-option.active').dataset.metric,
       materialCount:document.querySelector('#materialCountType .btn-option.active').dataset.type==='custom'?document.getElementById('materialCount').value:'unlimit',
       conditions:Array.from(document.querySelectorAll('#materialConditionGroup .condition-row')).map(r=>{const m=r.querySelector('.material-condition-metric').value,o=r.querySelector('.material-condition-operator').value,ins=r.querySelectorAll('.condition-input');return o==='between'?{metric:m,operator:o,min:ins[0].value,max:ins[1].value}:{metric:m,operator:o,value:ins[0].value}}),
-      repeatCount:document.querySelector('#repeatCountType .btn-option.active').dataset.type==='custom'?(document.getElementById('repeatCount').value||30):'unlimit',
-      dedupAcrossRounds:document.querySelector('#dedupAcrossRounds .btn-option.active').dataset.value==='1',
+      repeatCount:singleRoundRepeat,totalRepeatCount,
       adCount:document.getElementById('adCount').value||30}};
   console.log('提交数据：',formData);alert('任务创建成功！');closeTaskModal()});
 

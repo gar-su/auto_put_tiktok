@@ -78,21 +78,23 @@
   - 筛选模式=自定义且无条件行时，显示红色错误提示「选择自定义时，至少需要输入一个条件」
 - **按指标排序** 按钮组：消耗(`cost`, 默认) / DOROI(`doroi`) / D0广告ROI(`d0_ad_roi`) / D0 IAA(`d0_iaa`) / 综合达标率(`compliance`)
 
-### 3.3 单剧本/单账户最高重复次数
+### 3.3 素材单轮投放次数
 按钮组：
 | 按钮文案 | data-value | 默认 |
 |---------|-----------|------|
-| 不限 | `unlimit` | ✓ |
-| 自定义 | `custom` | |
+| 不限 | `unlimit` | |
+| 自定义 | `custom` | ✓ |
 
-选自定义时弹出数字输入框。
+选自定义时弹出数字输入框，默认值 1，辅助文案「单轮内最多使用次数」。
 
-### 3.4 多轮执行不投重复素材
-按钮组，二选一：
-| 按钮文案 | data-value | 默认 | API 字段 |
-|---------|-----------|------|---------|
-| 关闭 | `0` | ✓ | `dedup_across_rounds = false` |
-| 开启 | `1` | | `dedup_across_rounds = true` |
+### 3.4 素材累计投放次数
+按钮组：
+| 按钮文案 | data-value | 默认 |
+|---------|-----------|------|
+| 不限 | `unlimit` | |
+| 自定义 | `custom` | ✓ |
+
+选自定义时弹出数字输入框，默认值 1，辅助文案「累计投满即退出」。单轮实际次数 = min(单轮投放次数, 累计剩余)，累计为硬上限，投满后素材退出该账户后续轮次。
 
 ### 3.5 广告个数
 数字输入，不填默认 30。占位提示「不填写默认30」。
@@ -580,7 +582,7 @@
 | 投放配置 | `account.strategy` | 投放策略（自动推导，见 4.6） |
 | 投放配置 | `account.pixelId` | 像素ID（仅销量模式） |
 | 认证身份 | `identities` | `[{dramaName, accountId, accountName, language, identityId, identityName, isFallback}]`，见 4.8 |
-| 素材筛选 | `material.*` | 含 createTime/filterType/businessType/media/statRange/sortMetric/materialCount/conditions/repeatCount/dedupAcrossRounds/adCount |
+| 素材筛选 | `material.*` | 含 createTime/filterType/businessType/media/statRange/sortMetric/materialCount/conditions/repeatCount/totalRepeatCount/adCount |
 
 ## 9. 生成监测链接
 监测链接按任务设置自动生成，每条链接对应一个短剧 × 账户组合（与 `dramaMatches` 同粒度）。生成表单为三步向导：基本信息 → 付费策略 → 回传，大部分字段从任务配置自动带入。付费策略需根据是否小程序推广（TikTok Minis）区分字段。
