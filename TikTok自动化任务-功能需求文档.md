@@ -193,7 +193,7 @@
 | 版位-自动版位 | 可选手动选择 | 可选手动选择 | 强制隐藏 |
 | 版位-Pangle | 可选 | 可选 | 强制隐藏+取消勾选 |
 | 版位-TikTok | 可选 | 可选 | 强制勾选 |
-| 付费模板组 | 隐藏 | 隐藏 | 显示 |
+| 付费模板组 | 隐藏 | 隐藏 | 仅业务类型=付费时显示 |
 
 选择应用下拉：写死 netshort。
 选择小程序下拉：从 NS 后台小程序管理拉取。
@@ -278,7 +278,8 @@
 - **视频共享** 按钮组：关闭(`0`, 默认) / 开启(`1`)。对应 API `video_share`。
 
 ### 5.15 付费模板组
-位于「渠道号」下方的下拉选框，**仅 TikTok Minis 类型显示**，必填。对应 API `paid_template_group`。
+位于「渠道号」下方的下拉选框，**仅 TikTok Minis 且业务类型=付费时显示**，必填。对应 API `paid_template_group`。
+- **生效条件**：推广系列类型 = TikTok Minis 且业务类型 = 付费，两者同时满足才显示；隐藏时清空已选值。
 - 选项数据为**选中小程序后，调用小程序接口返回的模板组列表**，原型中以 `mockPaidTemplateGroups` mock（8 条）：
 | 模板组名称 |
 |-----------|
@@ -291,7 +292,7 @@
 | 纯订阅-中充面板-常规价格-$14.99 |
 | 纯订阅-高充面板-常规价格-$24.99 |
 - **切换小程序时重置已选值**（模板组随小程序重新返回）。
-- 提交校验：TikTok Minis 类型未选择时 alert「请选择付费模板组」。
+- 提交校验：TikTok Minis 且业务类型=付费时未选择则 alert「请选择付费模板组」。
 
 ## 6. 销量配置 (`WEB_CONVERSIONS`)
 ### 6.1 选择应用
@@ -502,7 +503,7 @@
 | 商品数据源 | `productSource` | `"0"` / `"1"` | |
 | 选择应用 | `selectApp` | string | |
 | 选择小程序 | `selectMiniProgram` | string | |
-| 付费模板组 | `paidTemplateGroup` | string | 仅 TikTok Minis，小程序返回的模板组 |
+| 付费模板组 | `paidTemplateGroup` | string | 仅 TikTok Minis 且业务类型=付费，小程序返回的模板组 |
 | 关联商品投放 | `productLibraries` | array | `[{dramaName, accountId, libId, libName, productId, seriesName}]`，由 `dramaMatches` 展开 |
 | 单日预算 | `dailyBudget` | string | |
 | 竞价策略 | `bidStrategy` | `"max_conversion"` / `"cost_cap"` / `"max_delivery"` | |
