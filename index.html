@@ -716,7 +716,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       </div>
       <div class="form-item">
         <label><span class="required">*</span>每轮账户数</label>
-        <div class="form-control"><div class="input-group"><input type="number" class="input-text" id="accountCount" min="1" placeholder="请输入" style="width:110px"><span class="tip-text" id="accountCountHint">请先选择账户包</span></div></div>
+        <div class="form-control"><div class="input-group"><input type="number" class="input-text" id="accountCount" min="1" step="1" placeholder="请输入" style="width:110px"><span class="tip-text" id="accountCountHint">请先选择账户包</span></div></div>
       </div>
       <div class="form-item">
         <label><span class="required">*</span>广告目标</label>
@@ -1427,6 +1427,7 @@ function closeBatchLinkModal(){document.getElementById('batchLinkModal').style.d
 function applyBatchLinkFilter(){const raw=document.getElementById('batchLinkInput').value;if(!raw.trim()){closeBatchLinkModal();return}const ids=raw.split(/[\n,，\s]+/).filter(Boolean);document.querySelector('#page-campaign input[placeholder="监测链接ID/名称"]').value=ids.join(',');closeBatchLinkModal()}
 function resetTaskForm(){
   document.getElementById('autoTaskForm').reset();
+  document.getElementById('accountCountHint').textContent='请先选择账户包';
   document.getElementById('taskNameCount').textContent='0 / 50';
   dramaTargetingMap.clear();
   dramaStatusMap.clear();
@@ -1508,7 +1509,7 @@ const allRegions = ['美国','加拿大','英国','德国','法国','日本','�
   sel.addEventListener('change',function(){
     if(Object.keys(dramaMatches).length>0){dramaMatches={};renderSelectedProductLibs()}
     const m=getPackageAccounts().length;
-    document.getElementById('accountCountHint').textContent=m>0?('包内共 '+m+' 个账户，每轮随机抽取'):'请先选择账户包';
+    document.getElementById('accountCountHint').textContent=m>0?('包内共 '+m+' 个账户，每轮随机抽取 N 个'):'请先选择账户包';
   });
   // 年龄多选按钮
   document.querySelectorAll('#tpAge .btn-option').forEach(b=>b.addEventListener('click',function(){this.classList.toggle('active')}));
