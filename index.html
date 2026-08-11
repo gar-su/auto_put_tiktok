@@ -2435,7 +2435,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
     scheduleTime:scheduleTime?scheduleTime+'+08:00':null,
     executeFrequency,dramas,endConditions:[{metric:'series_count',operator:'>=',value:ev1},{metric:'account_count',operator:'>=',value:ev2}],campaignLimit:+cl,
     campaignNameSuffix:document.getElementById('campaignNameSuffix').value,
-    account:{package:accountPkg,accountCount:accountCount,
+    account:{package:accountPkg,accountCount:+accountCount,
       bizType:isSales?document.querySelector('#salesBizType .btn-option.active').dataset.type:document.querySelector('#appBizType .btn-option.active').dataset.type,
       channel:isSales?document.getElementById('salesChannel').textContent:document.getElementById('appChannel').textContent,
       channelNo:isSales?document.getElementById('salesChannelNo').value:document.getElementById('appChannelNo').value,
