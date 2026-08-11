@@ -131,6 +131,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .char-count{font-size:12px;color:var(--text-secondary);margin-top:4px;text-align:right}
 .error-tip{display:none;font-size:12px;color:#ff4d4f;margin-top:4px}
 .error-tip.show{display:block}
+.tip-icon{position:relative;display:inline-block;width:16px;height:16px;line-height:16px;border-radius:50%;background:var(--text-secondary);color:#fff;font-size:12px;text-align:center;cursor:help;margin-left:6px;vertical-align:middle;font-style:normal}
+.tip-icon .tip-box{display:none;position:absolute;top:22px;left:-10px;width:300px;padding:8px 10px;background:#303133;color:#fff;border-radius:4px;font-size:12px;line-height:1.7;text-align:left;font-weight:400;z-index:30;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.tip-icon .tip-box::before{content:'';position:absolute;top:-6px;left:14px;border:6px solid transparent;border-bottom-color:#303133}
+.tip-icon:hover .tip-box{display:block}
 
 /* 短剧搜索 */
 .drama-search-section{border:1px solid #dcdfe6;border-radius:4px;padding:16px}
@@ -561,6 +565,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <label style="width:180px"><span class="required">*</span>单轮单短剧计划创建上限</label>
         <div class="form-control"><input type="number" class="input-text" id="campaignLimit" min="1" max="30" value="1" style="width:130px"></div>
       </div>
+      <div class="form-item">
+        <label style="width:180px"><span class="required">*</span>每轮账户数<i class="tip-icon">?<span class="tip-box">每轮从账户包随机抽取 N 个账户并行创建，N 范围 1~包内账户总数。每个账户独立执行：各自筛选取素材、各自创建不超过单轮单短剧计划创建上限的计划、各自遵守素材重复次数与跨轮去重；同一素材可跨账户复用。</span></i></label>
+        <div class="form-control"><div class="input-group"><input type="number" class="input-text" id="accountCount" min="1" step="1" value="1" placeholder="请输入" style="width:110px"><span class="tip-text" id="accountCountHint">请先选择账户包</span></div></div>
+      </div>
 
       <div class="form-group-title">素材配置</div>
 
@@ -713,10 +721,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       <div class="form-item">
         <label><span class="required">*</span>投放账户</label>
         <div class="form-control"><select class="condition-select" id="accountPackage" style="min-width:280px"><option value="">请选择账户包</option></select></div>
-      </div>
-      <div class="form-item">
-        <label><span class="required">*</span>每轮账户数</label>
-        <div class="form-control"><div class="input-group"><input type="number" class="input-text" id="accountCount" min="1" step="1" placeholder="请输入" style="width:110px"><span class="tip-text" id="accountCountHint">请先选择账户包</span></div></div>
       </div>
       <div class="form-item">
         <label><span class="required">*</span>广告目标</label>
