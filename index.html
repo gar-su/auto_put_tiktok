@@ -715,6 +715,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <div class="form-control"><select class="condition-select" id="accountPackage" style="min-width:280px"><option value="">请选择账户包</option></select></div>
       </div>
       <div class="form-item">
+        <label><span class="required">*</span>每轮账户数</label>
+        <div class="form-control"><div class="input-group"><input type="number" class="input-text" id="accountCount" min="1" placeholder="请输入" style="width:110px"><span class="tip-text" id="accountCountHint">请先选择账户包</span></div></div>
+      </div>
+      <div class="form-item">
         <label><span class="required">*</span>广告目标</label>
         <div class="form-control"><div class="btn-group" id="campaignObjective">
           <button type="button" class="btn-option active" data-value="app_promotion">应用推广</button>
@@ -1501,6 +1505,12 @@ const allRegions = ['美国','加拿大','英国','德国','法国','日本','�
 (function(){
   const sel=document.getElementById('accountPackage');
   mockAccountPackages.forEach(p=>{const o=document.createElement('option');o.value=p.name;o.textContent=p.name;sel.appendChild(o)});
+  sel.addEventListener('change',function(){
+    dramaMatches={};
+    renderSelectedProductLibs();
+    const m=getPackageAccounts().length;
+    document.getElementById('accountCountHint').textContent=m>0?('包内共 '+m+' 个账户，每轮随机抽取'):'请先选择账户包';
+  });
   // 年龄多选按钮
   document.querySelectorAll('#tpAge .btn-option').forEach(b=>b.addEventListener('click',function(){this.classList.toggle('active')}));
   // 点击外部关闭语言下拉
