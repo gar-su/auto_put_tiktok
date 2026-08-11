@@ -2591,7 +2591,7 @@ function autoMatchDramas(){
     const parts=dramaName.split('-');
     const nameKey=parts[2]?parts[2].toLowerCase().trim():parts[0].toLowerCase().trim();
     const langKey=dramaLangToProductLang[parts[3]]||parts[3]||'';
-    mockProductAccounts.forEach(account=>{
+    getPackageAccounts().forEach(account=>{
       // 跳过已匹配的
       if(dramaMatches[dramaName]&&dramaMatches[dramaName][account.id])return;
       let bestProduct=null,bestLib=null;
@@ -2649,7 +2649,7 @@ function closeProductLibraryDrawer(){
 
 function confirmProductLibraries(){
   const dramas=getSelectedDramas();
-  const accounts=mockProductAccounts;
+  const accounts=getPackageAccounts();
   let missing=[];
   dramas.forEach(d=>{
     accounts.forEach(a=>{
@@ -2671,7 +2671,7 @@ function renderDramaList(){
   document.getElementById('plDramaList').innerHTML=dramas.map(d=>{
     const isActive=currentDramaName===d;
     const matched=Object.keys(dramaMatches[d]||{}).length;
-    const total=mockProductAccounts.length;
+    const total=getPackageAccounts().length;
     const done=matched===total;
     return `<div class="pl-card${isActive?' selected':''}" onclick="selectDrama('${d.replace(/'/g,"\\'")}')">
       <div class="pl-name">${d}${done?' <span style="color:var(--success);font-size:14px">✓</span>':''}</div>
@@ -2691,8 +2691,8 @@ function selectDrama(name){
 // ---- 中栏：投放账户 + 商品库 ----
 function renderAccountListD(){
   const container=document.getElementById('plAccountListD');
-  document.getElementById('plAccountCount').textContent=mockProductAccounts.length;
-  container.innerHTML=mockProductAccounts.map(a=>{
+  document.getElementById('plAccountCount').textContent=getPackageAccounts().length;
+  container.innerHTML=getPackageAccounts().map(a=>{
     const isActive=currentAccountId===a.id;
     const match=dramaMatches[currentDramaName]&&dramaMatches[currentDramaName][a.id];
     const hasMatch=!!match;
