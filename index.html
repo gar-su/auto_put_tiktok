@@ -2335,6 +2335,11 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
   if(!cl||+cl<1||+cl>30){alert('请填写计划创建上限（1-30）');return}
   const accountPkg=document.getElementById('accountPackage').value;
   if(!accountPkg){alert('请选择投放账户');return}
+  const accountCount=document.getElementById('accountCount').value;
+  const pkgAccounts=getPackageAccounts();
+  if(!accountCount||+accountCount<1){alert('请输入每轮账户数');return}
+  if(pkgAccounts.length===0){alert('当前账户包内无账户');return}
+  if(+accountCount>pkgAccounts.length){alert('每轮账户数不能超过包内账户数（'+pkgAccounts.length+'）');return}
   const appChannelNo=isSales?document.getElementById('salesChannelNo').value:document.getElementById('appChannelNo').value;
   if(!appChannelNo){alert('请输入渠道号');return}
   if(!isSales&&document.querySelector('#campaignType .btn-option.active').dataset.value==='tiktok_minis'&&document.querySelector('#appBizType .btn-option.active').dataset.type==='付费'&&!document.getElementById('paidTemplateGroup').value){alert('请选择付费模板组');return}
@@ -2430,7 +2435,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
     scheduleTime:scheduleTime?scheduleTime+'+08:00':null,
     executeFrequency,dramas,endConditions:[{metric:'series_count',operator:'>=',value:ev1},{metric:'account_count',operator:'>=',value:ev2}],campaignLimit:+cl,
     campaignNameSuffix:document.getElementById('campaignNameSuffix').value,
-    account:{package:accountPkg,
+    account:{package:accountPkg,accountCount:accountCount,
       bizType:isSales?document.querySelector('#salesBizType .btn-option.active').dataset.type:document.querySelector('#appBizType .btn-option.active').dataset.type,
       channel:isSales?document.getElementById('salesChannel').textContent:document.getElementById('appChannel').textContent,
       channelNo:isSales?document.getElementById('salesChannelNo').value:document.getElementById('appChannelNo').value,
