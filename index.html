@@ -784,6 +784,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <label><span class="required">*</span>渠道号</label>
         <div class="form-control"><input type="text" class="input-text" id="appChannelNo" placeholder="请输入渠道号" style="width:100%"></div>
       </div>
+      <div class="form-item" id="paidTemplateGroupItem" style="display:none">
+        <label><span class="required">*</span>付费模板组</label>
+        <div class="form-control"><select class="condition-select" id="paidTemplateGroup" style="min-width:320px"><option value="">请选择付费模板组</option></select></div>
+      </div>
       <div class="form-item">
         <label><span class="required">*</span>投放策略</label>
         <div class="form-control"><span style="line-height:32px;color:#606266">直投</span></div>
@@ -2048,6 +2052,7 @@ function toggleCampaignTypeFields(){
   document.getElementById('productSourceItem').style.display=type==='tiktok_minis'?'flex':'none';
   document.getElementById('selectAppItem').style.display=(type==='app_install'||type==='app_retargeting')?'flex':'none';
   document.getElementById('selectMiniProgramItem').style.display=type==='tiktok_minis'?'flex':'none';
+  document.getElementById('paidTemplateGroupItem').style.display=type==='tiktok_minis'?'flex':'none';
   toggleProductLibraryConnect();
   const onlyAppEvent=type==='app_retargeting';
   const onlyValue=type==='tiktok_minis';
@@ -2082,6 +2087,22 @@ document.querySelectorAll('#campaignType .btn-option').forEach(b=>b.addEventList
   document.querySelectorAll('#campaignType .btn-option').forEach(x=>x.classList.remove('active'));
   this.classList.add('active');toggleCampaignTypeFields();toggleAppEventField();resetMaterialPreview();updateChannelDisplay();
 }));
+
+// ===== 付费模板组（TikTok Minis） =====
+// mock 数据：选中小程序后，调用小程序接口返回的付费模板组列表
+const mockPaidTemplateGroups=[
+  '混合-中充面板-首周15.99，续订19.99',
+  '混合-高充面板-首周19.99，续订24.99',
+  '纯订阅-高充面板-较低价格-$14.99',
+  '纯订阅-中充面板-较低价格-$9.99',
+  '纯订阅-低充面板-较低价格-$4.99',
+  '纯订阅-低充面板-常规价格-$9.99',
+  '纯订阅-中充面板-常规价格-$14.99',
+  '纯订阅-高充面板-常规价格-$24.99',
+];
+document.getElementById('paidTemplateGroup').innerHTML='<option value="">请选择付费模板组</option>'+mockPaidTemplateGroups.map(g=>`<option value="${g}">${g}</option>`).join('');
+// 切换小程序时，模板组随小程序重新返回，重置已选值
+document.getElementById('selectMiniProgram').addEventListener('change',function(){document.getElementById('paidTemplateGroup').value='';});
 
 // ===== 优化目标联动 — 应用内事件（应用推广） =====
 function toggleAppEventField(){
@@ -2292,6 +2313,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
   if(!accountPkg){alert('请选择投放账户');return}
   const appChannelNo=isSales?document.getElementById('salesChannelNo').value:document.getElementById('appChannelNo').value;
   if(!appChannelNo){alert('请输入渠道号');return}
+  if(!isSales&&document.querySelector('#campaignType .btn-option.active').dataset.value==='tiktok_minis'&&!document.getElementById('paidTemplateGroup').value){alert('请选择付费模板组');return}
   // validate identity matching for all (drama × account) combos
   const getHasPangle=isSales=>{
     const pl=isSales?document.querySelector('#salesPlacement .btn-option.active'):document.querySelector('#placement .btn-option.active');
@@ -2354,6 +2376,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
       productSource:document.querySelector('#productSource .btn-option.active').dataset.value,
       selectApp:document.getElementById('selectApp').value,
       selectMiniProgram:document.getElementById('selectMiniProgram').value,
+      paidTemplateGroup:document.getElementById('paidTemplateGroup').value,
       productLibraries:(()=>{const r=[];Object.entries(dramaMatches).forEach(([dn,accs])=>{Object.entries(accs).forEach(([aid,m])=>{r.push({dramaName:dn,accountId:aid,libId:m.libId,libName:m.libName,productId:m.product.productId,seriesName:m.product.seriesName,targeting:m.targeting||null})})});return r})(),
       cbo:'1',
       adOnly:'1',
