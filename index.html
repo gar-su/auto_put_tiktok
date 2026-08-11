@@ -1435,15 +1435,21 @@ function resetTaskForm(){
 
 // ==================== 账户包 ====================
 const mockAccountPackages = [
-  {id:355,name:'账户包A-北美投放',created:'2026-05-12',updated:'2026-06-20'},
-  {id:356,name:'账户包B-东南亚投放',created:'2026-05-15',updated:'2026-06-18'},
-  {id:357,name:'账户包C-欧洲投放',created:'2026-05-20',updated:'2026-06-22'},
-  {id:358,name:'账户包D-日韩投放',created:'2026-06-01',updated:'2026-06-21'},
-  {id:359,name:'账户包E-全球投放',created:'2026-06-05',updated:'2026-06-23'},
-  {id:360,name:'复制 - ja_JP_JP',created:'2026-06-10',updated:'2026-06-23'},
-  {id:361,name:'账户包F-测试专用',created:'2026-06-12',updated:'2026-06-24'},
-  {id:362,name:'账户包G-南美投放',created:'2026-06-15',updated:'2026-06-24'},
+  {id:355,name:'账户包A-北美投放',accounts:['7652323541467234312'],created:'2026-05-12',updated:'2026-06-20'},
+  {id:356,name:'账户包B-东南亚投放',accounts:['7652323541467234312','7623607732641417217'],created:'2026-05-15',updated:'2026-06-18'},
+  {id:357,name:'账户包C-欧洲投放',accounts:['7623607732641417217'],created:'2026-05-20',updated:'2026-06-22'},
+  {id:358,name:'账户包D-日韩投放',accounts:['7652323541467234312','7623607732641417217'],created:'2026-06-01',updated:'2026-06-21'},
+  {id:359,name:'账户包E-全球投放',accounts:['7652323541467234312','7623607732641417217'],created:'2026-06-05',updated:'2026-06-23'},
+  {id:360,name:'复制 - ja_JP_JP',accounts:['7623607732641417217'],created:'2026-06-10',updated:'2026-06-23'},
+  {id:361,name:'账户包F-测试专用',accounts:['7652323541467234312'],created:'2026-06-12',updated:'2026-06-24'},
+  {id:362,name:'账户包G-南美投放',accounts:['7652323541467234312','7623607732641417217'],created:'2026-06-15',updated:'2026-06-24'},
 ];
+function getPackageAccounts(){
+  const pkgName=document.getElementById('accountPackage').value;
+  const pkg=mockAccountPackages.find(p=>p.name===pkgName);
+  if(!pkg||!Array.isArray(pkg.accounts))return [];
+  return mockProductAccounts.filter(a=>pkg.accounts.includes(a.id));
+}
 const mockTargetingPackages = [
   {id:'tp1',name:'兴趣标签定向',gender:'不限',ageGroups:['18-24','25-34'],languages:['zh','en'],os:'不限',minOsVersion:'',network:'不限',locations:'美国, 加拿大, 英国'},
   {id:'tp2',name:'男性行为定向',gender:'男',ageGroups:['25-34','35-44','45-54'],languages:['en'],os:'Android',minOsVersion:'10',network:'WiFi',locations:'美国'},
