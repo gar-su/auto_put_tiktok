@@ -1506,8 +1506,7 @@ const allRegions = ['美国','加拿大','英国','德国','法国','日本','�
   const sel=document.getElementById('accountPackage');
   mockAccountPackages.forEach(p=>{const o=document.createElement('option');o.value=p.name;o.textContent=p.name;sel.appendChild(o)});
   sel.addEventListener('change',function(){
-    dramaMatches={};
-    renderSelectedProductLibs();
+    if(Object.keys(dramaMatches).length>0){dramaMatches={};renderSelectedProductLibs()}
     const m=getPackageAccounts().length;
     document.getElementById('accountCountHint').textContent=m>0?('包内共 '+m+' 个账户，每轮随机抽取'):'请先选择账户包';
   });
@@ -2068,7 +2067,7 @@ function toggleCampaignTypeFields(){
   document.getElementById('productSourceItem').style.display=type==='tiktok_minis'?'flex':'none';
   document.getElementById('selectAppItem').style.display=(type==='app_install'||type==='app_retargeting')?'flex':'none';
   document.getElementById('selectMiniProgramItem').style.display=type==='tiktok_minis'?'flex':'none';
-  document.getElementById('paidTemplateGroupItem').style.display=type==='tiktok_minis'?'flex':'none';
+  togglePaidTemplateGroup();
   toggleProductLibraryConnect();
   const onlyAppEvent=type==='app_retargeting';
   const onlyValue=type==='tiktok_minis';
@@ -2117,6 +2116,15 @@ const mockPaidTemplateGroups=[
   '纯订阅-高充面板-常规价格-$24.99',
 ];
 document.getElementById('paidTemplateGroup').innerHTML='<option value="">请选择付费模板组</option>'+mockPaidTemplateGroups.map(g=>`<option value="${g}">${g}</option>`).join('');
+// 仅 TikTok Minis 且业务类型=付费 时生效
+function togglePaidTemplateGroup(){
+  const type=document.querySelector('#campaignType .btn-option.active').dataset.value;
+  const bizType=document.querySelector('#appBizType .btn-option.active').dataset.type;
+  const show=type==='tiktok_minis'&&bizType==='付费';
+  document.getElementById('paidTemplateGroupItem').style.display=show?'flex':'none';
+  if(!show)document.getElementById('paidTemplateGroup').value='';
+}
+document.querySelectorAll('#appBizType .btn-option').forEach(b=>b.addEventListener('click',togglePaidTemplateGroup));
 // 切换小程序时，模板组随小程序重新返回，重置已选值
 document.getElementById('selectMiniProgram').addEventListener('change',function(){document.getElementById('paidTemplateGroup').value='';});
 
@@ -2329,7 +2337,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
   if(!accountPkg){alert('请选择投放账户');return}
   const appChannelNo=isSales?document.getElementById('salesChannelNo').value:document.getElementById('appChannelNo').value;
   if(!appChannelNo){alert('请输入渠道号');return}
-  if(!isSales&&document.querySelector('#campaignType .btn-option.active').dataset.value==='tiktok_minis'&&!document.getElementById('paidTemplateGroup').value){alert('请选择付费模板组');return}
+  if(!isSales&&document.querySelector('#campaignType .btn-option.active').dataset.value==='tiktok_minis'&&document.querySelector('#appBizType .btn-option.active').dataset.type==='付费'&&!document.getElementById('paidTemplateGroup').value){alert('请选择付费模板组');return}
   // validate identity matching for all (drama × account) combos
   const getHasPangle=isSales=>{
     const pl=isSales?document.querySelector('#salesPlacement .btn-option.active'):document.querySelector('#placement .btn-option.active');
