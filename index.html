@@ -931,12 +931,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 
       <div id="salesConfig" style="display:none">
 
-      <div class="form-item">
-        <label><span class="required">*</span>选择应用</label>
-        <div class="form-control"><select class="condition-select" id="salesSelectApp" style="min-width:200px">
-          <option value="netshort" selected>Netshort</option>
-        </select></div>
-      </div>
       <div class="form-item" id="salesProductSourceItem">
         <label>商品数据源</label>
         <div class="form-control"><div class="btn-group" id="salesProductSource">
@@ -963,12 +957,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <div class="form-control"><span style="line-height:32px;color:#606266" id="salesChannel">TikTok ads</span></div>
       </div>
       <div class="form-item">
-        <label><span class="required">*</span>渠道号</label>
-        <div class="form-control"><input type="text" class="input-text" id="salesChannelNo" placeholder="请输入渠道号" style="width:100%"></div>
+        <label><span class="required">*</span>投放策略</label>
+        <div class="form-control"><div class="btn-group" id="salesStrategy">
+          <button type="button" class="btn-option active" data-value="W2A">W2A</button>
+          <button type="button" class="btn-option" data-value="H5">H5</button>
+        </div></div>
       </div>
       <div class="form-item">
-        <label><span class="required">*</span>投放策略</label>
-        <div class="form-control"><span style="line-height:32px;color:#606266">W2A</span></div>
+        <label><span class="required">*</span>渠道号</label>
+        <div class="form-control"><input type="text" class="input-text" id="salesChannelNo" placeholder="请输入渠道号" style="width:100%"></div>
       </div>
       <div class="form-item">
         <label><span class="required">*</span>像素ID</label>
@@ -2280,7 +2277,7 @@ function updateChannelDisplay(){
   }
 }
 // ===== 销量模式 交互 =====
-['#salesCampaignStatus','#salesAdgroupStatus','#salesProductSource','#salesOptimizationEvent','#salesPlacement','#salesBidStrategy','#salesEventCount','#salesUserComments','#salesVideoDownload','#salesVideoShare','#salesBizType'].forEach(bindBtnGroup);
+['#salesCampaignStatus','#salesAdgroupStatus','#salesProductSource','#salesOptimizationEvent','#salesPlacement','#salesBidStrategy','#salesEventCount','#salesUserComments','#salesVideoDownload','#salesVideoShare','#salesBizType','#salesStrategy'].forEach(bindBtnGroup);
 document.querySelectorAll('#salesBidStrategy .btn-option').forEach(b=>b.addEventListener('click',toggleSalesBidAmount));
 document.getElementById('campaignNameSuffix').addEventListener('input',function(){document.getElementById('campaignNameSuffixCount').textContent=this.value.length+' / 50'});
 document.getElementById('salesAdgroupName').addEventListener('input',function(){document.getElementById('salesAdgroupNameCount').textContent=this.value.length+' / 50'});
@@ -2385,7 +2382,6 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
       budgetType:'daily',
       dailyBudget:document.getElementById('salesDailyBudget').value,
       status:document.querySelector('#salesCampaignStatus .btn-option.active').dataset.value,
-      selectApp:document.getElementById('salesSelectApp').value,
     };
     adGroup={
       name:document.getElementById('salesAdgroupName').value,
@@ -2439,6 +2435,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
   }
   const singleRoundRepeat=document.querySelector('#singleRoundRepeatType .btn-option.active').dataset.type==='custom'?(document.getElementById('singleRoundRepeat').value||1):'unlimit';
   const totalRepeatCount=document.querySelector('#totalRepeatType .btn-option.active').dataset.type==='custom'?(document.getElementById('totalRepeatCount').value||1):'unlimit';
+  const salesStrategy=isSales?document.querySelector('#salesStrategy .btn-option.active').dataset.value:'直投';
   const formData={taskName,status:document.querySelector('.btn-option[data-status].active').dataset.status,
     timeRanges:Array.from(document.querySelectorAll('#timeRangeContainer .time-range-group')).map(r=>({start:r.querySelectorAll('.time-input')[0].value,end:r.querySelectorAll('.time-input')[1].value})),
     scheduleTime:scheduleTime?scheduleTime+'+08:00':null,
@@ -2448,8 +2445,9 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
       bizType:isSales?document.querySelector('#salesBizType .btn-option.active').dataset.type:document.querySelector('#appBizType .btn-option.active').dataset.type,
       channel:isSales?document.getElementById('salesChannel').textContent:document.getElementById('appChannel').textContent,
       channelNo:isSales?document.getElementById('salesChannelNo').value:document.getElementById('appChannelNo').value,
-      strategy:isSales?'W2A':'直投',
-      pixelId:isSales?document.getElementById('salesPixelId').value:''},
+      strategy:salesStrategy,
+      pixelId:isSales?document.getElementById('salesPixelId').value:'',
+      monitorLink:isSales?{promotionType:salesStrategy==='H5'?4:1,promotionChannel:salesStrategy==='H5'?2:1,callbackDatas:['completeRegistrationCode','purchaseCode','subscribeCode'],pixelId:document.getElementById('salesPixelId').value,channelNo:document.getElementById('salesChannelNo').value}:null},
     identities:identityResults,
     campaign,adGroup,ad,
     material:materialMode==='specify'?{mode:'specify',items:confirmedMaterials.map(m=>m.id),repeatCount:singleRoundRepeat,totalRepeatCount,adCount:document.getElementById('adCount').value||30}:{mode:'filter',createTime:document.querySelector('#materialCreateTime .btn-option.active').dataset.day,
