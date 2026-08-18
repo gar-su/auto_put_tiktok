@@ -403,7 +403,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       <button class="btn btn-default btn-sm">重置</button>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>任务ID</th><th>广告系列ID</th><th>广告系列名称</th><th>账户名称</th><th>账户ID</th><th>剧本编号</th><th>剧本名称</th><th>短剧名称</th><th>渠道名称</th><th>渠道号</th><th>上传状态</th><th>系列状态</th><th>日预算</th><th>优化目标</th><th>失败原因</th><th>链接名称</th><th>回传模板</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
+    <div class="table-batch-bar" data-body="campaignTableBody" style="margin-bottom:12px;display:flex;align-items:center;gap:12px">
+      <span class="batch-info" style="font-size:13px;color:var(--text-secondary)">已选择 <b>0</b> 条</span>
+      <button type="button" class="btn btn-default btn-sm batch-retry-btn" style="color:#e6a23c;border-color:#e6a23c">批量重试</button>
+    </div>
+      <thead><tr><th><input type="checkbox" class="select-all-check" data-body="campaignTableBody"></th><th>ID</th><th>任务ID</th><th>广告系列ID</th><th>广告系列名称</th><th>账户名称</th><th>账户ID</th><th>剧本编号</th><th>剧本名称</th><th>短剧名称</th><th>渠道名称</th><th>渠道号</th><th>上传状态</th><th>系列状态</th><th>日预算</th><th>优化目标</th><th>失败原因</th><th>链接名称</th><th>回传模板</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
       <tbody id="campaignTableBody"></tbody>
     </table></div>
     <div class="pagination" id="campaignPagination"></div>
@@ -433,7 +437,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       <button class="btn btn-default btn-sm">重置</button>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>任务ID</th><th>上传系列ID</th><th>广告组名称</th><th>账户信息</th><th>投放短剧</th><th>广告组状态</th><th>定向包</th><th>失败原因</th><th>优化目标</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
+    <div class="table-batch-bar" data-body="adgroupTableBody" style="margin-bottom:12px;display:flex;align-items:center;gap:12px">
+      <span class="batch-info" style="font-size:13px;color:var(--text-secondary)">已选择 <b>0</b> 条</span>
+      <button type="button" class="btn btn-default btn-sm batch-retry-btn" style="color:#e6a23c;border-color:#e6a23c">批量重试</button>
+    </div>
+      <thead><tr><th><input type="checkbox" class="select-all-check" data-body="adgroupTableBody"></th><th>ID</th><th>任务ID</th><th>上传系列ID</th><th>广告组名称</th><th>账户信息</th><th>投放短剧</th><th>上传状态</th><th>广告组状态</th><th>定向包</th><th>失败原因</th><th>优化目标</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
       <tbody id="adgroupTableBody"></tbody>
     </table></div>
     <div class="pagination" id="adgroupPagination"></div>
@@ -460,7 +468,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       <button class="btn btn-default btn-sm">重置</button>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th><input type="checkbox"></th><th>ID</th><th>任务ID</th><th>广告系列ID</th><th>广告组ID</th><th>上传广告组ID</th><th>广告ID</th><th>账户名称</th><th>账户ID</th><th>上传状态</th><th>广告状态</th><th>多广告主</th><th>失败原因</th><th>素材名称</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
+    <div class="table-batch-bar" data-body="adTableBody" style="margin-bottom:12px;display:flex;align-items:center;gap:12px">
+      <span class="batch-info" style="font-size:13px;color:var(--text-secondary)">已选择 <b>0</b> 条</span>
+      <button type="button" class="btn btn-default btn-sm batch-retry-btn" style="color:#e6a23c;border-color:#e6a23c">批量重试</button>
+    </div>
+      <thead><tr><th><input type="checkbox" class="select-all-check" data-body="adTableBody"></th><th>ID</th><th>任务ID</th><th>广告系列ID</th><th>广告组ID</th><th>上传广告组ID</th><th>广告ID</th><th>账户名称</th><th>账户ID</th><th>上传状态</th><th>广告状态</th><th>多广告主</th><th>失败原因</th><th>素材名称</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
       <tbody id="adTableBody"></tbody>
     </table></div>
     <div class="pagination" id="adPagination"></div>
@@ -1429,6 +1441,8 @@ function closeBatchLinkModal(){document.getElementById('batchLinkModal').style.d
 function applyBatchLinkFilter(){const raw=document.getElementById('batchLinkInput').value;if(!raw.trim()){closeBatchLinkModal();return}const ids=raw.split(/[\n,，\s]+/).filter(Boolean);document.querySelector('#page-campaign input[placeholder="监测链接ID/名称"]').value=ids.join(',');closeBatchLinkModal()}
 function resetTaskForm(){
   document.getElementById('autoTaskForm').reset();
+  document.querySelector('#salesStrategy .btn-option[data-value="W2A"]').classList.add('active');
+  document.querySelector('#salesStrategy .btn-option[data-value="H5"]').classList.remove('active');
   document.getElementById('accountCountHint').textContent='请先选择账户包';
   document.getElementById('taskNameCount').textContent='0 / 50';
   dramaTargetingMap.clear();
@@ -2813,7 +2827,7 @@ function clearProductTable(){
 }
 
 // ==================== 表格渲染 ====================
-function renderTable(bodyId,data,cols,pageSize,ops){const page=this._page||1,start=(page-1)*pageSize,pageData=data.slice(start,start+pageSize);document.getElementById(bodyId).innerHTML=pageData.map(row=>{let h='<tr><td><input type="checkbox"></td>';cols.forEach(col=>{if(typeof col==='string')h+=`<td>${row[col]||''}</td>`;else h+=col.render?`<td>${col.render(row)}</td>`:`<td>${row[col.key]||''}</td>`});if(ops){h+='<td>';if(typeof ops==='function')h+=ops(row);else ops.forEach(o=>h+=`<button class="btn btn-text btn-sm" ${o.onclick?`onclick="${o.onclick(row)}"`:''}>${o.label}</button>`);h+='</td>'}else{h+='<td><button class="btn btn-text btn-sm">编辑</button><button class="btn btn-text btn-sm" style="color:#f56c6c">删除</button></td>'}return h+'</tr>'}).join('')}
+function renderTable(bodyId,data,cols,pageSize,ops){const page=this._page||1,start=(page-1)*pageSize,pageData=data.slice(start,start+pageSize);document.getElementById(bodyId).innerHTML=pageData.map(row=>{const ok=row.uploadStatus!=='上传成功';let h='<tr><td><input type="checkbox" class="row-check" data-id="'+row.id+'"'+(ok?'':' disabled')+'></td>';cols.forEach(col=>{if(typeof col==='string')h+=`<td>${row[col]||''}</td>`;else h+=col.render?`<td>${col.render(row)}</td>`:`<td>${row[col.key]||''}</td>`});if(ops){h+='<td>';if(typeof ops==='function')h+=ops(row);else ops.forEach(o=>h+=`<button class="btn btn-text btn-sm"${ok?'':' disabled style="color:#c0c4cc;cursor:not-allowed"'} ${o.onclick?`onclick="${o.onclick(row)}"`:''}>${o.label}</button>`);h+='</td>'}else{h+='<td><button class="btn btn-text btn-sm">编辑</button><button class="btn btn-text btn-sm" style="color:#f56c6c">删除</button></td>'}return h+'</tr>'}).join('')}
 function renderPagination(pid,total,pageSize,onChange){const tp=Math.ceil(total/pageSize),page=this._page||1,c=document.getElementById(pid);let h=`<span>共 ${total} 条</span>`;h+=`<button class="page-btn" ${page<=1?'disabled':''} data-page="${page-1}">&lt;</button>`;for(let i=1;i<=Math.min(tp,5);i++)h+=`<button class="page-btn${i===page?' active':''}" data-page="${i}">${i}</button>`;if(tp>5)h+=`<span>...</span><button class="page-btn" data-page="${tp}">${tp}</button>`;h+=`<button class="page-btn" ${page>=tp?'disabled':''} data-page="${page+1}">&gt;</button>`;c.innerHTML=h;c.querySelectorAll('.page-btn:not([disabled])').forEach(b=>b.addEventListener('click',function(){const p=parseInt(this.dataset.page);if(p>=1&&p<=tp){c._page=p;onChange(p)}}));c._page=page}
 
 // ==================== Mock 数据 ====================
@@ -2829,15 +2843,40 @@ function renderAccountPackages(p=1){renderTable('accountPackageTableBody',mockAc
 // 广告系列
 const mockChannels=['通用默认渠道','TikTok渠道','测试渠道'],mockTemplates=['回传模板_001','回传模板_002','回传模板_003','回传模板_004','回传模板_005'];
 const campaigns=Array.from({length:20},(_,i)=>{const drama=mockDramas[i%8],pkg=mockAccountPackages[i%8],strategies=['最大转化量','成本上限','出价上限'];return{id:1000+i,taskId:`T2026${String(i%10+1).padStart(5,'0')}`,campaignId:`C2026${String(i+1).padStart(5,'0')}`,name:`${drama}-系列_${String(i+1).padStart(3,'0')}`,accountName:pkg.name,accountId:`A${String(i+100).padStart(5,'0')}`,scriptNo:`SC${String(i+1).padStart(5,'0')}`,scriptName:`${drama}`,channelName:mockChannels[i%3],channelNo:`CH${String(i+1).padStart(3,'0')}`,uploadStatus:Math.random()>.3?'上传成功':'上传失败',status:Math.random()>.3?'已开启':'已关闭',bidStrategy:strategies[Math.floor(Math.random()*3)],dailyBudget:`$${Math.floor(Math.random()*500+50)}`,optimization:mockOptimizations[Math.floor(Math.random()*3)],failReason:Math.random()>.7?'网络超时':'',drama,linkName:`${drama}_Link`,template:mockTemplates[i%5],created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
-function renderCampaigns(p=1){renderTable('campaignTableBody',campaigns,['id','taskId',{key:'campaignId',render:r=>`<span class="col-id">${r.campaignId}</span>`},'name','accountName','accountId','scriptNo','scriptName','drama','channelName','channelNo',{key:'uploadStatus',render:r=>`<span class="col-status ${r.uploadStatus==='上传成功'?'running':'error'}">${r.uploadStatus}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'bidStrategy','dailyBudget','optimization','failReason','linkName','template','created','updated'],10,[{label:'重试'}]);renderPagination('campaignPagination',campaigns.length,10,p=>renderCampaigns(p))}
+function renderCampaigns(p=1){renderTable('campaignTableBody',campaigns,['id','taskId',{key:'campaignId',render:r=>`<span class="col-id">${r.campaignId}</span>`},'name','accountName','accountId','scriptNo','scriptName','drama','channelName','channelNo',{key:'uploadStatus',render:r=>`<span class="col-status ${r.uploadStatus==='上传成功'?'running':'error'}">${r.uploadStatus}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'bidStrategy','dailyBudget','optimization','failReason','linkName','template','created','updated'],10,[{label:'重试'}]);renderPagination('campaignPagination',campaigns.length,10,p=>renderCampaigns(p));syncBatchCounts()}
 
 // 广告组
-const adGroups=Array.from({length:20},(_,i)=>{const drama=mockDramas[i%8],lang=mockLangs[i%7],pkg=mockAccountPackages[i%8];return{id:2000+i,taskId:`T2026${String(i%10+1).padStart(5,'0')}`,uploadSeriesId:`C2026${String(i%20+1).padStart(5,'0')}`,name:`${drama}-${lang}-G${String(i+1).padStart(3,'0')}`,accountInfo:pkg.name,drama:`${drama}-${lang}`,status:Math.random()>.3?'已开启':'已关闭',targeting:mockTargetingPackages[i%5],failReason:Math.random()>.7?'图片尺寸不符':'',optimization:mockOptimizations[Math.floor(Math.random()*3)],created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
-function renderAdGroups(p=1){renderTable('adgroupTableBody',adGroups,['id','taskId','uploadSeriesId','name','accountInfo','drama',{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'targeting','failReason','optimization','created','updated'],10,[{label:'重试'}]);renderPagination('adgroupPagination',adGroups.length,10,p=>renderAdGroups(p))}
+const adGroups=Array.from({length:20},(_,i)=>{const drama=mockDramas[i%8],lang=mockLangs[i%7],pkg=mockAccountPackages[i%8];return{id:2000+i,taskId:`T2026${String(i%10+1).padStart(5,'0')}`,uploadSeriesId:`C2026${String(i%20+1).padStart(5,'0')}`,name:`${drama}-${lang}-G${String(i+1).padStart(3,'0')}`,accountInfo:pkg.name,drama:`${drama}-${lang}`,uploadStatus:Math.random()>.3?'上传成功':'上传失败',status:Math.random()>.3?'已开启':'已关闭',targeting:mockTargetingPackages[i%5],failReason:Math.random()>.7?'图片尺寸不符':'',optimization:mockOptimizations[Math.floor(Math.random()*3)],created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
+function renderAdGroups(p=1){renderTable('adgroupTableBody',adGroups,['id','taskId','uploadSeriesId','name','accountInfo','drama',{key:'uploadStatus',render:r=>`<span class="col-status ${r.uploadStatus==='上传成功'?'running':'error'}">${r.uploadStatus}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'targeting','failReason','optimization','created','updated'],10,[{label:'重试'}]);renderPagination('adgroupPagination',adGroups.length,10,p=>renderAdGroups(p));syncBatchCounts()}
 
 // 广告
 const adsList=Array.from({length:20},(_,i)=>{const pkg=mockAccountPackages[i%8];return{id:3000+i,taskId:`T2026${String(i%10+1).padStart(5,'0')}`,campaignId:`C2026${String(i%20+1).padStart(5,'0')}`,adgroupId:`AG${String(i%20+1).padStart(6,'0')}`,uploadAdgroupId:`AG${String(i%20+1).padStart(6,'0')}`,adId:`AD${String(i+1).padStart(7,'0')}`,accountName:pkg.name,accountId:`A${String(i+100).padStart(5,'0')}`,uploadStatus:Math.random()>.2?'上传成功':(Math.random()>.5?'待上传':'上传失败'),status:Math.random()>.3?'已开启':'已关闭',multiAdvertiser:Math.random()>.7?'是':'否',failReason:Math.random()>.8?'视频时长超限':'',material:mockMaterialData[i%12].name,created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*7)).padStart(2,'0')}`}});
-function renderAds(p=1){renderTable('adTableBody',adsList,['id','taskId','campaignId','adgroupId','uploadAdgroupId','adId','accountName','accountId',{key:'uploadStatus',render:r=>`<span class="col-status ${r.uploadStatus==='上传成功'?'running':(r.uploadStatus==='上传失败'?'error':'pending')}">${r.uploadStatus}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'multiAdvertiser','failReason','material','created','updated'],10,[{label:'重试'}]);renderPagination('adPagination',adsList.length,10,p=>renderAds(p))}
+function renderAds(p=1){renderTable('adTableBody',adsList,['id','taskId','campaignId','adgroupId','uploadAdgroupId','adId','accountName','accountId',{key:'uploadStatus',render:r=>`<span class="col-status ${r.uploadStatus==='上传成功'?'running':(r.uploadStatus==='上传失败'?'error':'pending')}">${r.uploadStatus}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'multiAdvertiser','failReason','material','created','updated'],10,[{label:'重试'}]);renderPagination('adPagination',adsList.length,10,p=>renderAds(p));syncBatchCounts()}
+
+// ===== 广告系列/广告组/广告 批量选中重试 =====
+document.querySelectorAll('.table-batch-bar').forEach(function(bar){
+  const bodyId=bar.dataset.body;
+  const body=document.getElementById(bodyId);
+  const countEl=bar.querySelector('.batch-info b');
+  const retryBtn=bar.querySelector('.batch-retry-btn');
+  const allCheck=document.querySelector('.select-all-check[data-body="'+bodyId+'"]');
+  function sync(){
+    const checks=body.querySelectorAll('.row-check:not(:disabled)');
+    const n=Array.from(checks).filter(c=>c.checked).length;
+    countEl.textContent=n;
+    if(allCheck)allCheck.checked=n>0&&n===checks.length;
+  }
+  body.addEventListener('change',function(e){if(e.target.classList.contains('row-check'))sync()});
+  if(allCheck)allCheck.addEventListener('change',function(){body.querySelectorAll('.row-check:not(:disabled)').forEach(c=>c.checked=this.checked);sync()});
+  retryBtn.addEventListener('click',function(){
+    const n=body.querySelectorAll('.row-check:checked').length;
+    if(!n){alert('请先选择要重试的条目');return}
+    if(!confirm('确认重试已选中的 '+n+' 条吗？'))return;
+    alert('已重试 '+n+' 条');
+    body.querySelectorAll('.row-check:checked').forEach(c=>c.checked=false);sync();
+  });
+});
+function syncBatchCounts(){document.querySelectorAll('.table-batch-bar').forEach(function(bar){const body=document.getElementById(bar.dataset.body);const checks=body.querySelectorAll('.row-check:not(:disabled)');const n=Array.from(checks).filter(c=>c.checked).length;bar.querySelector('.batch-info b').textContent=n;const allCheck=document.querySelector('.select-all-check[data-body="'+bar.dataset.body+'"]');if(allCheck)allCheck.checked=false})}
 
 // ==================== 初始化 ====================
 toggleCampaignTypeFields();
