@@ -769,6 +769,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
           <option value="netshort" selected>Netshort</option>
         </select></div>
       </div>
+      <div class="form-item" id="delayedDeepLinkItem" style="display:none">
+        <label>延迟深度链接</label>
+        <div class="form-control"><div class="btn-group" id="delayedDeepLink">
+          <button type="button" class="btn-option active" data-value="0">关闭</button>
+          <button type="button" class="btn-option" data-value="1">开启</button>
+        </div></div>
+      </div>
       <div class="form-item" id="selectMiniProgramItem" style="display:none">
         <label><span class="required">*</span>选择小程序</label>
         <div class="form-control"><select class="condition-select" id="selectMiniProgram" style="min-width:320px">
@@ -2075,7 +2082,7 @@ function confirmMaterialSelect(){
 function removeConfirmedMaterial(id){confirmedMaterials=confirmedMaterials.filter(m=>m.id!==id);delete materialSelected[id];renderSelectedTags();if(materialMode==='specify')updateSpecifyPreview()}
 
 // ==================== 投放配置/广告组设置/广告设置 交互 ====================
-['#campaignObjective','#campaignType','#productSource','#campaignStatus','#optimizationGoal','#placement','#campaignBidStrategy','#appEventCount','#userComments','#videoDownload','#videoShare','#appBizType'].forEach(bindBtnGroup);
+['#campaignObjective','#campaignType','#productSource','#campaignStatus','#optimizationGoal','#placement','#campaignBidStrategy','#appEventCount','#userComments','#videoDownload','#videoShare','#appBizType','#delayedDeepLink'].forEach(bindBtnGroup);
 
 
 
@@ -2084,6 +2091,7 @@ function toggleCampaignTypeFields(){
   const type=document.querySelector('#campaignType .btn-option.active').dataset.value;
   document.getElementById('productSourceItem').style.display=type==='tiktok_minis'?'flex':'none';
   document.getElementById('selectAppItem').style.display=(type==='app_install'||type==='app_retargeting')?'flex':'none';
+  document.getElementById('delayedDeepLinkItem').style.display=(type==='app_install'||type==='app_retargeting')?'flex':'none';
   document.getElementById('selectMiniProgramItem').style.display=type==='tiktok_minis'?'flex':'none';
   togglePaidTemplateGroup();
   toggleProductLibraryConnect();
@@ -2422,6 +2430,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
       productSource:document.querySelector('#productSource .btn-option.active').dataset.value,
       selectApp:document.getElementById('selectApp').value,
       selectMiniProgram:document.getElementById('selectMiniProgram').value,
+      delayedDeepLink:document.querySelector('#delayedDeepLink .btn-option.active').dataset.value,
       paidTemplateGroup:document.getElementById('paidTemplateGroup').value,
       productLibraries:(()=>{const r=[];Object.entries(dramaMatches).forEach(([dn,accs])=>{Object.entries(accs).forEach(([aid,m])=>{r.push({dramaName:dn,accountId:aid,libId:m.libId,libName:m.libName,productId:m.product.productId,seriesName:m.product.seriesName,targeting:m.targeting||null})})});return r})(),
       cbo:'1',
