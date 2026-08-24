@@ -195,23 +195,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .material-preview-table tbody tr:hover{background:#f5f7fa}
 .material-preview-empty{text-align:center;padding:32px;color:var(--text-secondary);font-size:14px}
 .material-preview-footer{padding:8px 16px;border-top:1px solid #ebeef5;font-size:12px;color:var(--text-secondary);text-align:center}
-.material-preview-tabs{display:flex;gap:4px;background:#f5f7fa;border-radius:4px;padding:2px}
-.material-preview-tabs .preview-tab{padding:3px 12px;font-size:13px;color:var(--text-secondary);cursor:pointer;border-radius:3px;white-space:nowrap;user-select:none}
-.material-preview-tabs .preview-tab:hover{color:var(--text)}
-.material-preview-tabs .preview-tab.active{background:var(--white);color:var(--primary);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-/* 广告结构预览(参照「广告批量预览」展示方式) */
-.adstruct-page{padding:12px}
-.adstruct-page .page-header-wrap{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
-.adstruct-page .preview-title{font-size:18px;font-weight:600}
-.adstruct-page .blue-link-text{color:#2b78e4;padding:4px 0;display:block;border-bottom:1px solid #cce0ff;margin-bottom:10px}
-.adstruct-page .top-right-info{text-align:right}
-.adstruct-page .top-right-buttons>button{background-color:#2b78e4;color:#fff;border:none;padding:6px 14px;border-radius:4px;font-size:14px;margin-left:6px;cursor:pointer}
-.adstruct-page .top-right-text-row{margin:8px 0;font-size:15px}
-.adstruct-page table{width:100%;border-collapse:collapse;background:#fff;font-size:14px}
-.adstruct-page th{background:#f7f7f7;font-weight:600;text-align:left;padding:10px 8px;border:1px solid #e5e7eb;white-space:nowrap}
-.adstruct-page td{padding:10px 8px;border:1px solid #e5e7eb;vertical-align:middle}
-.adstruct-page .tag-wait-upload{background:#e1edff;color:#2b78e4;border-radius:4px;padding:3px 8px;display:inline-block;font-size:13px}
-.adstruct-page .link-blue{color:#2b78e4}
 
 /* 素材标签 */
 .material-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:#ecf5ff;border:1px solid #b3d8ff;border-radius:3px;font-size:12px;color:var(--primary)}
@@ -1136,15 +1119,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       </div>
 
       <div class="material-preview-section" id="materialPreviewSection">
-        <div class="material-preview-header">
-          <div style="display:flex;align-items:center;gap:16px"><span>素材预览</span>
-            <div class="material-preview-tabs">
-              <span class="preview-tab active" data-tab="list" onclick="switchPreviewTab('list')">素材清单</span>
-              <span class="preview-tab" data-tab="structure" onclick="switchPreviewTab('structure')">广告结构</span>
-            </div>
-          </div>
-          <span style="cursor:pointer" onclick="closeMaterialPreview()">&times;</span>
-        </div>
+        <div class="material-preview-header"><span>素材预览</span><span style="cursor:pointer" onclick="closeMaterialPreview()">&times;</span></div>
         <div id="materialPreviewContent"><div class="material-preview-empty">点击「预览素材」查看匹配结果</div></div>
       </div>
 
@@ -2404,20 +2379,15 @@ const mockMaterialData=[
   {id:'mat_012',type:'视频',name:'素材_012.mp4',vnName:'Khánh Dư Niên',w:720,h:1280,size:'230MB',duration:'00:15:14',source:'檀檀灰',time:'2026-05-10 16:31:47',user:'运营A',tags:['测试'],script:'庆余年',folder:'短剧库/庆余年',bookId:'L0005',bookName:'庆余年',drama:'Joy of Life',lang:'英文',cost:1100,doroi:2.1,d0AdRoi:1.7,d0Iaa:390,compliance:76,oldCompliance:69,created:'2026-05-10',businessType:'付费',media:'TikTok'}
 ];
 initMaterialFilters();
-let previewVisible=false,previewTimer=null,previewTab='list',previewData=[];
+let previewVisible=false,previewTimer=null,previewData=[];
 
-function toggleMaterialPreview(){clearTimeout(previewTimer);const section=document.getElementById('materialPreviewSection'),content=document.getElementById('materialPreviewContent'),btn=document.getElementById('btnPreview');if(previewVisible){closeMaterialPreview();return}previewVisible=true;section.classList.add('show');btn.textContent='收起预览';previewTab='list';updatePreviewTabs();loadPreviewData()}
+function toggleMaterialPreview(){clearTimeout(previewTimer);const section=document.getElementById('materialPreviewSection'),content=document.getElementById('materialPreviewContent'),btn=document.getElementById('btnPreview');if(previewVisible){closeMaterialPreview();return}previewVisible=true;section.classList.add('show');btn.textContent='收起预览';loadPreviewData()}
 function loadPreviewData(){const content=document.getElementById('materialPreviewContent');if(materialMode==='specify'){previewData=confirmedMaterials.slice();renderPreview();return}content.innerHTML='<div class="material-preview-empty">正在查询匹配素材...</div>';previewTimer=setTimeout(()=>{const shuffled=[...mockMaterialData].sort(()=>Math.random()-.5),count=Math.floor(Math.random()*10)+6;previewData=shuffled.slice(0,count).sort((a,b)=>b.cost-a.cost);renderPreview()},600)}
-function renderPreview(){const content=document.getElementById('materialPreviewContent');if(previewTab==='structure'){renderAdStructure(content);return}renderMaterialList(content)}
+function renderPreview(){const content=document.getElementById('materialPreviewContent');renderMaterialList(content)}
 function renderMaterialList(content){const data=previewData;if(data.length===0){content.innerHTML='<div class="material-preview-empty">未找到匹配的素材</div>';return}const displayData=data.length>10?data.slice(0,10):data;const rows=displayData.map(d=>`<tr><td style="color:var(--primary);text-decoration:underline;cursor:pointer">${d.name}</td><td>${d.bookId}</td><td>${d.bookName}</td><td>${d.drama}</td><td>${d.lang}</td><td>${d.businessType}</td><td>${d.media}</td><td>$${d.cost.toLocaleString()}</td><td>${d.doroi}</td><td>${d.d0AdRoi}%</td><td>$${d.d0Iaa.toLocaleString()}</td><td>${d.compliance}%</td><td>${d.oldCompliance}%</td><td>${d.created}</td></tr>`).join(''),note=data.length>10?`<div class="material-preview-footer">共 ${data.length} 条，仅展示前 10 条</div>`:`<div class="material-preview-footer">共 ${data.length} 条</div>`;content.innerHTML=`<div class="material-preview-table-wrap"><table class="material-preview-table"><thead><tr><th>素材名称</th><th>剧本ID</th><th>剧本名称</th><th>短剧</th><th>语言</th><th>业务类型</th><th>媒体</th><th>消耗</th><th>DOROI</th><th>D0广告ROI</th><th>D0 IAA</th><th>综合达标率</th><th>老达标率</th><th>创建时间</th></tr></thead><tbody>${rows}</tbody></table></div>${note}`}
-function readRepeatCount(typeSel,valSel){return document.querySelector(typeSel+' .btn-option.active').dataset.type==='unlimit'?Infinity:(+document.getElementById(valSel).value||1)}
-function descRepeat(t){return t===Infinity?'不限':t}
-function renderAdStructure(content){const data=previewData;if(data.length===0){content.innerHTML='<div class="material-preview-empty">未找到匹配的素材</div>';return}const dramas=getSelectedDramas(),groups=dramas.length?dramas:['全部短剧'];const suffix=document.getElementById('campaignNameSuffix').value;const objective=document.querySelector('#campaignObjective .btn-option.active').dataset.value==='product_sales'?'销量':'应用推广';const adCount=+document.getElementById('adCount').value||30,limit=+document.getElementById('campaignLimit').value||30;const M=readRepeatCount('#singleRoundRepeatType','singleRoundRepeat'),N=readRepeatCount('#totalRepeatType','totalRepeatCount');const expanded=[];data.forEach(m=>{const t=Math.min(M,N),n=t===Infinity?limit:Math.min(t,limit);for(let i=0;i<n;i++)expanded.push(m)});const accs=getPackageAccounts(),pCount=+(document.getElementById('accountCount').value||0)||accs.length,participants=pCount>0?accs.slice(0,Math.min(pCount,accs.length)):[],accName=participants.length?`本轮参与 ${participants.length} 个账户：${participants.map(a=>a.name+'('+a.id+')').join('、')}`:'';const seriesList=[];groups.forEach(drama=>{const tp=((dramaTargetingMap.get(drama)||[]).map(id=>{const t=mockTargetingPackages.find(x=>x.id===id);return t?t.name:''}).filter(Boolean).join('、'))||'自动定向';expanded.slice(0,limit).forEach((m,idx)=>{seriesList.push({name:`${drama}${suffix?'-'+suffix:''}-系列_${String(idx+1).padStart(3,'0')}`,material:m,targeting:tp})})});const seriesAll=seriesList.length,totalAds=seriesAll*adCount,cap=totalAds>30;let shown=0,rows='';for(let i=0;i<seriesList.length&&shown<30;i++){const s=seriesList[i],take=Math.min(adCount,30-shown);rows+=`<tr><td rowspan="${take}">${objective}</td><td rowspan="${take}">${s.name}</td><td rowspan="${take}"><span class="tag-wait-upload">待上传</span></td><td rowspan="${take}">现在开始</td><td rowspan="${take}"></td><td rowspan="${take}"></td><td rowspan="${take}"><span class="tag-wait-upload">待上传</span></td><td rowspan="${take}">${s.targeting}</td><td>创意组${i+1}</td><td><span class="tag-wait-upload">待上传</span></td><td class="link-blue">${s.material.name}</td></tr>`;for(let k=2;k<=take;k++){rows+=`<tr><td>创意组${i+1}</td><td><span class="tag-wait-upload">待上传</span></td><td class="link-blue">${s.material.name}</td></tr>`}shown+=take}const truncNote=cap?`<div class="material-preview-footer">广告/创意共 ${totalAds} 条，仅展示前 30 条</div>`:'';content.innerHTML=`<div class="adstruct-page"><div class="page-header-wrap"><div><div class="preview-title">预览区</div>${accName?`<div class="blue-link-text">${accName}</div>`:''}</div><div class="top-right-info"><div class="top-right-buttons"><span>预计生成${totalAds}条广告</span><button onclick="alert('原型预览，未实现')">立即提交</button><button onclick="alert('原型预览，未实现')">定时提交</button></div><div class="top-right-text-row">计划数量：${seriesAll} &nbsp;&nbsp;广告组数量：${seriesAll} &nbsp;&nbsp;广告数量：${totalAds}</div></div></div><table><thead><tr><th colspan="3">计划信息</th><th colspan="5">广告组信息</th><th colspan="3">广告/创意</th></tr><tr><th>广告目标</th><th>系列名称</th><th>状态</th><th>排期</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>定向包</th><th>创意名称</th><th>状态</th><th>素材</th></tr></thead><tbody>${rows}</tbody></table>${truncNote}<div class="material-preview-footer">素材池 ${data.length} 个 | 系列 ${seriesAll} 个（≤ ${groups.length}×${limit}）| 每系列广告 ${adCount} 条 | 单轮投放 ${descRepeat(M)} · 累计 ${descRepeat(N)} | 素材按预算分散至本轮参与账户</div></div>`}
-function switchPreviewTab(tab){previewTab=tab;updatePreviewTabs();if(previewVisible)renderPreview()}
-function updatePreviewTabs(){document.querySelectorAll('.preview-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===previewTab))}
 function updateSpecifyPreview(){if(previewVisible){previewData=confirmedMaterials.slice();renderPreview()}}
 function closeMaterialPreview(){clearTimeout(previewTimer);previewVisible=false;document.getElementById('materialPreviewSection').classList.remove('show');document.getElementById('btnPreview').textContent='预览素材'}
-function resetMaterialPreview(){if(previewVisible)closeMaterialPreview();previewTab='list';previewData=[];updatePreviewTabs();document.getElementById('materialPreviewContent').innerHTML='<div class="material-preview-empty">点击「预览素材」查看匹配结果</div>'}
+function resetMaterialPreview(){if(previewVisible)closeMaterialPreview();previewData=[];document.getElementById('materialPreviewContent').innerHTML='<div class="material-preview-empty">点击「预览素材」查看匹配结果</div>'}
 
 // ==================== 表单提交 ====================
 document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.preventDefault();
