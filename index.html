@@ -748,6 +748,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <div class="form-control"><input type="text" class="input-text" id="campaignNameSuffix" placeholder="请输入广告系列名称后缀" maxlength="50" style="width:100%">
         <div class="char-count" id="campaignNameSuffixCount">0 / 50</div></div>
       </div>
+      <div class="form-item" id="callbackTemplateItem">
+        <label><span class="required">*</span>回传模板</label>
+        <div class="form-control"><select class="condition-select" id="callbackTemplate" style="min-width:320px"><option value="">请选择回传模板</option></select></div>
+      </div>
 
       <div id="appPromotionConfig">
 
@@ -1459,6 +1463,7 @@ function resetTaskForm(){
   closeMaterialPreview();
   confirmedMaterials=[];materialSelected={};
   if(materialMode==='specify'){document.querySelectorAll('#materialModeBtns .btn-option').forEach(b=>b.classList.remove('active'));document.querySelector('#materialModeBtns .btn-option[data-mode="filter"]').classList.add('active');materialMode='filter';toggleMaterialModeUI();}
+  reloadCallbackTemplate();
 }
 
 // ==================== 账户包 ====================
@@ -2123,6 +2128,7 @@ function toggleCampaignTypeFields(){
     if(cb.value==='pangle'){l.style.display=isMinis?'none':'';if(isMinis)cb.checked=false}
     if(cb.value==='tiktok'&&isMinis)cb.checked=true;
   });
+  reloadCallbackTemplate();
 }
 document.querySelectorAll('#campaignType .btn-option').forEach(b=>b.addEventListener('click',function(){
   document.querySelectorAll('#campaignType .btn-option').forEach(x=>x.classList.remove('active'));
@@ -2153,6 +2159,42 @@ function togglePaidTemplateGroup(){
 document.querySelectorAll('#appBizType .btn-option').forEach(b=>b.addEventListener('click',togglePaidTemplateGroup));
 // 切换小程序时，模板组随小程序重新返回，重置已选值
 document.getElementById('selectMiniProgram').addEventListener('change',function(){document.getElementById('paidTemplateGroup').value='';});
+
+// ===== 回传模板（投放配置区通用，TikTok Minis 不支持） =====
+// mock 数据：管理后台按 媒体×策略×业务类型 返回的待选名单，strategy: 1=W2A/2=直投/4=H5，businessType: 1=免费/2=付费
+const mockCallbackPlans=[
+  {id:'2079078045704589313',name:'TT-W2A-订阅全回传购物最小金额扣2',strategy:1,businessType:1},
+  {id:'2079077522897178625',name:'TT-W2A-IOS扣10安卓扣5',strategy:1,businessType:1},
+  {id:'2079076547507589121',name:'TT-W2A-按最小金额10扣量',strategy:1,businessType:1},
+  {id:'2079075879543705602',name:'TT-W2A-按最小金额5扣量',strategy:1,businessType:1},
+  {id:'2079075572583567361',name:'TT-W2A-按最小金额2扣量',strategy:1,businessType:1},
+  {id:'2079075094462271490',name:'TT-W2A-全回传',strategy:1,businessType:1},
+  {id:'2052293604398858241',name:'TT-W2A-拉活-IAP-投销量',strategy:1,businessType:1},
+  {id:'2009571458564771841',name:'TT-W2A-N解N实验',strategy:1,businessType:2},
+  {id:'2079074471390023682',name:'TT-直投-全回传',strategy:2,businessType:1},
+  {id:'2064551976047669250',name:'TT-直投-拉活-扣量1- IAP',strategy:2,businessType:1},
+  {id:'2046510544197779457',name:'TT-直投-拉活-IAP',strategy:2,businessType:1},
+  {id:'2064984139092463617',name:'TT-直投-拉活-扣量-IAA',strategy:2,businessType:2},
+  {id:'2049753192761131010',name:'TT-直投-拉活-IAA-成就等级',strategy:2,businessType:2},
+  {id:'2037013273114574850',name:'TT-直投-成就等级实验专用2',strategy:2,businessType:2},
+  {id:'2080642403120099329',name:'TT-H5-默认全回传',strategy:4,businessType:1},
+];
+function reloadCallbackTemplate(){
+  const isSales=document.querySelector('#campaignObjective .btn-option.active').dataset.value==='product_sales';
+  const campaignType=isSales?null:document.querySelector('#campaignType .btn-option.active').dataset.value;
+  const item=document.getElementById('callbackTemplateItem'),sel=document.getElementById('callbackTemplate');
+  if(!isSales&&campaignType==='tiktok_minis'){item.style.display='none';sel.value='';return}
+  item.style.display='flex';
+  const strategy=isSales?(document.querySelector('#salesStrategy .btn-option.active').dataset.value==='W2A'?1:4):2;
+  const bizType=(isSales?document.querySelector('#salesBizType .btn-option.active').dataset.type:document.querySelector('#appBizType .btn-option.active').dataset.type)==='付费'?2:1;
+  const plans=mockCallbackPlans.filter(p=>p.strategy===strategy&&p.businessType===bizType);
+  sel.innerHTML='<option value="">请选择回传模板</option>'+plans.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  if(!plans.some(p=>p.id===sel.value))sel.value='';
+}
+reloadCallbackTemplate();
+document.querySelectorAll('#appBizType .btn-option').forEach(b=>b.addEventListener('click',reloadCallbackTemplate));
+document.querySelectorAll('#salesBizType .btn-option').forEach(b=>b.addEventListener('click',reloadCallbackTemplate));
+document.querySelectorAll('#salesStrategy .btn-option').forEach(b=>b.addEventListener('click',reloadCallbackTemplate));
 
 // ===== 优化目标联动 — 应用内事件（应用推广） =====
 function toggleAppEventField(){
@@ -2208,6 +2250,7 @@ function toggleCampaignObjective(){
   if(obj==='product_sales'){toggleSalesOptimizationEvent();toggleSalesBidStrategyOptions();toggleProductLibraryConnect();}
   if(obj==='app_promotion'){toggleCampaignTypeFields();toggleAppEventField();toggleBidStrategyOptions();}
   updateChannelDisplay();
+  reloadCallbackTemplate();
 }
 document.querySelectorAll('#campaignObjective .btn-option').forEach(b=>b.addEventListener('click',function(){
   document.querySelectorAll('#campaignObjective .btn-option').forEach(x=>x.classList.remove('active'));
@@ -2369,6 +2412,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
   const appChannelNo=isSales?document.getElementById('salesChannelNo').value:document.getElementById('appChannelNo').value;
   if(!appChannelNo){alert('请输入渠道号');return}
   if(!isSales&&document.querySelector('#campaignType .btn-option.active').dataset.value==='tiktok_minis'&&document.querySelector('#appBizType .btn-option.active').dataset.type==='付费'&&!document.getElementById('paidTemplateGroup').value){alert('请选择付费模板组');return}
+  if(document.getElementById('callbackTemplateItem').style.display!=='none'&&!document.getElementById('callbackTemplate').value){alert('请选择回传模板');return}
   // validate identity matching for all (drama × account) combos
   const getHasPangle=isSales=>{
     const pl=isSales?document.querySelector('#salesPlacement .btn-option.active'):document.querySelector('#placement .btn-option.active');
@@ -2469,6 +2513,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
       channel:isSales?document.getElementById('salesChannel').textContent:document.getElementById('appChannel').textContent,
       channelNo:isSales?document.getElementById('salesChannelNo').value:document.getElementById('appChannelNo').value,
       strategy:salesStrategy,
+      callbackTemplate:document.getElementById('callbackTemplate').value,
       pixelId:isSales?document.getElementById('salesPixelId').value:'',
       monitorLink:isSales?{promotionType:salesStrategy==='H5'?4:1,promotionChannel:salesStrategy==='H5'?2:1,callbackDatas:['completeRegistrationCode','purchaseCode','subscribeCode'],pixelId:document.getElementById('salesPixelId').value,channelNo:document.getElementById('salesChannelNo').value}:null},
     identities:identityResults,
