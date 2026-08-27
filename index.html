@@ -181,6 +181,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .drama-targeting-none{font-size:12px;color:var(--text-secondary)}
 .drama-targeting-add{font-size:13px;color:var(--primary);cursor:pointer;white-space:nowrap}
 .drama-targeting-add:hover{color:var(--primary-light);text-decoration:underline}
+.drama-schedule-row{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--text-secondary)}
+.drama-schedule-row .drama-schedule-label{white-space:nowrap}
 .tp-check{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:2px solid #dcdfe6;border-radius:4px;font-size:12px;color:transparent;transition:all .15s;flex-shrink:0}
 .tp-check.checked{background:var(--primary);border-color:var(--primary);color:var(--white)}
 
@@ -523,12 +525,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         </div></div>
       </div>
 
-      <!-- 排期时间 -->
-      <div class="form-item">
-        <label>排期（东八区）</label>
-        <div class="form-control"><input type="datetime-local" class="input-text" id="scheduleTime" style="width:220px"><span style="line-height:32px;color:#909399;font-size:13px">已选预上线短剧时必填；留空表示立即投放；时间按东八区填写</span></div>
-      </div>
-
       <!-- 选择短剧 -->
       <div class="form-item">
         <label><span class="required">*</span>选择短剧</label>
@@ -551,6 +547,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
               <a href="#" class="add-time-btn" onclick="clearAllTargeting();return false" style="margin-left:8px;font-size:13px;color:#ff4d4f">清空定向包</a>
               <a href="#" class="add-time-btn" onclick="clearAllDramas();return false" style="margin-left:8px;font-size:13px;color:#ff4d4f">清空短剧</a>
             </div>
+            <div style="color:#909399;font-size:13px;margin-bottom:8px">已选预上线短剧时，该短剧排期必填；已上线短剧留空=立即投放；时间按东八区填写</div>
             <div id="selectedDramasList"></div>
           </div>
         </div></div>
@@ -1459,6 +1456,7 @@ function resetTaskForm(){
   document.getElementById('taskNameCount').textContent='0 / 50';
   dramaTargetingMap.clear();
   dramaStatusMap.clear();
+  dramaScheduleMap.clear();
   document.getElementById('selectedDramasArea').style.display='none';
   document.getElementById('dramaSearchResult').innerHTML='<div class="drama-placeholder">请输入搜索条件进行搜索</div>';
   closeMaterialPreview();
@@ -1493,6 +1491,7 @@ const mockTargetingPackages = [
 let editingTpId = null, tpSelectedRegions = [];
 let dramaTargetingMap = new Map();
 let dramaStatusMap = new Map();
+let dramaScheduleMap = new Map();
 let currentTargetingDramaKey = null, batchSelectedIds = [];
 let materialMode = 'filter', confirmedMaterials = [], materialSelected = {}, materialFiltered = [], matPage = 0;
 const langLabelMap = {zh:'中文',en:'英语',ja:'日语',ko:'韩语',th:'泰语',es:'西班牙语',pt:'葡萄牙语',ar:'阿拉伯语',id:'印尼语',vi:'越南语'};
@@ -1863,6 +1862,7 @@ function addDrama(btn){
   }
   dramaTargetingMap.set(tagText,[]);
   dramaStatusMap.set(tagText,card.dataset.status||'已上线');
+  dramaScheduleMap.set(tagText,'');
   renderAllDramaRows();
   btn.textContent='已添加';btn.disabled=true;resetMaterialPreview();
 }
@@ -1879,6 +1879,11 @@ function renderDramaRow(dramaKey){
       ${none}${tags}
       <span class="drama-targeting-add" data-key="${dramaKey.replace(/"/g,'&quot;')}" onclick="openTargetingDrawer(this)">+ 选择定向包</span>
     </div>
+    <div class="drama-schedule-row">
+      <span class="drama-schedule-label">排期（东八区）</span>
+      <input type="datetime-local" class="input-text drama-schedule-input" data-key="${dramaKey.replace(/"/g,'&quot;')}" value="${dramaScheduleMap.get(dramaKey)||''}" style="width:210px;height:28px">
+      <span>留空=立即投放</span>
+    </div>
   </div>`;
 }
 function renderAllDramaRows(){
@@ -1891,6 +1896,7 @@ function clearAllDramas(){
   if(!confirm('确定清空全部短剧？'))return;
   dramaTargetingMap.clear();
   dramaStatusMap.clear();
+  dramaScheduleMap.clear();
   renderAllDramaRows();
 }
 function clearAllTargeting(){
@@ -1914,10 +1920,16 @@ document.getElementById('selectedDramasList').addEventListener('click',function(
   const rm=e.target.closest('.drama-targeting-remove');
   if(rm){
     dramaTargetingMap.delete(rm.dataset.key);
+    dramaStatusMap.delete(rm.dataset.key);
+    dramaScheduleMap.delete(rm.dataset.key);
     if(Object.keys(dramaMatches).length>0){dramaMatches={};renderSelectedProductLibs()}
     renderAllDramaRows();
     return;
   }
+});
+document.getElementById('selectedDramasList').addEventListener('change',function(e){
+  const inp=e.target.closest('.drama-schedule-input');
+  if(inp)dramaScheduleMap.set(inp.dataset.key,inp.value);
 });
 
 // ==================== 表单交互 ====================
@@ -2394,14 +2406,13 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
   if(materialMode==='specify'){if(confirmedMaterials.length===0){alert('请至少选择 1 个素材');return}}
   else {if(!checkMaterialConditionRequired()){alert('选择自定义时，至少需要输入一个条件');return}}
   const taskName=document.getElementById('taskName').value,executeFrequency=document.getElementById('executeFrequency').value;
-  const dramas=Array.from(dramaTargetingMap.entries()).map(([key,pkgs])=>({key,targetingPackages:pkgs,status:dramaStatusMap.get(key)||'已上线'}));
-  const scheduleTime=document.getElementById('scheduleTime').value;
+  const dramas=Array.from(dramaTargetingMap.entries()).map(([key,pkgs])=>({key,targetingPackages:pkgs,status:dramaStatusMap.get(key)||'已上线',scheduleTime:dramaScheduleMap.get(key)?dramaScheduleMap.get(key)+'+08:00':null}));
   const ev1=document.querySelectorAll('#endConditionGroup .condition-input')[0].value,ev2=document.querySelectorAll('#endConditionGroup .condition-input')[1].value;
   const cl=document.getElementById('campaignLimit').value;
   const isSales=document.querySelector('#campaignObjective .btn-option.active').dataset.value==='product_sales';
   if(!taskName){alert('请输入任务名称');return}if(!executeFrequency){alert('请输入执行频率');return}
   if(dramas.length===0){alert('请选择短剧');return}if(dramas.some(d=>d.targetingPackages.length===0)){alert('请为每个短剧分配至少一个定向包');return}if(!ev1||!ev2){alert('请填写结束运行条件的数值');return}
-  if(dramas.some(d=>d.status==='预上线')&&!scheduleTime){alert('已选预上线短剧，请填写排期时间');return}
+  if(dramas.some(d=>d.status==='预上线'&&!d.scheduleTime)){alert('已选预上线短剧，请为该短剧填写排期时间');return}
   if(cl&&+cl<1){alert('计划创建上限不能小于1（不填=不限）');return}
   const accountPkg=document.getElementById('accountPackage').value;
   if(!accountPkg){alert('请选择投放账户');return}
@@ -2506,7 +2517,6 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
   const salesStrategy=isSales?document.querySelector('#salesStrategy .btn-option.active').dataset.value:'直投';
   const formData={taskName,status:document.querySelector('.btn-option[data-status].active').dataset.status,
     timeRanges:Array.from(document.querySelectorAll('#timeRangeContainer .time-range-group')).map(r=>({start:r.querySelectorAll('.time-input')[0].value,end:r.querySelectorAll('.time-input')[1].value})),
-    scheduleTime:scheduleTime?scheduleTime+'+08:00':null,
     executeFrequency,dramas,endConditions:[{metric:'series_count',operator:'>=',value:ev1},{metric:'account_count',operator:'>=',value:ev2}],campaignLimit:+cl,
     campaignNameSuffix:document.getElementById('campaignNameSuffix').value,
     account:{package:accountPkg,accountCount:+accountCount,
