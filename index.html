@@ -979,6 +979,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
           <button type="button" class="btn-option" data-value="H5">H5</button>
         </div></div>
       </div>
+      <div class="form-item" id="salesH5LinkItem" style="display:none">
+        <label><span class="required">*</span>选择H5</label>
+        <div class="form-control"><select class="condition-select" id="salesH5Link" style="min-width:320px"><option value="">请选择H5</option></select></div>
+      </div>
       <div class="form-item">
         <label><span class="required">*</span>渠道号</label>
         <div class="form-control"><input type="text" class="input-text" id="salesChannelNo" placeholder="请输入渠道号" style="width:100%"></div>
@@ -1464,6 +1468,7 @@ function resetTaskForm(){
   confirmedMaterials=[];materialSelected={};
   if(materialMode==='specify'){document.querySelectorAll('#materialModeBtns .btn-option').forEach(b=>b.classList.remove('active'));document.querySelector('#materialModeBtns .btn-option[data-mode="filter"]').classList.add('active');materialMode='filter';toggleMaterialModeUI();}
   reloadCallbackTemplate();
+  reloadSalesH5Link();
 }
 
 // ==================== 账户包 ====================
@@ -2215,8 +2220,27 @@ function reloadCallbackTemplate(){
 }
 reloadCallbackTemplate();
 document.querySelectorAll('#appBizType .btn-option').forEach(b=>b.addEventListener('click',reloadCallbackTemplate));
-document.querySelectorAll('#salesBizType .btn-option').forEach(b=>b.addEventListener('click',reloadCallbackTemplate));
-document.querySelectorAll('#salesStrategy .btn-option').forEach(b=>b.addEventListener('click',reloadCallbackTemplate));
+
+// ===== 选择H5 — 不同的H5（落地页）由监测链接接口返回 =====
+// mock 数据：监测链接接口按 投放策略×业务类型 返回待选名单，strategy 编码同回传模板（1=W2A/4=H5）
+const mockMonitorLinks=[
+  {id:'2080642403120099329',name:'H5-东南亚短剧-标准',strategy:4,businessType:1},
+  {id:'2088834631521864281',name:'H5-欧美短剧-订阅',strategy:4,businessType:1},
+  {id:'2088834631521864282',name:'H5-付费充值-解锁页',strategy:4,businessType:2},
+  {id:'2080642403120099330',name:'W2A-落地链接-默认',strategy:1,businessType:1},
+];
+function reloadSalesH5Link(){
+  const item=document.getElementById('salesH5LinkItem'),sel=document.getElementById('salesH5Link');
+  const isSales=document.querySelector('#campaignObjective .btn-option.active').dataset.value==='product_sales';
+  const isH5=isSales&&document.querySelector('#salesStrategy .btn-option.active').dataset.value==='H5';
+  item.style.display=isH5?'flex':'none';
+  if(!isH5){sel.value='';return}
+  const bizType=document.querySelector('#salesBizType .btn-option.active').dataset.type==='付费'?2:1;
+  const links=mockMonitorLinks.filter(l=>l.strategy===4&&l.businessType===bizType);
+  sel.innerHTML='<option value="">请选择H5</option>'+links.map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+  if(!links.some(l=>l.id===sel.value))sel.value='';
+}
+reloadSalesH5Link();
 
 // ===== 优化目标联动 — 应用内事件（应用推广） =====
 function toggleAppEventField(){
@@ -2273,6 +2297,7 @@ function toggleCampaignObjective(){
   if(obj==='app_promotion'){toggleCampaignTypeFields();toggleAppEventField();toggleBidStrategyOptions();}
   updateChannelDisplay();
   reloadCallbackTemplate();
+  reloadSalesH5Link();
 }
 document.querySelectorAll('#campaignObjective .btn-option').forEach(b=>b.addEventListener('click',function(){
   document.querySelectorAll('#campaignObjective .btn-option').forEach(x=>x.classList.remove('active'));
@@ -2301,7 +2326,7 @@ document.querySelectorAll('#salesPlacement .btn-option').forEach(b=>b.addEventLi
 
 // ===== 销量优化目标 → 优化事件联动 =====
 function toggleSalesOptimizationEvent(e){
-  const goal=e.target.dataset.value;
+  const goal=e?e.target.dataset.value:document.querySelector('#salesOptimizationEvent .btn-option.active').dataset.value;
   const item=document.getElementById('salesOptimizationEventItem');
   const eventCountItem=document.getElementById('salesEventCountItem');
   const onceBtn=document.querySelector('#salesEventCount .btn-option[data-value="once"]');
@@ -2365,6 +2390,11 @@ function updateChannelDisplay(){
 }
 // ===== 销量模式 交互 =====
 ['#salesCampaignStatus','#salesAdgroupStatus','#salesProductSource','#salesOptimizationEvent','#salesPlacement','#salesBidStrategy','#salesEventCount','#salesUserComments','#salesVideoDownload','#salesVideoShare','#salesBizType','#salesStrategy'].forEach(bindBtnGroup);
+// 销售策略/业务类型基于 active 的联动，在 bindBtnGroup 之后注册以保证读到新 active
+document.querySelectorAll('#salesBizType .btn-option').forEach(b=>b.addEventListener('click',reloadCallbackTemplate));
+document.querySelectorAll('#salesStrategy .btn-option').forEach(b=>b.addEventListener('click',reloadCallbackTemplate));
+document.querySelectorAll('#salesStrategy .btn-option').forEach(b=>b.addEventListener('click',reloadSalesH5Link));
+document.querySelectorAll('#salesBizType .btn-option').forEach(b=>b.addEventListener('click',reloadSalesH5Link));
 document.querySelectorAll('#salesBidStrategy .btn-option').forEach(b=>b.addEventListener('click',toggleSalesBidAmount));
 document.getElementById('campaignNameSuffix').addEventListener('input',function(){document.getElementById('campaignNameSuffixCount').textContent=this.value.length+' / 50'});
 document.getElementById('salesAdgroupName').addEventListener('input',function(){document.getElementById('salesAdgroupNameCount').textContent=this.value.length+' / 50'});
@@ -2434,6 +2464,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
   if(!appChannelNo){alert('请输入渠道号');return}
   if(!isSales&&document.querySelector('#campaignType .btn-option.active').dataset.value==='tiktok_minis'&&document.querySelector('#appBizType .btn-option.active').dataset.type==='付费'&&!document.getElementById('paidTemplateGroup').value){alert('请选择付费模板组');return}
   if(document.getElementById('callbackTemplateItem').style.display!=='none'&&!document.getElementById('callbackTemplate').value){alert('请选择回传模板');return}
+  if(isSales&&document.querySelector('#salesStrategy .btn-option.active').dataset.value==='H5'&&!document.getElementById('salesH5Link').value){alert('请选择H5');return}
   // validate identity matching for all (drama × account) combos
   const getHasPangle=isSales=>{
     const pl=isSales?document.querySelector('#salesPlacement .btn-option.active'):document.querySelector('#placement .btn-option.active');
