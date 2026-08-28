@@ -183,6 +183,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .drama-targeting-add:hover{color:var(--primary-light);text-decoration:underline}
 .drama-schedule-row{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--text-secondary)}
 .drama-schedule-row .drama-schedule-label{white-space:nowrap}
+.drama-schedule-expired{margin-top:4px;font-size:12px;color:#ff4d4f}
 .tp-check{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:2px solid #dcdfe6;border-radius:4px;font-size:12px;color:transparent;transition:all .15s;flex-shrink:0}
 .tp-check.checked{background:var(--primary);border-color:var(--primary);color:var(--white)}
 
@@ -1866,10 +1867,14 @@ function addDrama(btn){
   renderAllDramaRows();
   btn.textContent='已添加';btn.disabled=true;resetMaterialPreview();
 }
+function isScheduleExpired(v){
+  return !!v && new Date(v + '+08:00').getTime() <= Date.now();
+}
 function renderDramaRow(dramaKey){
   const pkgIds=dramaTargetingMap.get(dramaKey)||[];
   const tags=pkgIds.map(id=>{const tp=mockTargetingPackages.find(t=>t.id===id);return tp?`<span class="drama-targeting-tag">${tp.name}<span class="remove-drama-targeting" data-key="${dramaKey.replace(/"/g,'&quot;')}" data-pkg="${id}">&times;</span></span>`:''}).join('');
   const none=pkgIds.length===0?'<span class="drama-targeting-none">未分配</span>':'';
+  const expired=isScheduleExpired(dramaScheduleMap.get(dramaKey));
   return `<div class="drama-targeting-row">
     <div class="drama-targeting-row-header">
       <span class="drama-targeting-name">${dramaKey}</span>
@@ -1884,6 +1889,7 @@ function renderDramaRow(dramaKey){
       <input type="datetime-local" class="input-text drama-schedule-input" data-key="${dramaKey.replace(/"/g,'&quot;')}" value="${dramaScheduleMap.get(dramaKey)||''}" style="width:210px;height:28px">
       <span>留空=立即投放</span>
     </div>
+    <div class="drama-schedule-expired" style="display:${expired?'block':'none'}">该排期已过期，排期参数不生效，请选择未来的排期</div>
   </div>`;
 }
 function renderAllDramaRows(){
@@ -1929,7 +1935,10 @@ document.getElementById('selectedDramasList').addEventListener('click',function(
 });
 document.getElementById('selectedDramasList').addEventListener('change',function(e){
   const inp=e.target.closest('.drama-schedule-input');
-  if(inp)dramaScheduleMap.set(inp.dataset.key,inp.value);
+  if(!inp)return;
+  dramaScheduleMap.set(inp.dataset.key,inp.value);
+  const warn=inp.closest('.drama-targeting-row').querySelector('.drama-schedule-expired');
+  if(warn)warn.style.display=isScheduleExpired(inp.value)?'block':'none';
 });
 
 // ==================== 表单交互 ====================
@@ -2539,6 +2548,8 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
       conditions:Array.from(document.querySelectorAll('#materialConditionGroup .condition-row')).map(r=>{const m=r.querySelector('.material-condition-metric').value,o=r.querySelector('.material-condition-operator').value,ins=r.querySelectorAll('.condition-input');return o==='between'?{metric:m,operator:o,min:ins[0].value,max:ins[1].value}:{metric:m,operator:o,value:ins[0].value}}),
       repeatCount:singleRoundRepeat,totalRepeatCount,
       adCount:document.getElementById('adCount').value||30}};
+  const expiredDramas=Array.from(dramaScheduleMap.entries()).filter(([k,v])=>isScheduleExpired(v)).map(([k])=>k);
+  if(expiredDramas.length)alert('以下短剧排期已过期，排期参数不生效，请确认或修改排期：\n'+expiredDramas.join('\n'));
   console.log('提交数据：',formData);alert('任务创建成功！');closeTaskModal()});
 
 // ==================== 商品库关联 ====================
