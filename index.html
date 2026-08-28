@@ -809,6 +809,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <label><span class="required">*</span>渠道号</label>
         <div class="form-control"><input type="text" class="input-text" id="appChannelNo" placeholder="请输入渠道号" style="width:100%"></div>
       </div>
+      <div class="form-item" id="freeTemplateGroupItem" style="display:none">
+        <label><span class="required">*</span>免费广告策略模板</label>
+        <div class="form-control"><select class="condition-select" id="freeTemplateGroup" style="min-width:320px"><option value="">请选择免费广告策略模板</option></select></div>
+      </div>
       <div class="form-item" id="paidTemplateGroupItem" style="display:none">
         <label><span class="required">*</span>付费模板组</label>
         <div class="form-control"><select class="condition-select" id="paidTemplateGroup" style="min-width:320px"><option value="">请选择付费模板组</option></select></div>
@@ -2125,7 +2129,7 @@ function toggleCampaignTypeFields(){
   document.getElementById('selectAppItem').style.display=(type==='app_install'||type==='app_retargeting')?'flex':'none';
   document.getElementById('delayedDeepLinkItem').style.display=(type==='app_install'||type==='app_retargeting')?'flex':'none';
   document.getElementById('selectMiniProgramItem').style.display=type==='tiktok_minis'?'flex':'none';
-  togglePaidTemplateGroup();
+  toggleTemplateGroup();
   toggleProductLibraryConnect();
   const onlyAppEvent=type==='app_retargeting';
   const onlyValue=type==='tiktok_minis';
@@ -2162,8 +2166,8 @@ document.querySelectorAll('#campaignType .btn-option').forEach(b=>b.addEventList
   this.classList.add('active');toggleCampaignTypeFields();toggleAppEventField();resetMaterialPreview();updateChannelDisplay();
 }));
 
-// ===== 付费模板组（TikTok Minis） =====
-// mock 数据：选中小程序后，调用小程序接口返回的付费模板组列表
+// ===== 模板组（TikTok Minis）：业务类型=付费 选付费模板组，=免费 选免费广告策略模板 =====
+// mock 数据：选中小程序后，调用小程序接口返回的模板组列表
 const mockPaidTemplateGroups=[
   '混合-中充面板-首周15.99，续订19.99',
   '混合-高充面板-首周19.99，续订24.99',
@@ -2174,18 +2178,30 @@ const mockPaidTemplateGroups=[
   '纯订阅-中充面板-常规价格-$14.99',
   '纯订阅-高充面板-常规价格-$24.99',
 ];
+const mockFreeTemplateGroups=[
+  '免费剧-常规策略',
+  '免费剧-默认全回传',
+  '免费剧-拉活-IAA',
+  '免费剧-激励视频策略',
+  '免费剧-插屏广告策略',
+  '免费剧-控成本-低消耗模式',
+];
 document.getElementById('paidTemplateGroup').innerHTML='<option value="">请选择付费模板组</option>'+mockPaidTemplateGroups.map(g=>`<option value="${g}">${g}</option>`).join('');
-// 仅 TikTok Minis 且业务类型=付费 时生效
-function togglePaidTemplateGroup(){
+document.getElementById('freeTemplateGroup').innerHTML='<option value="">请选择免费广告策略模板</option>'+mockFreeTemplateGroups.map(g=>`<option value="${g}">${g}</option>`).join('');
+// 仅 TikTok Minis 时生效：付费/免费按业务类型互斥显示
+function toggleTemplateGroup(){
   const type=document.querySelector('#campaignType .btn-option.active').dataset.value;
   const bizType=document.querySelector('#appBizType .btn-option.active').dataset.type;
-  const show=type==='tiktok_minis'&&bizType==='付费';
-  document.getElementById('paidTemplateGroupItem').style.display=show?'flex':'none';
-  if(!show)document.getElementById('paidTemplateGroup').value='';
+  const isMinis=type==='tiktok_minis';
+  const showPaid=isMinis&&bizType==='付费',showFree=isMinis&&bizType==='免费';
+  document.getElementById('paidTemplateGroupItem').style.display=showPaid?'flex':'none';
+  document.getElementById('freeTemplateGroupItem').style.display=showFree?'flex':'none';
+  if(!showPaid)document.getElementById('paidTemplateGroup').value='';
+  if(!showFree)document.getElementById('freeTemplateGroup').value='';
 }
-document.querySelectorAll('#appBizType .btn-option').forEach(b=>b.addEventListener('click',togglePaidTemplateGroup));
+document.querySelectorAll('#appBizType .btn-option').forEach(b=>b.addEventListener('click',toggleTemplateGroup));
 // 切换小程序时，模板组随小程序重新返回，重置已选值
-document.getElementById('selectMiniProgram').addEventListener('change',function(){document.getElementById('paidTemplateGroup').value='';});
+document.getElementById('selectMiniProgram').addEventListener('change',function(){document.getElementById('paidTemplateGroup').value='';document.getElementById('freeTemplateGroup').value='';});
 
 // ===== 回传模板（投放配置区通用，TikTok Minis 不支持） =====
 // mock 数据：管理后台按 媒体×策略×业务类型 返回的待选名单，strategy: 1=W2A/2=直投/4=H5，businessType: 1=免费/2=付费
@@ -2463,6 +2479,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
   const appChannelNo=isSales?document.getElementById('salesChannelNo').value:document.getElementById('appChannelNo').value;
   if(!appChannelNo){alert('请输入渠道号');return}
   if(!isSales&&document.querySelector('#campaignType .btn-option.active').dataset.value==='tiktok_minis'&&document.querySelector('#appBizType .btn-option.active').dataset.type==='付费'&&!document.getElementById('paidTemplateGroup').value){alert('请选择付费模板组');return}
+  if(!isSales&&document.querySelector('#campaignType .btn-option.active').dataset.value==='tiktok_minis'&&document.querySelector('#appBizType .btn-option.active').dataset.type==='免费'&&!document.getElementById('freeTemplateGroup').value){alert('请选择免费广告策略模板');return}
   if(document.getElementById('callbackTemplateItem').style.display!=='none'&&!document.getElementById('callbackTemplate').value){alert('请选择回传模板');return}
   if(isSales&&document.querySelector('#salesStrategy .btn-option.active').dataset.value==='H5'&&!document.getElementById('salesH5Link').value){alert('请选择H5');return}
   // validate identity matching for all (drama × account) combos
@@ -2528,6 +2545,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
       selectMiniProgram:document.getElementById('selectMiniProgram').value,
       delayedDeepLink:document.querySelector('#delayedDeepLink .btn-option.active').dataset.value,
       paidTemplateGroup:document.getElementById('paidTemplateGroup').value,
+      freeTemplateGroup:document.getElementById('freeTemplateGroup').value,
       productLibraries:(()=>{const r=[];Object.entries(dramaMatches).forEach(([dn,accs])=>{Object.entries(accs).forEach(([aid,m])=>{r.push({dramaName:dn,accountId:aid,libId:m.libId,libName:m.libName,productId:m.product.productId,seriesName:m.product.seriesName,targeting:m.targeting||null})})});return r})(),
       cbo:'1',
       adOnly:'1',
