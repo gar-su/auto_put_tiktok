@@ -741,10 +741,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <div class="form-control"><input type="text" class="input-text" id="campaignNameSuffix" placeholder="请输入广告系列名称后缀" maxlength="50" style="width:100%">
         <div class="char-count" id="campaignNameSuffixCount">0 / 50</div></div>
       </div>
-      <div class="form-item" id="callbackTemplateItem">
-        <label><span class="required">*</span>回传模板</label>
-        <div class="form-control"><select class="condition-select" id="callbackTemplate" style="min-width:320px"><option value="">请选择回传模板</option></select></div>
-      </div>
 
       <div id="appPromotionConfig">
 
@@ -808,6 +804,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       <div class="form-item">
         <label><span class="required">*</span>渠道号</label>
         <div class="form-control"><input type="text" class="input-text" id="appChannelNo" placeholder="请输入渠道号" style="width:100%"></div>
+      </div>
+      <div class="form-item" id="callbackTemplateItem">
+        <label><span class="required">*</span>回传模板</label>
+        <div class="form-control"><select class="condition-select" id="callbackTemplate" style="min-width:320px"><option value="">请选择回传模板</option></select></div>
       </div>
       <div class="form-item" id="freeTemplateGroupItem" style="display:none">
         <label><span class="required">*</span>免费广告策略模板</label>
@@ -990,6 +990,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       <div class="form-item">
         <label><span class="required">*</span>渠道号</label>
         <div class="form-control"><input type="text" class="input-text" id="salesChannelNo" placeholder="请输入渠道号" style="width:100%"></div>
+      </div>
+      <div class="form-item" id="salesCallbackTemplateItem">
+        <label><span class="required">*</span>回传模板</label>
+        <div class="form-control"><select class="condition-select" id="salesCallbackTemplate" style="min-width:320px"><option value="">请选择回传模板</option></select></div>
       </div>
       <div class="form-item">
         <label><span class="required">*</span>像素ID</label>
@@ -2225,17 +2229,22 @@ const mockCallbackPlans=[
 function reloadCallbackTemplate(){
   const isSales=document.querySelector('#campaignObjective .btn-option.active').dataset.value==='product_sales';
   const campaignType=isSales?null:document.querySelector('#campaignType .btn-option.active').dataset.value;
-  const item=document.getElementById('callbackTemplateItem'),sel=document.getElementById('callbackTemplate');
-  if(!isSales&&campaignType==='tiktok_minis'){item.style.display='none';sel.value='';return}
-  item.style.display='flex';
+  const appItem=document.getElementById('callbackTemplateItem'),appSel=document.getElementById('callbackTemplate');
+  const salesSel=document.getElementById('salesCallbackTemplate');
+  if(!isSales&&campaignType==='tiktok_minis'){appItem.style.display='none';appSel.value='';salesSel.value='';return}
+  appItem.style.display='flex';
   const strategy=isSales?(document.querySelector('#salesStrategy .btn-option.active').dataset.value==='W2A'?1:4):2;
   const bizType=(isSales?document.querySelector('#salesBizType .btn-option.active').dataset.type:document.querySelector('#appBizType .btn-option.active').dataset.type)==='付费'?2:1;
   const plans=mockCallbackPlans.filter(p=>p.strategy===strategy&&p.businessType===bizType);
-  sel.innerHTML='<option value="">请选择回传模板</option>'+plans.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-  if(!plans.some(p=>p.id===sel.value))sel.value='';
+  const options='<option value="">请选择回传模板</option>'+plans.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  const val=plans.some(p=>p.id===appSel.value)?appSel.value:'';
+  appSel.innerHTML=options;salesSel.innerHTML=options;
+  appSel.value=val;salesSel.value=val;
 }
 reloadCallbackTemplate();
 document.querySelectorAll('#appBizType .btn-option').forEach(b=>b.addEventListener('click',reloadCallbackTemplate));
+document.getElementById('callbackTemplate').addEventListener('change',function(){document.getElementById('salesCallbackTemplate').value=this.value});
+document.getElementById('salesCallbackTemplate').addEventListener('change',function(){document.getElementById('callbackTemplate').value=this.value});
 
 // ===== 选择H5 — 不同的H5（落地页）由监测链接接口返回 =====
 // mock 数据：监测链接接口按 投放策略×业务类型 返回待选名单，strategy 编码同回传模板（1=W2A/4=H5）
