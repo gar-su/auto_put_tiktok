@@ -1313,8 +1313,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
           <button type="button" class="btn btn-primary btn-sm" onclick="autoMatchDramas()" style="font-size:12px;padding:3px 10px">一键关联</button>
         </div>
         <div style="font-size:12px;color:#909399;margin-bottom:8px">共<b id="plDramaCount">0</b>个短剧</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:12px;color:var(--text)">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="plBatchAll" onchange="togglePlBatchAll(this)">
+            全选短剧
+          </label>
+          <a href="#" onclick="clearSelectedMatches();return false" style="color:#ff4d4f">批量清空关联</a>
+        </div>
         <div id="plDramaList" style="flex:1;overflow-y:auto"></div>
       </div>
+      <div id="plConfigArea" style="display:none;flex:1;min-width:0">
       <!-- 第二栏：投放账户 + 商品库 -->
       <div style="width:380px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column">
         <div style="padding:12px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;flex:1;overflow:hidden">
@@ -1348,6 +1356,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
             <tbody id="productTableBody"></tbody>
           </table>
         </div>
+      </div>
       </div>
       </div><!-- /flex row -->
     </div>
@@ -2657,10 +2666,11 @@ const mockProductAccounts=[
 ];
 // dramaMatches: { dramaName: { accountId: { libId, libName, product, targeting? } } }
 let dramaMatches={};
-let currentDramaName=null;
 let currentAccountId=null;
 let currentLibId=null;
 let currentLibProducts=[];
+// 人工匹配：勾选的短剧集合，账户内点商品即写入全部勾选短剧
+let plBatchSelected = new Set();
 
 function getSelectedDramas(){
   return Array.from(dramaTargetingMap.keys());
@@ -2773,7 +2783,9 @@ function autoMatchDramas(){
       }
     });
   });
+  if(plBatchSelected.size===0){getSelectedDramas().forEach(d=>plBatchSelected.add(d))}
   renderDramaList();
+  syncConfigArea();
   if(currentAccountId)renderAccountListD();
   if(currentLibId&&currentLibProducts.length>0)renderProductTable(currentLibProducts,document.getElementById('productSearch').value);
   renderSelectedProductLibs();
@@ -2794,7 +2806,10 @@ function openProductLibraryDrawer(){
   if(dramas.length===0){alert('请先选择短剧');return}
   document.getElementById('productLibraryDrawer').style.display='flex';
   document.getElementById('plSearch').value='';document.getElementById('productSearch').value='';
-  currentDramaName=null;currentAccountId=null;currentLibId=null;currentLibProducts=[];
+  currentAccountId=null;currentLibId=null;currentLibProducts=[];
+  plBatchSelected.clear();
+  const bat=document.getElementById('plBatchAll');if(bat)bat.checked=false;
+  const area=document.getElementById('plConfigArea');if(area)area.style.display='none';
   renderDramaList();
   clearLibList();
   clearProductTable();
@@ -2823,44 +2838,99 @@ function confirmProductLibraries(){
   closeProductLibraryDrawer();
 }
 
-// ---- 左栏：已选短剧列表 ----
+// ---- 左栏：已选短剧列表（逐短剧复选框，勾选范围=该账户内点商品写入的范围）----
 function renderDramaList(){
   const dramas=getSelectedDramas();
   document.getElementById('plDramaCount').textContent=dramas.length;
-  document.getElementById('plDramaList').innerHTML=dramas.map(d=>{
-    const isActive=currentDramaName===d;
+  const bat=document.getElementById('plBatchAll');
+  if(bat)bat.checked=plBatchSelected.size>0&&plBatchSelected.size===dramas.length;
+  document.getElementById('plDramaList').innerHTML=dramas.map((d,i)=>{
+    const checked=plBatchSelected.has(d);
     const matched=Object.keys(dramaMatches[d]||{}).length;
     const total=getPackageAccounts().length;
-    const done=matched===total;
-    return `<div class="pl-card${isActive?' selected':''}" onclick="selectDrama('${d.replace(/'/g,"\\'")}')">
-      <div class="pl-name">${d}${done?' <span style="color:var(--success);font-size:14px">✓</span>':''}</div>
-      <div class="pl-meta">已匹配 ${matched}/${total} 个账户</div>
+    const done=total>0&&matched===total;
+    return `<div class="pl-card${checked?' selected':''}" style="cursor:pointer;display:flex;align-items:flex-start;gap:8px" onclick="if(event.target.closest('input'))return;togglePlDrama(${i})">
+      <input type="checkbox" ${checked?'checked':''} onchange="setPlDrama(${i},this.checked)" style="margin-top:4px">
+      <span style="flex:1;min-width:0">
+        <span class="pl-name" style="display:block">${d}${done?' <span style="color:var(--success);font-size:14px">✓</span>':''}</span>
+        <span class="pl-meta" style="display:block">已匹配 ${matched}/${total} 个账户</span>
+      </span>
     </div>`;
   }).join('');
 }
 
-function selectDrama(name){
-  currentDramaName=name;currentAccountId=null;currentLibId=null;currentLibProducts=[];
+// 全选/逐短剧勾选：决定「点商品写入哪些短剧」的范围与账户列显隐
+function togglePlBatchAll(cb){
+  if(cb.checked){getSelectedDramas().forEach(d=>plBatchSelected.add(d))}
+  else{plBatchSelected.clear()}
+  renderDramaList();
+  syncConfigArea();
+}
+function setPlDrama(i,checked){
+  const d=getSelectedDramas()[i];
+  if(d===undefined)return;
+  if(checked)plBatchSelected.add(d);else plBatchSelected.delete(d);
+  renderDramaList();
+  syncConfigArea();
+}
+function togglePlDrama(i){setPlDrama(i,!plBatchSelected.has(getSelectedDramas()[i]))}
+// 有勾选才显示账户/商品库/商品列；无勾选时收起并清空当前账户选择
+function syncConfigArea(){
+  const area=document.getElementById('plConfigArea');
+  if(!area)return;
+  if(plBatchSelected.size>0){
+    area.style.display='flex';
+    renderAccountListD();
+  }else{
+    area.style.display='none';
+    currentAccountId=null;currentLibId=null;currentLibProducts=[];
+    clearLibList();
+    clearProductTable();
+  }
+}
+// 批量清空勾选短剧在全部账户下的商品关联
+function clearSelectedMatches(){
+  if(plBatchSelected.size===0){alert('请先在左侧勾选要清空的短剧');return}
+  const n=plBatchSelected.size;
+  if(!confirm('确定清空 '+n+' 个勾选短剧在全部账户下的商品关联吗？'))return;
+  plBatchSelected.forEach(d=>delete dramaMatches[d]);
   renderDramaList();
   renderAccountListD();
-  clearLibList();
-  clearProductTable();
+  renderProductTable(currentLibProducts,document.getElementById('productSearch').value);
+  renderSelectedProductLibs();
 }
 
 // ---- 中栏：投放账户 + 商品库 ----
+function accountMatchedDramas(aid){
+  const res={count:0,total:getSelectedDramas().length,product:null,same:true};
+  const pids=new Set();
+  getSelectedDramas().forEach(d=>{
+    const m=dramaMatches[d]&&dramaMatches[d][aid];
+    if(!m)return;
+    res.count++;pids.add(m.product.productId);res.product=m;
+  });
+  res.same=pids.size<=1;
+  return res;
+}
 function renderAccountListD(){
   const container=document.getElementById('plAccountListD');
   document.getElementById('plAccountCount').textContent=getPackageAccounts().length;
   container.innerHTML=getPackageAccounts().map(a=>{
     const isActive=currentAccountId===a.id;
-    const match=dramaMatches[currentDramaName]&&dramaMatches[currentDramaName][a.id];
-    const hasMatch=!!match;
+    const cov=accountMatchedDramas(a.id);
+    let nameExtra='';
+    if(cov.count>0){
+      nameExtra=cov.same
+        ?` <span style="color:var(--success);font-size:14px">✓ ${cov.product.product.seriesName}</span>`
+        :` <span style="color:var(--text);font-size:12px">已配 ${cov.count}/${cov.total} 个短剧</span>`;
+    }
     let tHtml='';
-    if(hasMatch&&match.targeting){
-      tHtml=`<div class="pl-meta" style="margin-top:4px"><span style="color:var(--primary)">${match.targeting.name}</span><span>${match.targeting.desc||''}</span></div>`;
+    if(cov.count>0&&cov.same&&cov.product.targeting){
+      const t=cov.product.targeting;
+      tHtml=`<div class="pl-meta" style="margin-top:4px"><span style="color:var(--primary)">${t.name}</span><span>${t.desc||''}</span></div>`;
     }
     return `<div class="pl-card${isActive?' selected':''}" onclick="selectAccountD('${a.id}')">
-      <div class="pl-name">${a.name}${hasMatch?' <span style="color:var(--success);font-size:14px">✓ '+match.product.seriesName+'</span>':''}</div>
+      <div class="pl-name">${a.name}${nameExtra}</div>
       <div class="pl-meta"><span>ID: ${a.id}</span><span>BCID: ${a.bcid}</span></div>
       ${tHtml}
     </div>`;
@@ -2925,31 +2995,46 @@ function renderProductTable(products,filter){
   let items=products||[];
   if(filter){const kw=filter.toLowerCase();items=items.filter(p=>p.seriesName.toLowerCase().includes(kw))}
   document.getElementById('productTableTitle').textContent='共 '+items.length+' 件商品';
-  // 当前短剧×账户是否已有匹配
-  const currentMatch=dramaMatches[currentDramaName]&&dramaMatches[currentDramaName][currentAccountId];
-  const currentPid=currentMatch?currentMatch.product.productId:null;
+  // 该账户在勾选短剧上统一的当前商品才标 ✓（多勾选短剧同商品时展示）
+  const activePid=currentAccountProductId();
   document.getElementById('productTableBody').innerHTML=items.map(p=>{
-    const isSelected=currentPid===p.productId;
-    return `<tr style="${isSelected?'background:rgba(64,128,255,.08)':''};cursor:pointer" onclick="assignProduct('${p.productId}')">
-      <td style="text-align:center">${isSelected?'<span style="color:var(--success);font-weight:bold">✓</span>':''}</td>
+    const isActive=activePid===p.productId;
+    const mark=isActive?'<span style="color:var(--success);font-weight:bold">✓</span>':'';
+    const style=isActive?'background:rgba(64,128,255,.08)':'';
+    return `<tr style="${style};cursor:pointer" onclick="assignProduct('${p.productId}')">
+      <td style="text-align:center">${mark}</td>
       <td>${p.seriesName}</td>
       <td>${(p.seriesTags||'').replace(/_/g,' ')}</td>
       <td>${p.totalEpisodes}</td>
     </tr>`;
   }).join('');
 }
+function currentAccountProductId(){
+  if(!currentAccountId||plBatchSelected.size===0)return null;
+  const pids=new Set();
+  plBatchSelected.forEach(d=>{
+    const m=dramaMatches[d]&&dramaMatches[d][currentAccountId];
+    if(m)pids.add(m.product.productId);
+  });
+  return pids.size===1?pids.values().next().value:null;
+}
 
+// 点商品即生效：把商品写入当前账户 × 全部勾选短剧
 function assignProduct(productId){
-  if(!currentDramaName||!currentAccountId||!currentLibId)return;
-  const lib=mockProductAccounts.find(a=>a.id===currentAccountId)?.libraries.find(l=>l.id===currentLibId);
-  if(!lib)return;
-  const product=lib.products.find(p=>p.productId===productId);
-  if(!product)return;
-  if(!dramaMatches[currentDramaName])dramaMatches[currentDramaName]={};
-  dramaMatches[currentDramaName][currentAccountId]={libId:currentLibId,libName:lib.name,product,targeting:generateAutoTargeting(product,lib)};
+  if(!currentAccountId||!currentLibId)return;
+  if(plBatchSelected.size===0){alert('请先在左侧勾选要匹配的短剧');return}
+  const account=mockProductAccounts.find(a=>a.id===currentAccountId);
+  const lib=account?.libraries.find(l=>l.id===currentLibId);
+  const product=lib?.products.find(p=>p.productId===productId);
+  if(!account||!lib||!product)return;
+  plBatchSelected.forEach(dramaName=>{
+    if(!dramaMatches[dramaName])dramaMatches[dramaName]={};
+    dramaMatches[dramaName][currentAccountId]={libId:lib.id,libName:lib.name,product,targeting:generateAutoTargeting(product,lib)};
+  });
   renderProductTable(currentLibProducts,document.getElementById('productSearch').value);
   renderAccountListD();
   renderDramaList();
+  renderSelectedProductLibs();
 }
 
 function clearProductTable(){
