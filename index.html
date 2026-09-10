@@ -41,6 +41,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .toolbar input[type=text],.toolbar select{height:32px;padding:4px 12px;border:1px solid var(--border);border-radius:4px;font-size:14px;color:var(--text);outline:none;min-width:160px}
 .toolbar input[type=text]:focus,.toolbar select:focus{border-color:var(--primary)}
 
+/* ========== 概览卡 ========== */
+.kpi-row{display:flex;gap:12px;margin-bottom:12px}
+.kpi-card{flex:1;background:var(--white);border-radius:6px;padding:16px 20px}
+.kpi-label{font-size:13px;color:var(--text-secondary);margin-bottom:8px}
+.kpi-value{font-size:28px;font-weight:600;color:var(--text);line-height:1.2}
+.kpi-sub{font-size:12px;color:var(--text-secondary);margin-top:6px}
+.filter-label{font-size:13px;color:var(--text-secondary);white-space:nowrap}
+
 /* 按钮 */
 .btn{padding:7px 16px;border-radius:4px;font-size:14px;cursor:pointer;border:1px solid transparent;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
 .btn-primary{background:var(--primary);color:var(--white);border-color:var(--primary)}
@@ -342,12 +350,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
   <div class="page-container active" id="page-auto-task">
     <div class="toolbar" style="flex-direction:column;align-items:stretch;gap:8px">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <input type="text" placeholder="任务ID" style="width:120px">
-        <input type="text" placeholder="任务名称" style="width:150px">
-        <select><option value="">任务状态</option><option>启用</option><option>停用</option></select>
-        <select><option value="">请选择创建人</option></select>
-        <button class="btn btn-default btn-sm">查询</button>
-        <button class="btn btn-default btn-sm">重置</button>
+        <input type="text" id="taskFilterId" placeholder="任务ID" style="width:120px">
+        <input type="text" id="taskFilterName" placeholder="任务名称" style="width:150px">
+        <select id="taskFilterStatus"><option value="">任务状态</option><option>启用</option><option>停用</option></select>
+        <select id="taskFilterCreator"><option value="">请选择创建人</option></select>
+        <span class="filter-label">创建时间</span>
+        <input type="text" id="taskFilterCreatedStart" placeholder="开始日期" style="width:100px">
+        <input type="text" id="taskFilterCreatedEnd" placeholder="结束日期" style="width:100px">
+        <span class="filter-label">更新时间</span>
+        <input type="text" id="taskFilterUpdatedStart" placeholder="开始日期" style="width:100px">
+        <input type="text" id="taskFilterUpdatedEnd" placeholder="结束日期" style="width:100px">
+        <button class="btn btn-default btn-sm" onclick="applyTaskFilter()">查询</button>
+        <button class="btn btn-default btn-sm" onclick="resetTaskFilter()">重置</button>
         <button class="btn btn-primary btn-sm" onclick="openTaskModal()">+ 新建任务</button>
       </div>
       <div style="display:flex;align-items:center;gap:12px;padding-top:4px;border-top:1px dashed var(--border)">
@@ -356,6 +370,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
         <button class="btn btn-default btn-sm" style="color:#e6a23c;border-color:#e6a23c">批量暂停</button>
       </div>
     </div>
+    <div class="kpi-row" id="taskKpiRow"></div>
     <div class="table-wrap"><table>
       <thead><tr><th><input type="checkbox"></th><th>ID</th><th>任务名称</th><th>状态</th><th>竞价策略</th><th>日预算</th><th>执行间隔(分钟)</th><th>优化目标</th><th>成效目标</th><th>渠道号</th><th>上次完成时间</th><th>创建人</th><th>更新人</th><th>创建时间</th><th>更新时间</th><th>操作</th></tr></thead>
       <tbody id="autoTaskTableBody"></tbody>
@@ -3054,22 +3069,52 @@ const mockUsers=['橘柚','青兰','穗禾','蓝木','云笛','森柠','乐初',
 
 // 自动化任务
 const autoTasks=Array.from({length:20},(_,i)=>{const user=mockUsers[i%10],time=mockTimes[i%3],lang=mockLangs[i%7],strategies=['最大转化量','成本上限','出价上限'],goals=['价值','安装','购买','注册'];return{id:1571+i,name:`${user}-${time}-${lang}`,status:Math.random()>.9?'停用':'启用',bidStrategy:strategies[Math.floor(Math.random()*3)],dailyBudget:`$${Math.floor(Math.random()*500+50)}`,interval:Math.floor(Math.random()*30+5),optimization:goals[Math.floor(Math.random()*4)],target:'应用推广',channelNo:`CH${String(100+i).padStart(3,'0')}`,lastComplete:`2026-06-${String(24-Math.floor(Math.random()*7)).padStart(2,'0')} ${String(Math.floor(Math.random()*24)).padStart(2,'0')}:${String(Math.floor(Math.random()*60)).padStart(2,'0')}:00`,creator:user,updater:mockUsers[Math.floor(Math.random()*10)],created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
-function renderAutoTasks(p=1){renderTable('autoTaskTableBody',autoTasks,['id',{key:'name',render:r=>`<span class="col-name" style="cursor:pointer" onclick="openTaskModal({name:'${r.name}'})">${r.name}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='启用'?'running':'stopped'}">${r.status}</span>`},'bidStrategy','dailyBudget','interval','optimization','target','channelNo','lastComplete','creator','updater','created','updated'],10,[{label:'编辑',onclick:r=>`openTaskModal({name:'${r.name}'})`},{label:'复制'},{label:'日志'}]);renderPagination('autoTaskPagination',autoTasks.length,10,p=>renderAutoTasks(p))}
+function renderAutoTasks(p=1){renderTable('autoTaskTableBody',filteredTasks,['id',{key:'name',render:r=>`<span class="col-name" style="cursor:pointer" onclick="openTaskModal({name:'${r.name}'})">${r.name}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='启用'?'running':'stopped'}">${r.status}</span>`},'bidStrategy','dailyBudget','interval','optimization','target','channelNo','lastComplete','creator','updater','created','updated'],10,[{label:'编辑',onclick:r=>`openTaskModal({name:'${r.name}'})`},{label:'复制'},{label:'日志'}]);renderPagination('autoTaskPagination',filteredTasks.length,10,p=>renderAutoTasks(p))}
+
+// ==================== 任务效率概览卡 ====================
+let filteredTasks=autoTasks;
+function initTaskFilterOptions(){document.getElementById('taskFilterCreator').innerHTML='<option value="">请选择创建人</option>'+mockUsers.map(u=>`<option>${u}</option>`).join('')}
+function kpiRate(numerator,denominator){return denominator>0?(numerator/denominator*100).toFixed(1)+'%':'--'}
+function uploadStat(rows){
+  const ok=rows.filter(r=>r.uploadStatus==='上传成功').length,fail=rows.filter(r=>r.uploadStatus==='上传失败').length,pending=rows.length-ok-fail;
+  return {rate:kpiRate(ok,ok+fail),sub:`成功 ${ok} / 失败 ${fail} 条${pending?` / 待上传 ${pending} 条`:''}`};
+}
+function renderKpiCards(list){
+  const ids=new Set(list.map(t=>t.id)),of=rows=>rows.filter(r=>ids.has(r.taskId));
+  const series=uploadStat(of(campaigns)),adset=uploadStat(of(adGroups)),ad=uploadStat(of(adsList));
+  const cards=[
+    {label:'已启用任务',value:list.filter(t=>t.status==='启用').length,sub:`共 ${list.length} 个任务`},
+    {label:'广告系列上传成功率',value:series.rate,sub:series.sub},
+    {label:'广告组上传成功率',value:adset.rate,sub:adset.sub},
+    {label:'广告上传成功率',value:ad.rate,sub:ad.sub}
+  ];
+  document.getElementById('taskKpiRow').innerHTML=cards.map(c=>`<div class="kpi-card"><div class="kpi-label">${c.label}</div><div class="kpi-value">${c.value}</div><div class="kpi-sub">${c.sub}</div></div>`).join('');
+}
+function applyTaskFilter(){
+  const val=id=>document.getElementById(id).value.trim();
+  const id=val('taskFilterId'),name=val('taskFilterName'),status=document.getElementById('taskFilterStatus').value,creator=document.getElementById('taskFilterCreator').value,cs=val('taskFilterCreatedStart'),ce=val('taskFilterCreatedEnd'),us=val('taskFilterUpdatedStart'),ue=val('taskFilterUpdatedEnd');
+  filteredTasks=autoTasks.filter(t=>(!id||String(t.id).includes(id))&&(!name||t.name.includes(name))&&(!status||t.status===status)&&(!creator||t.creator===creator)&&(!cs||t.created>=cs)&&(!ce||t.created<=ce)&&(!us||t.updated>=us)&&(!ue||t.updated<=ue));
+  renderKpiCards(filteredTasks);renderAutoTasks(1);
+}
+function resetTaskFilter(){
+  ['taskFilterId','taskFilterName','taskFilterStatus','taskFilterCreator','taskFilterCreatedStart','taskFilterCreatedEnd','taskFilterUpdatedStart','taskFilterUpdatedEnd'].forEach(i=>document.getElementById(i).value='');
+  applyTaskFilter();
+}
 
 // 账户包
 function renderAccountPackages(p=1){renderTable('accountPackageTableBody',mockAccountPackages,['id','name','created','updated'],10,[{label:'编辑'},{label:'复制'},{label:'删除'}]);renderPagination('accountPackagePagination',mockAccountPackages.length,10,p=>renderAccountPackages(p))}
 
 // 广告系列
 const mockChannels=['通用默认渠道','TikTok渠道','测试渠道'],mockTemplates=['回传模板_001','回传模板_002','回传模板_003','回传模板_004','回传模板_005'];
-const campaigns=Array.from({length:20},(_,i)=>{const drama=mockDramas[i%8],pkg=mockAccountPackages[i%8],strategies=['最大转化量','成本上限','出价上限'];return{id:1000+i,taskId:`T2026${String(i%10+1).padStart(5,'0')}`,campaignId:`C2026${String(i+1).padStart(5,'0')}`,name:`${drama}-系列_${String(i+1).padStart(3,'0')}`,accountName:pkg.name,accountId:`A${String(i+100).padStart(5,'0')}`,scriptNo:`SC${String(i+1).padStart(5,'0')}`,scriptName:`${drama}`,channelName:mockChannels[i%3],channelNo:`CH${String(i+1).padStart(3,'0')}`,uploadStatus:Math.random()>.3?'上传成功':'上传失败',status:Math.random()>.3?'已开启':'已关闭',bidStrategy:strategies[Math.floor(Math.random()*3)],dailyBudget:`$${Math.floor(Math.random()*500+50)}`,optimization:mockOptimizations[Math.floor(Math.random()*3)],failReason:Math.random()>.7?'网络超时':'',drama,linkName:`${drama}_Link`,template:mockTemplates[i%5],created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
+const campaigns=Array.from({length:80},(_,i)=>{const drama=mockDramas[i%8],pkg=mockAccountPackages[i%8],strategies=['最大转化量','成本上限','出价上限'];return{id:1000+i,taskId:autoTasks[i%20].id,campaignId:`C2026${String(i+1).padStart(5,'0')}`,name:`${drama}-系列_${String(i+1).padStart(3,'0')}`,accountName:pkg.name,accountId:`A${String(i+100).padStart(5,'0')}`,scriptNo:`SC${String(i+1).padStart(5,'0')}`,scriptName:`${drama}`,channelName:mockChannels[i%3],channelNo:`CH${String(i+1).padStart(3,'0')}`,uploadStatus:Math.random()>.3?'上传成功':'上传失败',status:Math.random()>.3?'已开启':'已关闭',bidStrategy:strategies[Math.floor(Math.random()*3)],dailyBudget:`$${Math.floor(Math.random()*500+50)}`,optimization:mockOptimizations[Math.floor(Math.random()*3)],failReason:Math.random()>.7?'网络超时':'',drama,linkName:`${drama}_Link`,template:mockTemplates[i%5],created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
 function renderCampaigns(p=1){renderTable('campaignTableBody',campaigns,['id','taskId',{key:'campaignId',render:r=>`<span class="col-id">${r.campaignId}</span>`},'name','accountName','accountId','scriptNo','scriptName','drama','channelName','channelNo',{key:'uploadStatus',render:r=>`<span class="col-status ${r.uploadStatus==='上传成功'?'running':'error'}">${r.uploadStatus}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'bidStrategy','dailyBudget','optimization','failReason','linkName','template','created','updated'],10,[{label:'重试'}]);renderPagination('campaignPagination',campaigns.length,10,p=>renderCampaigns(p));syncBatchCounts()}
 
 // 广告组
-const adGroups=Array.from({length:20},(_,i)=>{const drama=mockDramas[i%8],lang=mockLangs[i%7],pkg=mockAccountPackages[i%8];return{id:2000+i,taskId:`T2026${String(i%10+1).padStart(5,'0')}`,uploadSeriesId:`C2026${String(i%20+1).padStart(5,'0')}`,name:`${drama}-${lang}-G${String(i+1).padStart(3,'0')}`,accountInfo:pkg.name,drama:`${drama}-${lang}`,uploadStatus:Math.random()>.3?'上传成功':'上传失败',status:Math.random()>.3?'已开启':'已关闭',targeting:mockTargetingPackages[i%5],failReason:Math.random()>.7?'图片尺寸不符':'',optimization:mockOptimizations[Math.floor(Math.random()*3)],created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
+const adGroups=Array.from({length:80},(_,i)=>{const drama=mockDramas[i%8],lang=mockLangs[i%7],pkg=mockAccountPackages[i%8];return{id:2000+i,taskId:autoTasks[i%20].id,uploadSeriesId:`C2026${String(i%20+1).padStart(5,'0')}`,name:`${drama}-${lang}-G${String(i+1).padStart(3,'0')}`,accountInfo:pkg.name,drama:`${drama}-${lang}`,uploadStatus:Math.random()>.3?'上传成功':'上传失败',status:Math.random()>.3?'已开启':'已关闭',targeting:mockTargetingPackages[i%5],failReason:Math.random()>.7?'图片尺寸不符':'',optimization:mockOptimizations[Math.floor(Math.random()*3)],created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
 function renderAdGroups(p=1){renderTable('adgroupTableBody',adGroups,['id','taskId','uploadSeriesId','name','accountInfo','drama',{key:'uploadStatus',render:r=>`<span class="col-status ${r.uploadStatus==='上传成功'?'running':'error'}">${r.uploadStatus}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'targeting','failReason','optimization','created','updated'],10,[{label:'重试'}]);renderPagination('adgroupPagination',adGroups.length,10,p=>renderAdGroups(p));syncBatchCounts()}
 
 // 广告
-const adsList=Array.from({length:20},(_,i)=>{const pkg=mockAccountPackages[i%8];return{id:3000+i,taskId:`T2026${String(i%10+1).padStart(5,'0')}`,campaignId:`C2026${String(i%20+1).padStart(5,'0')}`,adgroupId:`AG${String(i%20+1).padStart(6,'0')}`,uploadAdgroupId:`AG${String(i%20+1).padStart(6,'0')}`,adId:`AD${String(i+1).padStart(7,'0')}`,accountName:pkg.name,accountId:`A${String(i+100).padStart(5,'0')}`,uploadStatus:Math.random()>.2?'上传成功':(Math.random()>.5?'待上传':'上传失败'),status:Math.random()>.3?'已开启':'已关闭',multiAdvertiser:Math.random()>.7?'是':'否',failReason:Math.random()>.8?'视频时长超限':'',material:mockMaterialData[i%12].name,created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*7)).padStart(2,'0')}`}});
+const adsList=Array.from({length:80},(_,i)=>{const pkg=mockAccountPackages[i%8];return{id:3000+i,taskId:autoTasks[i%20].id,campaignId:`C2026${String(i%20+1).padStart(5,'0')}`,adgroupId:`AG${String(i%20+1).padStart(6,'0')}`,uploadAdgroupId:`AG${String(i%20+1).padStart(6,'0')}`,adId:`AD${String(i+1).padStart(7,'0')}`,accountName:pkg.name,accountId:`A${String(i+100).padStart(5,'0')}`,uploadStatus:Math.random()>.2?'上传成功':(Math.random()>.5?'待上传':'上传失败'),status:Math.random()>.3?'已开启':'已关闭',multiAdvertiser:Math.random()>.7?'是':'否',failReason:Math.random()>.8?'视频时长超限':'',material:mockMaterialData[i%12].name,created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*7)).padStart(2,'0')}`}});
 function renderAds(p=1){renderTable('adTableBody',adsList,['id','taskId','campaignId','adgroupId','uploadAdgroupId','adId','accountName','accountId',{key:'uploadStatus',render:r=>`<span class="col-status ${r.uploadStatus==='上传成功'?'running':(r.uploadStatus==='上传失败'?'error':'pending')}">${r.uploadStatus}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='已开启'?'running':'stopped'}">${r.status}</span>`},'multiAdvertiser','failReason','material','created','updated'],10,[{label:'重试'}]);renderPagination('adPagination',adsList.length,10,p=>renderAds(p));syncBatchCounts()}
 
 // ===== 广告系列/广告组/广告 批量选中重试 =====
@@ -3099,7 +3144,7 @@ function syncBatchCounts(){document.querySelectorAll('.table-batch-bar').forEach
 
 // ==================== 初始化 ====================
 toggleCampaignTypeFields();
-renderAutoTasks();renderAccountPackages();renderCampaigns();renderAdGroups();renderAds();
+initTaskFilterOptions();applyTaskFilter();renderAccountPackages();renderCampaigns();renderAdGroups();renderAds();
 </script>
 </body>
 </html>
