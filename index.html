@@ -207,6 +207,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .material-preview-empty{text-align:center;padding:32px;color:var(--text-secondary);font-size:14px}
 .material-preview-footer{padding:8px 16px;border-top:1px solid #ebeef5;font-size:12px;color:var(--text-secondary);text-align:center}
 
+/* 广告结构预演 */
+.preview-tabs{display:flex;gap:4px}
+.preview-tab{border:none;background:none;padding:4px 12px;font-size:14px;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent}
+.preview-tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:500}
+.adstruct-stats{display:flex;align-items:center;gap:20px;padding:12px 16px;border-bottom:1px solid #ebeef5;font-size:13px;color:var(--text-secondary)}
+.adstruct-stats b{color:var(--primary);font-size:14px}
+.adstruct-note{padding:8px 16px;border-top:1px dashed #dcdfe6;font-size:12px;color:var(--text-secondary)}
+.adstruct-material-link{color:var(--primary);text-decoration:underline;cursor:pointer}
+.adstruct-structure-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px;min-width:900px}
+.adstruct-structure-table th{padding:8px 12px;border-bottom:1px solid #ebeef5;border-right:1px solid #ebeef5;color:var(--text-secondary);font-weight:500;text-align:center;background:#f5f7fa;white-space:nowrap}
+.adstruct-structure-table td{padding:8px 12px;border-bottom:1px solid #ebeef5;border-right:1px solid #ebeef5;color:var(--text);vertical-align:top;word-break:break-all}
+.adstruct-structure-table td.center{text-align:center}
+.adstruct-structure-table td.reason{color:var(--text-secondary)}
+.adstruct-structure-table tbody tr:hover{background:#f5f7fa}
+
 /* 素材标签 */
 .material-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:#ecf5ff;border:1px solid #b3d8ff;border-radius:3px;font-size:12px;color:var(--primary)}
 .material-tag .tag-remove{cursor:pointer;font-size:14px;color:#a0cfff;line-height:1}
@@ -1146,8 +1161,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
       </div>
 
       <div class="material-preview-section" id="materialPreviewSection">
-        <div class="material-preview-header"><span>素材预览</span><span style="cursor:pointer" onclick="closeMaterialPreview()">&times;</span></div>
+        <div class="material-preview-header">
+          <div class="preview-tabs">
+            <button type="button" class="preview-tab active" data-tab="list" onclick="switchPreviewTab('list')">素材清单</button>
+            <button type="button" class="preview-tab" data-tab="structure" onclick="switchPreviewTab('structure')">广告结构</button>
+          </div>
+          <span style="cursor:pointer" onclick="closeMaterialPreview()">&times;</span>
+        </div>
         <div id="materialPreviewContent"><div class="material-preview-empty">点击「预览素材」查看匹配结果</div></div>
+        <div id="adStructureContent" style="display:none"></div>
       </div>
 
     </form>
@@ -1494,6 +1516,7 @@ function syncMaterialRepeatLimits(){
 function openTaskModal(editData){
   document.getElementById('taskModalOverlay').style.display = 'flex';
   document.getElementById('taskModalTitle').textContent = editData ? '编辑TikTok自动化任务' : '新建TikTok自动化任务';
+  currentEditingTaskId = editData && editData.id ? editData.id : null;
   if(editData){document.getElementById('taskName').value=editData.name||'';document.getElementById('taskNameCount').textContent=(editData.name||'').length+' / 50'}
   syncMaterialRepeatLimits();
   checkMaterialFilterVisible();checkMaterialConditionRequired();toggleMaterialModeUI();
@@ -2503,12 +2526,129 @@ initMaterialFilters();
 let previewVisible=false,previewTimer=null,previewData=[];
 
 function toggleMaterialPreview(){clearTimeout(previewTimer);const section=document.getElementById('materialPreviewSection'),content=document.getElementById('materialPreviewContent'),btn=document.getElementById('btnPreview');if(previewVisible){closeMaterialPreview();return}previewVisible=true;section.classList.add('show');btn.textContent='收起预览';loadPreviewData()}
-function loadPreviewData(){const content=document.getElementById('materialPreviewContent');if(materialMode==='specify'){previewData=confirmedMaterials.slice();renderPreview();return}content.innerHTML='<div class="material-preview-empty">正在查询匹配素材...</div>';previewTimer=setTimeout(()=>{const shuffled=[...mockMaterialData].sort(()=>Math.random()-.5),count=Math.floor(Math.random()*10)+6;previewData=shuffled.slice(0,count).sort((a,b)=>b.cost-a.cost);renderPreview()},600)}
-function renderPreview(){const content=document.getElementById('materialPreviewContent');renderMaterialList(content)}
+function loadPreviewData(){const content=document.getElementById('materialPreviewContent');if(materialMode==='specify'){previewData=confirmedMaterials.slice();renderPreview();return}content.innerHTML='<div class="material-preview-empty">正在查询匹配素材...</div>';previewTimer=setTimeout(()=>{previewTimer=null;const shuffled=[...mockMaterialData].sort(()=>Math.random()-.5),count=Math.floor(Math.random()*10)+6;previewData=shuffled.slice(0,count).sort((a,b)=>b.cost-a.cost);renderPreview()},600)}
+function renderPreview(){const content=document.getElementById('materialPreviewContent');renderMaterialList(content);if(previewTab==='structure')renderAdStructure()}
 function renderMaterialList(content){const data=previewData;if(data.length===0){content.innerHTML='<div class="material-preview-empty">未找到匹配的素材</div>';return}const displayData=data.length>10?data.slice(0,10):data;const rows=displayData.map(d=>`<tr><td style="color:var(--primary);text-decoration:underline;cursor:pointer">${d.name}</td><td>${d.bookId}</td><td>${d.bookName}</td><td>${d.drama}</td><td>${d.lang}</td><td>${d.businessType}</td><td>${d.media}</td><td>$${d.cost.toLocaleString()}</td><td>${d.doroi}</td><td>${d.d0AdRoi}%</td><td>$${d.d0Iaa.toLocaleString()}</td><td>${d.compliance}%</td><td>${d.oldCompliance}%</td><td>${d.created}</td></tr>`).join(''),note=data.length>10?`<div class="material-preview-footer">共 ${data.length} 条，仅展示前 10 条</div>`:`<div class="material-preview-footer">共 ${data.length} 条</div>`;content.innerHTML=`<div class="material-preview-table-wrap"><table class="material-preview-table"><thead><tr><th>素材名称</th><th>剧本ID</th><th>剧本名称</th><th>短剧</th><th>语言</th><th>业务类型</th><th>媒体</th><th>消耗</th><th>DOROI</th><th>D0广告ROI</th><th>D0 IAA</th><th>综合达标率</th><th>老达标率</th><th>创建时间</th></tr></thead><tbody>${rows}</tbody></table></div>${note}`}
 function updateSpecifyPreview(){if(previewVisible){previewData=confirmedMaterials.slice();renderPreview()}}
 function closeMaterialPreview(){clearTimeout(previewTimer);previewVisible=false;document.getElementById('materialPreviewSection').classList.remove('show');document.getElementById('btnPreview').textContent='预览素材'}
-function resetMaterialPreview(){if(previewVisible)closeMaterialPreview();previewData=[];document.getElementById('materialPreviewContent').innerHTML='<div class="material-preview-empty">点击「预览素材」查看匹配结果</div>'}
+function resetMaterialPreview(){if(previewVisible)closeMaterialPreview();previewData=[];previewTimer=null;document.getElementById('materialPreviewContent').innerHTML='<div class="material-preview-empty">点击「预览素材」查看匹配结果</div>';switchPreviewTab('list')}
+// 任务配置任一改动（按钮组、输入框、下拉）即关闭预览区，需重新点击「预览素材」
+document.getElementById('autoTaskForm').addEventListener('input',resetMaterialPreview);
+document.getElementById('autoTaskForm').addEventListener('change',resetMaterialPreview);
+
+// ==================== 广告结构预演 ====================
+let previewTab='list',currentEditingTaskId=null;
+const runSnapshotCache={},ADSTRUCT_TS_BASE=2105583170522849281,ADSTRUCT_LANG_CODE={'中文':'ZH','英文':'EN','泰文':'TH','马来文':'MS'};
+// 上一轮结束时的已投记账快照（mock）：有任务 ID 时按 ID 确定性生成，新建任务返回 null（零基点预演）
+function mockSnapshotFor(taskId){
+  if(!taskId)return null;
+  if(!runSnapshotCache[taskId]){
+    const hash=s=>{let x=0;for(let i=0;i<s.length;i++)x=(x*31+s.charCodeAt(i))>>>0;return x};
+    runSnapshotCache[taskId]={finishedAt:'2026-06-24 18:00:00',builtSeriesOf:acctId=>hash(taskId+'$'+acctId)%2,usedInAccount:(name,acctId)=>hash(taskId+'#'+name+'@'+acctId)%2};
+  }
+  return runSnapshotCache[taskId];
+}
+function switchPreviewTab(tab){
+  previewTab=tab;
+  document.querySelectorAll('#materialPreviewSection .preview-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  document.getElementById('materialPreviewContent').style.display=tab==='list'?'block':'none';
+  document.getElementById('adStructureContent').style.display=tab==='structure'?'block':'none';
+  if(tab==='structure')renderAdStructure();
+}
+function adStructNumber(v,fallback){const n=parseInt(v,10);return isNaN(n)||n<1?fallback:n}
+function adStructCount(v,fallback){const n=parseInt(v,10);return isNaN(n)?fallback:n}
+function getObjectiveLabel(){return document.querySelector('#campaignObjective .btn-option.active').dataset.value==='product_sales'?'销量':'应用推广'}
+function getDramaNameOf(key){const p=key.split('-');return p.slice(2,p.length-1).join('-')||key}
+// 短剧列展示用：剧本名称-短剧名称；系列名称生成仍用短剧名称
+function getDramaLabelOf(key){const p=key.split('-');if(p.length<4)return key;const name=p.slice(2,p.length-1).join('-');return name?`${p[1]}-${name}`:key}
+function getDramaLangOf(key){const p=key.split('-');return p[p.length-1]}
+function getTargetingLabelOf(dramaKey){const ids=dramaTargetingMap.get(dramaKey)||[];const names=ids.map(id=>{const tp=mockTargetingPackages.find(t=>t.id===id);return tp?tp.name:''}).filter(Boolean);return names.length?names.join('、'):'自动定向'}
+function buildAdStructurePreview(){
+  const pool=previewData.slice(),dramaKeys=getSelectedDramas();
+  const adCount=adStructNumber(document.getElementById('adCount').value,30);
+  const singleM=adStructNumber(document.getElementById('singleRoundRepeat').value,1);
+  const totalN=adStructNumber(document.getElementById('totalRepeatCount').value,1);
+  const limitRaw=document.getElementById('campaignLimit').value;
+  const campaignLimit=limitRaw?adStructNumber(limitRaw,1):Infinity;
+  const endInputs=document.querySelectorAll('#endConditionGroup .condition-input');
+  const perAccount=adStructCount(endInputs[0]&&endInputs[0].value,Infinity);
+  const accountThreshold=adStructCount(endInputs[1]&&endInputs[1].value,Infinity);
+  const pkgAccounts=getPackageAccounts(),wantRaw=document.getElementById('accountCount').value;
+  const wantCount=wantRaw?adStructNumber(wantRaw,pkgAccounts.length):pkgAccounts.length;
+  const snap=mockSnapshotFor(currentEditingTaskId);
+  return dramaKeys.map(dramaKey=>{
+    const dramaName=getDramaNameOf(dramaKey),dramaLang=getDramaLangOf(dramaKey);
+    const base={dramaKey,dramaName,dramaLang,dramaLabel:getDramaLabelOf(dramaKey),reason:'',accounts:[],campaigns:0,ads:0};
+    if(pool.length===0)return {...base,reason:'没有可投放素材'};
+    if(pkgAccounts.length===0)return {...base,reason:'未选择账户包，或账户包内无账户'};
+    if(perAccount!==Infinity&&accountThreshold!==Infinity&&pkgAccounts.filter(a=>(snap?snap.builtSeriesOf(a.id):0)>=perAccount).length>=accountThreshold)return {...base,reason:'已达结束运行条件，本轮该短剧停建'};
+    const participating=[];
+    pkgAccounts.forEach(a=>{if(participating.length>=wantCount)return;const built=snap?snap.builtSeriesOf(a.id):0;if(perAccount!==Infinity&&built>=perAccount)return;participating.push({id:a.id,name:a.name,built})});
+    if(participating.length===0)return {...base,reason:'账户包内账户均已达到在投系列数阈值，本轮停建'};
+    const entries=pool.map(m=>{const used=participating.reduce((s,a)=>s+((snap&&snap.usedInAccount(m.name,a.id))?1:0),0);return {m,slots:Math.min(singleM,Math.max(0,totalN-used))}});
+    const totalSlots=entries.reduce((s,e)=>s+e.slots,0);
+    if(totalSlots===0)return {...base,reason:'素材累计投放次数已用尽，本轮无素材可投'};
+    const maxSlots=Math.max(...entries.map(e=>e.slots)),seq=[];
+    for(let r=0;r<maxSlots;r++)entries.forEach(e=>{if(e.slots>r)seq.push(e.m)});
+    const materialCampaigns=Math.ceil(totalSlots/adCount);
+    const accountCapacity=participating.reduce((s,a)=>s+(perAccount===Infinity?materialCampaigns:perAccount-a.built),0);
+    let campaignCount=Math.min(materialCampaigns,accountCapacity);
+    if(campaignLimit!==Infinity)campaignCount=Math.min(campaignCount,campaignLimit);
+    const campaignMats=[];let cur=[],curSet=new Set();
+    for(const m of seq){
+      if(campaignMats.length>=campaignCount)break;
+      if(curSet.has(m.name))continue;
+      cur.push(m);curSet.add(m.name);
+      if(cur.length>=adCount){campaignMats.push(cur);cur=[];curSet=new Set()}
+    }
+    if(cur.length&&campaignMats.length<campaignCount)campaignMats.push(cur);
+    const placed=participating.map(a=>({a,campaigns:[],seen:{}}));
+    campaignMats.forEach(mats=>{
+      let best=null,bestScore=null;
+      placed.forEach(p=>{const score=[mats.filter(m=>p.seen[m.name]).length,p.campaigns.length];if(!bestScore||score[0]<bestScore[0]||(score[0]===bestScore[0]&&score[1]<bestScore[1])){best=p;bestScore=score}});
+      best.campaigns.push(mats);mats.forEach(m=>{best.seen[m.name]=(best.seen[m.name]||0)+1});
+    });
+    const accounts=placed.filter(p=>p.campaigns.length>0).map(p=>({id:p.a.id,name:p.a.name,campaigns:p.campaigns}));
+    return {...base,accounts,campaigns:accounts.reduce((s,a)=>s+a.campaigns.length,0),ads:accounts.reduce((s,a)=>s+a.campaigns.reduce((t,c)=>t+c.length,0),0)};
+  });
+}
+function renderAdStructure(){
+  const box=document.getElementById('adStructureContent');
+  const groups=buildAdStructurePreview();
+  const totalCampaigns=groups.reduce((s,g)=>s+g.campaigns,0),totalAds=groups.reduce((s,g)=>s+g.ads,0);
+  const stats=`<div class="adstruct-stats"><span>预计生成 <b>${totalAds}</b> 条广告</span><span>计划数量：<b>${totalCampaigns}</b></span><span>广告组数量：<b>${totalCampaigns}</b></span><span>广告数量：<b>${totalAds}</b></span></div>`;
+  if(groups.length===0){box.innerHTML=stats+'<div class="material-preview-empty">请先在表单中选择短剧</div>';return}
+  if(previewData.length===0&&previewTimer!==null){box.innerHTML=stats+'<div class="material-preview-empty">正在查询匹配素材...</div>';return}
+  const objective=getObjectiveLabel(),rows=[],notes=[];
+  let nameSeq=0;
+  groups.forEach(g=>{
+    if(g.reason){rows.push(`<tr><td>${g.dramaLabel}</td><td colspan="5" class="reason">${g.reason}</td></tr>`);return}
+    const targeting=getTargetingLabelOf(g.dramaKey),langCode=ADSTRUCT_LANG_CODE[g.dramaLang]||'EN',shownRowsOf=c=>Math.min(c.length,30);
+    const dramaRows=g.accounts.reduce((s,a)=>s+a.campaigns.reduce((t,c)=>t+shownRowsOf(c),0),0);
+    let dramaCellPending=true;
+    g.accounts.forEach(a=>{
+      const accRows=a.campaigns.reduce((t,c)=>t+shownRowsOf(c),0);
+      let accCellPending=true;
+      a.campaigns.forEach(mats=>{
+        const shown=mats.length>30?mats.slice(0,30):mats,seq=++nameSeq;
+        const name=`${ADSTRUCT_TS_BASE+seq}-P585-FB-1001-${g.dramaName}-${langCode}-w2a-XLM-(${a.id}auto${6209+seq})`;
+        shown.forEach((m,mi)=>{
+          const tds=[];
+          if(dramaCellPending){tds.push(`<td rowspan="${dramaRows}">${g.dramaLabel}</td>`);dramaCellPending=false}
+          if(accCellPending){tds.push(`<td rowspan="${accRows}">${a.name}<div>(${a.id})</div></td>`);accCellPending=false}
+          if(mi===0)tds.push(`<td rowspan="${shown.length}">${objective}</td><td rowspan="${shown.length}">${name}</td><td rowspan="${shown.length}">${targeting}</td>`);
+          tds.push(`<td><span class="adstruct-material-link">${m.name}</span></td>`);
+          rows.push(`<tr>${tds.join('')}</tr>`);
+        });
+        if(mats.length>30)notes.push(`${g.dramaLabel} / ${a.name} / ${name}：广告/创意共 ${mats.length} 条，仅展示前 30 条`);
+      });
+    });
+  });
+  // 表头：短剧、账户跨两行，计划信息/广告组信息/广告-创意 三段分组；列宽固定，系列名称收窄、余量给素材
+  const cols=`<colgroup><col style="width:8%"><col style="width:18%"><col style="width:9%"><col style="width:29%"><col style="width:11%"><col style="width:25%"></colgroup>`;
+  const head=`<tr><th rowspan="2">短剧</th><th rowspan="2">账户</th><th colspan="2">计划信息</th><th>广告组信息</th><th>广告/创意</th></tr><tr><th>广告目标</th><th>系列名称</th><th>定向包</th><th>素材</th></tr>`;
+  box.innerHTML=stats+`<div class="material-preview-table-wrap"><table class="adstruct-structure-table">${cols}<thead>${head}</thead><tbody>${rows.join('')}</tbody></table></div>`+notes.map(n=>`<div class="adstruct-note">${n}</div>`).join('');
+}
 
 // ==================== 表单提交 ====================
 document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.preventDefault();
@@ -3104,7 +3244,7 @@ const mockUsers=['橘柚','青兰','穗禾','蓝木','云笛','森柠','乐初',
 
 // 自动化任务
 const autoTasks=Array.from({length:20},(_,i)=>{const user=mockUsers[i%10],time=mockTimes[i%3],lang=mockLangs[i%7],strategies=['最大转化量','成本上限','出价上限'],goals=['价值','安装','购买','注册'];return{id:1571+i,name:`${user}-${time}-${lang}`,status:Math.random()>.9?'停用':'启用',bidStrategy:strategies[Math.floor(Math.random()*3)],dailyBudget:`$${Math.floor(Math.random()*500+50)}`,interval:Math.floor(Math.random()*30+5),optimization:goals[Math.floor(Math.random()*4)],target:'应用推广',channelNo:`CH${String(100+i).padStart(3,'0')}`,lastComplete:`2026-06-${String(24-Math.floor(Math.random()*7)).padStart(2,'0')} ${String(Math.floor(Math.random()*24)).padStart(2,'0')}:${String(Math.floor(Math.random()*60)).padStart(2,'0')}:00`,creator:user,updater:mockUsers[Math.floor(Math.random()*10)],created:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`,updated:`2026-06-${String(24-Math.floor(Math.random()*14)).padStart(2,'0')}`}});
-function renderAutoTasks(p=1){renderTable('autoTaskTableBody',filteredTasks,['id',{key:'name',render:r=>`<span class="col-name" style="cursor:pointer" onclick="openTaskModal({name:'${r.name}'})">${r.name}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='启用'?'running':'stopped'}">${r.status}</span>`},'bidStrategy','dailyBudget','interval','optimization','target','channelNo','lastComplete','creator','updater','created','updated'],10,[{label:'编辑',onclick:r=>`openTaskModal({name:'${r.name}'})`},{label:'复制'},{label:'日志'}]);renderPagination('autoTaskPagination',filteredTasks.length,10,p=>renderAutoTasks(p))}
+function renderAutoTasks(p=1){renderTable('autoTaskTableBody',filteredTasks,['id',{key:'name',render:r=>`<span class="col-name" style="cursor:pointer" onclick="openTaskModal({id:${r.id},name:'${r.name}'})">${r.name}</span>`},{key:'status',render:r=>`<span class="col-status ${r.status==='启用'?'running':'stopped'}">${r.status}</span>`},'bidStrategy','dailyBudget','interval','optimization','target','channelNo','lastComplete','creator','updater','created','updated'],10,[{label:'编辑',onclick:r=>`openTaskModal({id:${r.id},name:'${r.name}'})`},{label:'复制'},{label:'日志'}]);renderPagination('autoTaskPagination',filteredTasks.length,10,p=>renderAutoTasks(p))}
 
 // ==================== 任务效率概览卡 ====================
 let filteredTasks=autoTasks;
