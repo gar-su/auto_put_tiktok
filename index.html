@@ -643,6 +643,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
           <button type="button" class="btn-option" data-type="custom">自定义</button>
         </div></div>
       </div>
+      <div class="form-item" id="statScopeItem" style="display:none">
+        <label>统计口径</label>
+        <div class="form-control"><div class="btn-group" id="statScopeBtns">
+          <button type="button" class="btn-option active" data-scope="ns">NS素材统计</button>
+          <button type="button" class="btn-option" data-scope="mini">小程序素材统计</button>
+        </div></div>
+      </div>
       <div class="form-item" id="businessTypeItem" style="display:none">
         <label>业务类型</label>
         <div class="form-control"><div class="btn-group" id="businessTypeBtns">
@@ -712,6 +719,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
           <button type="button" class="btn-option" data-metric="d0_ad_roi">D0广告ROI</button>
           <button type="button" class="btn-option" data-metric="d0_iaa">D0 IAA</button>
           <button type="button" class="btn-option" data-metric="old_compliance">老达标率</button>
+          <button type="button" class="btn-option" data-metric="d0_pay_users">DO充值用户数</button>
         </div></div>
       </div>
       </div>
@@ -2032,9 +2040,34 @@ document.getElementById('addTimeRange').addEventListener('click',function(){
 });
 
 // ==================== 素材配置 ====================
+const MATERIAL_METRIC_OPTIONS={
+  ns:[['cost','消耗'],['doroi','DOROI'],['d0_ad_roi','D0广告ROI'],['d0_iaa','D0 IAA'],['compliance','综合达标率'],['old_compliance','老达标率'],['d0_pay_users','DO充值用户数']],
+  mini:[['cost','消耗'],['doroi','DOROI'],['d0_ad_roi','D0广告ROI'],['d0_iaa','D0 IAA'],['d0_pay_users','DO充值用户数']]
+};
+function currentStatScope(){return document.querySelector('#statScopeBtns .btn-option.active').dataset.scope}
+function materialMetricOptionsHtml(scope){return MATERIAL_METRIC_OPTIONS[scope].map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}
+function applyStatScope(){
+  const scope=currentStatScope(),allowed=MATERIAL_METRIC_OPTIONS[scope].map(o=>o[0]),used=new Set();
+  document.querySelectorAll('#materialConditionGroup .material-condition-metric').forEach(sel=>{
+    const prev=sel.value;
+    sel.innerHTML=materialMetricOptionsHtml(scope);
+    if(allowed.includes(prev)){sel.value=prev}else{sel.value=MATERIAL_METRIC_OPTIONS[scope].map(o=>o[0]).find(v=>!used.has(v))||'cost'}
+    used.add(sel.value);
+    togglePercentSuffix(sel.closest('.condition-row'));
+  });
+  document.querySelectorAll('#sortMetricBtns .btn-option').forEach(btn=>{btn.style.display=allowed.includes(btn.dataset.metric)?'':'none'});
+  const activeSort=document.querySelector('#sortMetricBtns .btn-option.active');
+  if(!activeSort||!allowed.includes(activeSort.dataset.metric)){
+    document.querySelectorAll('#sortMetricBtns .btn-option').forEach(b=>b.classList.remove('active'));
+    document.querySelector('#sortMetricBtns .btn-option[data-metric="cost"]').classList.add('active');
+  }
+  checkMaterialConditionDuplicate();
+}
 function checkMaterialFilterVisible(){
   const isCustom=document.querySelector('#materialFilterType .btn-option.active').dataset.type==='custom';
-  ['statRangeItem','materialConditionItem','sortMetricItem','materialCountItem','businessTypeItem','mediaFilterItem'].forEach(id=>document.getElementById(id).style.display=isCustom?'flex':'none');
+  ['statScopeItem','statRangeItem','materialConditionItem','sortMetricItem','materialCountItem','businessTypeItem'].forEach(id=>document.getElementById(id).style.display=isCustom?'flex':'none');
+  document.getElementById('mediaFilterItem').style.display=isCustom&&currentStatScope()==='ns'?'flex':'none';
+  applyStatScope();
 }
 function checkMaterialConditionRequired(){
   if(materialMode==='specify'){
@@ -2061,6 +2094,11 @@ function bindBtnGroup(sel){
     resetMaterialPreview()})});
 }
 ['#materialCreateTime','#businessTypeBtns','#mediaFilterBtns','#statRangeBtns','#sortMetricBtns','#materialCountType','#singleRoundRepeatType','#totalRepeatType'].forEach(bindBtnGroup);
+document.querySelectorAll('#statScopeBtns .btn-option').forEach(btn=>{btn.addEventListener('click',function(){
+  if(this.dataset.scope===currentStatScope())return;
+  document.querySelectorAll('#statScopeBtns .btn-option').forEach(b=>b.classList.remove('active'));this.classList.add('active');
+  checkMaterialFilterVisible();resetMaterialPreview();
+})});
 
 // ==================== 素材选择方式切换 ====================
 document.querySelectorAll('#materialModeBtns .btn-option').forEach(btn=>{btn.addEventListener('click',function(){
@@ -2497,7 +2535,7 @@ function bindOperatorChange(row){row.querySelector('.material-condition-operator
 function checkMaterialConditionDuplicate(){const metrics=Array.from(document.querySelectorAll('.material-condition-metric')).map(m=>m.value);const hasDup=new Set(metrics).size!==metrics.length;document.getElementById('materialConditionError').classList.toggle('show',hasDup);return !hasDup}
 document.getElementById('addMaterialCondition').addEventListener('click',function(){
   const row=document.createElement('div');row.className='condition-row';
-  row.innerHTML='<select class="condition-select material-condition-metric"><option value="cost">消耗</option><option value="doroi">DOROI</option><option value="d0_ad_roi">D0广告ROI</option><option value="d0_iaa">D0 IAA</option><option value="compliance">综合达标率</option><option value="old_compliance">老达标率</option><option value="d0_pay_users">DO充值用户数</option></select><select class="condition-operator material-condition-operator"><option value=">=">>=</option><option value=">">></option><option value="=">=</option><option value="<"><</option><option value="<="><=</option><option value="between">介于</option></select><div class="single-input"><div class="condition-input-wrap"><input type="text" class="condition-input" placeholder="请输入"><span class="condition-input-suffix" style="display:none">%</span></div></div><div class="between-input-group"><div class="condition-input-wrap"><input type="text" class="condition-input" placeholder="请输入"><span class="condition-input-suffix" style="display:none">%</span></div><span>至</span><div class="condition-input-wrap"><input type="text" class="condition-input" placeholder="请输入"><span class="condition-input-suffix" style="display:none">%</span></div></div><button type="button" class="condition-delete">&times;</button>';
+  row.innerHTML=`<select class="condition-select material-condition-metric">${materialMetricOptionsHtml(currentStatScope())}</select><select class="condition-operator material-condition-operator"><option value=">=">>=</option><option value=">">></option><option value="=">=</option><option value="<"><</option><option value="<="><=</option><option value="between">介于</option></select><div class="single-input"><div class="condition-input-wrap"><input type="text" class="condition-input" placeholder="请输入"><span class="condition-input-suffix" style="display:none">%</span></div></div><div class="between-input-group"><div class="condition-input-wrap"><input type="text" class="condition-input" placeholder="请输入"><span class="condition-input-suffix" style="display:none">%</span></div><span>至</span><div class="condition-input-wrap"><input type="text" class="condition-input" placeholder="请输入"><span class="condition-input-suffix" style="display:none">%</span></div></div><button type="button" class="condition-delete">&times;</button>`;
   document.getElementById('materialConditionGroup').appendChild(row);
   row.querySelector('.condition-delete').addEventListener('click',()=>{row.remove();resetMaterialPreview();checkMaterialConditionRequired()});
   bindOperatorChange(row);row.querySelector('.material-condition-metric').addEventListener('change',function(){checkMaterialConditionDuplicate();resetMaterialPreview();togglePercentSuffix(row)});
@@ -2528,7 +2566,7 @@ let previewVisible=false,previewTimer=null,previewData=[];
 function toggleMaterialPreview(){clearTimeout(previewTimer);const section=document.getElementById('materialPreviewSection'),content=document.getElementById('materialPreviewContent'),btn=document.getElementById('btnPreview');if(previewVisible){closeMaterialPreview();return}previewVisible=true;section.classList.add('show');btn.textContent='收起预览';loadPreviewData()}
 function loadPreviewData(){const content=document.getElementById('materialPreviewContent');if(materialMode==='specify'){previewData=confirmedMaterials.slice();renderPreview();return}content.innerHTML='<div class="material-preview-empty">正在查询匹配素材...</div>';previewTimer=setTimeout(()=>{previewTimer=null;const shuffled=[...mockMaterialData].sort(()=>Math.random()-.5),count=Math.floor(Math.random()*10)+6;previewData=shuffled.slice(0,count).sort((a,b)=>b.cost-a.cost);renderPreview()},600)}
 function renderPreview(){const content=document.getElementById('materialPreviewContent');renderMaterialList(content);if(previewTab==='structure')renderAdStructure()}
-function renderMaterialList(content){const data=previewData;if(data.length===0){content.innerHTML='<div class="material-preview-empty">未找到匹配的素材</div>';return}const displayData=data.length>10?data.slice(0,10):data;const rows=displayData.map(d=>`<tr><td style="color:var(--primary);text-decoration:underline;cursor:pointer">${d.name}</td><td>${d.bookId}</td><td>${d.bookName}</td><td>${d.drama}</td><td>${d.lang}</td><td>${d.businessType}</td><td>${d.media}</td><td>$${d.cost.toLocaleString()}</td><td>${d.doroi}</td><td>${d.d0AdRoi}%</td><td>$${d.d0Iaa.toLocaleString()}</td><td>${d.compliance}%</td><td>${d.oldCompliance}%</td><td>${d.created}</td></tr>`).join(''),note=data.length>10?`<div class="material-preview-footer">共 ${data.length} 条，仅展示前 10 条</div>`:`<div class="material-preview-footer">共 ${data.length} 条</div>`;content.innerHTML=`<div class="material-preview-table-wrap"><table class="material-preview-table"><thead><tr><th>素材名称</th><th>剧本ID</th><th>剧本名称</th><th>短剧</th><th>语言</th><th>业务类型</th><th>媒体</th><th>消耗</th><th>DOROI</th><th>D0广告ROI</th><th>D0 IAA</th><th>综合达标率</th><th>老达标率</th><th>创建时间</th></tr></thead><tbody>${rows}</tbody></table></div>${note}`}
+function renderMaterialList(content){const data=previewData;if(data.length===0){content.innerHTML='<div class="material-preview-empty">未找到匹配的素材</div>';return}const isMini=materialMode==='filter'&&currentStatScope()==='mini',displayData=data.length>10?data.slice(0,10):data;const rows=displayData.map(d=>`<tr><td style="color:var(--primary);text-decoration:underline;cursor:pointer">${d.name}</td><td>${d.bookId}</td><td>${d.bookName}</td><td>${d.drama}</td><td>${d.lang}</td><td>${d.businessType}</td><td>${d.media}</td><td>$${d.cost.toLocaleString()}</td><td>${d.doroi}</td><td>${d.d0AdRoi}%</td><td>$${d.d0Iaa.toLocaleString()}</td>${isMini?'':`<td>${d.compliance}%</td><td>${d.oldCompliance}%</td>`}<td>${d.created}</td></tr>`).join(''),heads=isMini?'':'<th>综合达标率</th><th>老达标率</th>',note=data.length>10?`<div class="material-preview-footer">共 ${data.length} 条，仅展示前 10 条</div>`:`<div class="material-preview-footer">共 ${data.length} 条</div>`;content.innerHTML=`<div class="material-preview-table-wrap"><table class="material-preview-table"><thead><tr><th>素材名称</th><th>剧本ID</th><th>剧本名称</th><th>短剧</th><th>语言</th><th>业务类型</th><th>媒体</th><th>消耗</th><th>DOROI</th><th>D0广告ROI</th><th>D0 IAA</th>${heads}<th>创建时间</th></tr></thead><tbody>${rows}</tbody></table></div>${note}`}
 function updateSpecifyPreview(){if(previewVisible){previewData=confirmedMaterials.slice();renderPreview()}}
 function closeMaterialPreview(){clearTimeout(previewTimer);previewVisible=false;document.getElementById('materialPreviewSection').classList.remove('show');document.getElementById('btnPreview').textContent='预览素材'}
 function resetMaterialPreview(){if(previewVisible)closeMaterialPreview();previewData=[];previewTimer=null;document.getElementById('materialPreviewContent').innerHTML='<div class="material-preview-empty">点击「预览素材」查看匹配结果</div>';switchPreviewTab('list')}
@@ -2797,8 +2835,9 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
     campaign,adGroup,ad,
     material:materialMode==='specify'?{mode:'specify',items:confirmedMaterials.map(m=>m.id),repeatCount:singleRoundRepeat,totalRepeatCount,adCount:document.getElementById('adCount').value||30}:{mode:'filter',createTime:document.querySelector('#materialCreateTime .btn-option.active').dataset.day,
       filterType:document.querySelector('#materialFilterType .btn-option.active').dataset.type,
+      statScope:currentStatScope(),
       businessType:document.querySelector('#businessTypeBtns .btn-option.active').dataset.type,
-      media:document.querySelector('#mediaFilterBtns .btn-option.active').dataset.type,
+      media:document.querySelector('#materialFilterType .btn-option.active').dataset.type==='custom'&&currentStatScope()==='mini'?'':document.querySelector('#mediaFilterBtns .btn-option.active').dataset.type,
       statRange:document.querySelector('#statRangeBtns .btn-option.active').dataset.day,
       sortMetric:document.querySelector('#sortMetricBtns .btn-option.active').dataset.metric,
       materialCount:document.querySelector('#materialCountType .btn-option.active').dataset.type==='custom'?document.getElementById('materialCount').value:'unlimit',
