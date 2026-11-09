@@ -591,10 +591,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
             <div class="selected-dramas-title" style="display:flex;align-items:center;margin-bottom:12px">
               <span>已选短剧</span>
               <a href="#" class="add-time-btn" onclick="openTargetingDrawer();return false" style="margin-left:12px;font-size:13px">一键分配定向包</a>
+              <a href="#" class="add-time-btn" onclick="openBatchScheduleModal();return false" style="margin-left:8px;font-size:13px">一键配置排期</a>
               <a href="#" class="add-time-btn" onclick="clearAllTargeting();return false" style="margin-left:8px;font-size:13px;color:#ff4d4f">清空定向包</a>
               <a href="#" class="add-time-btn" onclick="clearAllDramas();return false" style="margin-left:8px;font-size:13px;color:#ff4d4f">清空短剧</a>
             </div>
-            <div style="color:#909399;font-size:13px;margin-bottom:8px">已选预上线短剧时，该短剧排期必填；已上线短剧留空=立即投放；时间按东八区填写</div>
+            <div style="color:#909399;font-size:13px;margin-bottom:8px">已选预上线短剧时，该短剧排期必填；已上线短剧留空=立即投放；时间按东八区填写；排期早于任务执行时间时不生效</div>
             <div id="selectedDramasList"></div>
           </div>
         </div></div>
@@ -1393,6 +1394,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
   </div>
 </div>
 
+<!-- ============ 一键配置排期弹窗 ============ -->
+<div class="modal-overlay" id="batchScheduleModal" style="display:none">
+  <div class="modal" style="width:460px;background:#fff;border-radius:8px;padding:24px;position:relative">
+    <div class="modal-close" onclick="closeBatchScheduleModal()">&times;</div>
+    <div class="modal-title">一键配置排期</div>
+    <div style="margin-top:16px">
+      <div style="font-size:13px;font-weight:500;margin-bottom:6px">作用域</div>
+      <div id="batchScheduleScope" style="display:flex;gap:20px;font-size:13px"></div>
+    </div>
+    <div style="margin-top:16px">
+      <div style="font-size:13px;font-weight:500;margin-bottom:6px"><span class="required">*</span>排期（东八区）</div>
+      <input type="datetime-local" class="input-text" id="batchScheduleTime" style="width:210px;height:32px">
+    </div>
+    <div style="margin-top:8px;color:#909399;font-size:12px">时间按东八区统一填写；排期早于任务执行时间时不生效（按立即投放），仅提示不拦截</div>
+    <div style="margin-top:16px;text-align:right">
+      <button class="btn btn-default" onclick="closeBatchScheduleModal()">取消</button>
+      <button class="btn btn-primary" onclick="applyBatchSchedule()">确定</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ 商品库选择侧边栏 ============ -->
 <div class="drawer-overlay" id="productLibraryDrawer" style="display:none">
   <div class="drawer" style="width:1100px">
@@ -2030,7 +2052,7 @@ function renderDramaRow(dramaKey){
       <input type="datetime-local" class="input-text drama-schedule-input" data-key="${dramaKey.replace(/"/g,'&quot;')}" value="${dramaScheduleMap.get(dramaKey)||''}" style="width:210px;height:28px">
       <span>留空=立即投放</span>
     </div>
-    <div class="drama-schedule-expired" style="display:${expired?'block':'none'}">该排期已过期，排期参数不生效，请选择未来的排期</div>
+    <div class="drama-schedule-expired" style="display:${expired?'block':'none'}">该排期早于任务执行时间，排期参数不生效，请选择晚于任务执行时间的排期</div>
   </div>`;
 }
 function renderAllDramaRows(){
@@ -2051,6 +2073,25 @@ function clearAllTargeting(){
   if(!confirm('确定清空所有短剧的定向包分配？'))return;
   dramaTargetingMap.forEach((pkgs,key)=>dramaTargetingMap.set(key,[]));
   renderAllDramaRows();
+}
+// ==================== 一键配置排期 ====================
+function openBatchScheduleModal(){
+  if(!dramaTargetingMap.size)return;
+  const total=dramaTargetingMap.size,unassigned=Array.from(dramaScheduleMap.values()).filter(v=>!v).length;
+  document.getElementById('batchScheduleScope').innerHTML=`<label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="batchScheduleScope" value="all" checked><span>全部短剧 (${total})</span></label><label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="batchScheduleScope" value="unassigned"><span>仅未配置排期的短剧 (${unassigned})</span></label>`;
+  document.getElementById('batchScheduleTime').value='';
+  document.getElementById('batchScheduleModal').style.display='flex';
+}
+function closeBatchScheduleModal(){document.getElementById('batchScheduleModal').style.display='none'}
+function applyBatchSchedule(){
+  const v=document.getElementById('batchScheduleTime').value;
+  if(!v){alert('请选择排期时间');return}
+  const scope=document.querySelector('input[name="batchScheduleScope"]:checked').value;
+  dramaScheduleMap.forEach((old,key)=>{
+    if(scope==='all'||!old)dramaScheduleMap.set(key,v);
+  });
+  renderAllDramaRows();
+  closeBatchScheduleModal();
 }
 
 // ==================== 短剧行事件委托 ====================
@@ -2988,7 +3029,7 @@ document.getElementById('autoTaskForm').addEventListener('submit',function(e){e.
       repeatCount:singleRoundRepeat,totalRepeatCount,
       adCount:document.getElementById('adCount').value||30}};
   const expiredDramas=Array.from(dramaScheduleMap.entries()).filter(([k,v])=>isScheduleExpired(v)).map(([k])=>k);
-  if(expiredDramas.length)alert('以下短剧排期已过期，排期参数不生效，请确认或修改排期：\n'+expiredDramas.join('\n'));
+  if(expiredDramas.length)alert('以下短剧排期早于任务执行时间，排期参数不生效，请确认或修改排期：\n'+expiredDramas.join('\n'));
   console.log('提交数据：',formData);alert('任务创建成功！');closeTaskModal()});
 
 // ==================== 商品库关联 ====================
